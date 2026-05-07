@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Fit - AI 기반 가상 피팅 앱</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .gold {
+            color: #C9A96E;
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            text-align: center;
+            gap: 40px;
+        }
+
+        .welcome-logo {
+            font-size: 72px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .welcome-tagline {
+            font-size: 24px;
+            color: #C9A96E;
+            margin-bottom: 60px;
+            font-weight: 300;
+        }
+
+        .welcome-description {
+            font-size: 16px;
+            max-width: 500px;
+            line-height: 1.8;
+            margin-bottom: 60px;
+            color: #cccccc;
+        }
+
+        /* How It Works Screen */
+        .how-it-works-screen {
+            text-align: center;
+            gap: 40px;
+        }
+
+        .how-it-works-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 40px;
+        }
+
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1000px;
+            margin-bottom: 60px;
+        }
+
+        .step {
+            padding: 30px;
+            background: rgba(201, 169, 110, 0.1);
+            border: 1px solid #C9A96E;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            background: rgba(201, 169, 110, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .step-number {
+            font-size: 36px;
+            color: #C9A96E;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .step-description {
+            font-size: 14px;
+            color: #cccccc;
+        }
+
+        /* Camera Screen */
+        .camera-screen {
+            gap: 30px;
+        }
+
+        .camera-title {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .camera-box {
+            width: 400px;
+            height: 500px;
+            background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);
+            border: 2px solid #C9A96E;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .camera-placeholder {
+            font-size: 64px;
+            color: #C9A96E;
+            opacity: 0.3;
+        }
+
+        .camera-info {
+            font-size: 16px;
+            color: #cccccc;
+            margin-top: 20px;
+        }
+
+        /* 3D Scan Screen */
+        .scan-screen {
+            gap: 30px;
+        }
+
+        .scan-title {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .scan-visualization {
+            width: 400px;
+            height: 500px;
+            background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);
+            border: 2px solid #C9A96E;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scan-animation {
+            font-size: 80px;
+            animation: pulse 1.5s infinite;
+            color: #C9A96E;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+        }
+
+        .scan-progress {
+            font-size: 16px;
+            color: #C9A96E;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        /* Clothing Selection Screen */
+        .clothing-screen {
+            gap: 30px;
+        }
+
+        .clothing-title {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .clothing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 150px);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .clothing-item {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);
+            border: 2px solid #C9A96E;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 40px;
+        }
+
+        .clothing-item:hover {
+            background: rgba(201, 169, 110, 0.2);
+            transform: scale(1.05);
+        }
+
+        .clothing-item.selected {
+            background: rgba(201, 169, 110, 0.3);
+            border-color: #C9A96E;
+            box-shadow: 0 0 20px rgba(201, 169, 110, 0.5);
+        }
+
+        /* Fit Result Screen */
+        .result-screen {
+            gap: 30px;
+        }
+
+        .result-title {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .result-visualization {
+            width: 400px;
+            height: 500px;
+            background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);
+            border: 2px solid #C9A96E;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-figure {
+            font-size: 120px;
+            color: #C9A96E;
+        }
+
+        .result-info {
+            font-size: 16px;
+            color: #cccccc;
+            margin-top: 20px;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+            max-width: 500px;
+        }
+
+        .stat {
+            padding: 15px;
+            background: rgba(201, 169, 110, 0.1);
+            border: 1px solid #C9A96E;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            color: #C9A96E;
+            font-weight: bold;
+        }
+
+        /* Navigation */
+        .nav-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 2px solid #C9A96E;
+            background: transparent;
+            color: #C9A96E;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: #C9A96E;
+            color: #1a1a1a;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-indicator {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            font-size: 14px;
+            color: #C9A96E;
+        }
+
+        .screen-counter {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(201, 169, 110, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: #C9A96E;
+            width: 30px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-indicator">
+        <span id="screenNumber">1</span> / 6
+    </div>
+
+    <div class="container">
+        <!-- Screen 1: Welcome -->
+        <div class="screen welcome-screen active" data-screen="1">
+            <div class="welcome-logo">
+                <span class="gold">My Fit</span>
+            </div>
+            <div class="welcome-tagline">AI 기반 가상 피팅 앱</div>
+            <div class="welcome-description">
+                당신의 신체에 가장 잘 어울리는 옷을 찾아보세요.<br>
+                AI 기술로 완벽한 피팅을 경험하세요.
+            </div>
+            <div class="nav-buttons">
+                <button onclick="nextScreen()">시작하기</button>
+            </div>
+        </div>
+
+        <!-- Screen 2: How It Works -->
+        <div class="screen how-it-works-screen" data-screen="2">
+            <h1 class="how-it-works-title">어떻게 작동하나요?</h1>
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-title">카메라로 촬영</div>
+                    <div class="step-description">정확한 신체 측정을 위해 카메라로 촬영합니다.</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-title">3D 스캔</div>
+                    <div class="step-description">AI가 신체를 3D로 분석합니다.</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-title">의상 선택</div>
+                    <div class="step-description">당신의 스타일에 맞는 의상을 선택합니다.</div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button onclick="prevScreen()">돌아가기</button>
+                <button onclick="nextScreen()">다음</button>
+            </div>
+        </div>
+
+        <!-- Screen 3: Camera -->
+        <div class="screen camera-screen" data-screen="3">
+            <h2 class="camera-title">카메라로 촬영하기</h2>
+            <div class="camera-box">
+                <div class="camera-placeholder">📷</div>
+            </div>
+            <div class="camera-info">
+                정면을 바라보고 카메라에서 1-2m 떨어져 서세요.
+            </div>
+            <div class="nav-buttons">
+                <button onclick="prevScreen()">돌아가기</button>
+                <button onclick="nextScreen()">촬영 완료</button>
+            </div>
+        </div>
+
+        <!-- Screen 4: 3D Scan -->
+        <div class="screen scan-screen" data-screen="4">
+            <h2 class="scan-title">3D 신체 스캔 중...</h2>
+            <div class="scan-visualization">
+                <div class="scan-animation">⚙️</div>
+            </div>
+            <div class="scan-progress">스캔 진행 중... 95%</div>
+            <div class="nav-buttons">
+                <button onclick="nextScreen()" style="margin-top: 20px;">스캔 완료</button>
+            </div>
+        </div>
+
+        <!-- Screen 5: Clothing Selection -->
+        <div class="screen clothing-screen" data-screen="5">
+            <h2 class="clothing-title">의상을 선택하세요</h2>
+            <div class="clothing-grid">
+                <div class="clothing-item" onclick="selectClothing(this)">👕</div>
+                <div class="clothing-item" onclick="selectClothing(this)">👔</div>
+                <div class="clothing-item" onclick="selectClothing(this)">👗</div>
+                <div class="clothing-item" onclick="selectClothing(this)">👖</div>
+                <div class="clothing-item" onclick="selectClothing(this)">🧥</div>
+                <div class="clothing-item" onclick="selectClothing(this)">🩳</div>
+            </div>
+            <div class="nav-buttons">
+                <button onclick="prevScreen()">돌아가기</button>
+                <button onclick="nextScreen()">피팅 보기</button>
+            </div>
+        </div>
+
+        <!-- Screen 6: Fit Result -->
+        <div class="screen result-screen" data-screen="6">
+            <h2 class="result-title">피팅 결과</h2>
+            <div class="result-visualization">
+                <div class="result-figure">👤</div>
+            </div>
+            <div class="result-info">
+                당신의 신체에 완벽하게 어울리는 스타일입니다!
+            </div>
+            <div class="result-stats">
+                <div class="stat">
+                    <div class="stat-label">핏 점수</div>
+                    <div class="stat-value">9.2</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">편의성</div>
+                    <div class="stat-value">8.8</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">추천도</div>
+                    <div class="stat-value">95%</div>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button onclick="resetToStart()">처음부터 시작</button>
+                <button onclick="shareResult()">결과 공유</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="screen-counter" id="screenCounter"></div>
+
+    <script>
+        let currentScreen = 1;
+        const totalScreens = 6;
+
+        function showScreen(screenNum) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+
+            // Show selected screen
+            document.querySelector(`[data-screen="${screenNum}"]`).classList.add('active');
+
+            // Update indicator
+            document.getElementById('screenNumber').textContent = screenNum;
+
+            // Update dots
+            updateDots();
+
+            currentScreen = screenNum;
+        }
+
+        function nextScreen() {
+            if (currentScreen < totalScreens) {
+                showScreen(currentScreen + 1);
+            }
+        }
+
+        function prevScreen() {
+            if (currentScreen > 1) {
+                showScreen(currentScreen - 1);
+            }
+        }
+
+        function resetToStart() {
+            showScreen(1);
+            document.querySelectorAll('.clothing-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+
+        function shareResult() {
+            alert('결과가 공유되었습니다!');
+        }
+
+        function selectClothing(element) {
+            document.querySelectorAll('.clothing-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+
+        function updateDots() {
+            const counter = document.getElementById('screenCounter');
+            counter.innerHTML = '';
+
+            for (let i = 1; i <= totalScreens; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot' + (i === currentScreen ? ' active' : '');
+                dot.onclick = () => showScreen(i);
+                counter.appendChild(dot);
+            }
+        }
+
+        // Initialize dots on page load
+        updateDots();
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextScreen();
+            if (e.key === 'ArrowLeft') prevScreen();
+        });
+    </script>
+</body>
+</html>
