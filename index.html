@@ -1,585 +1,508 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Fit - AI 기반 가상 피팅 앱</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MyFit — AI 가상 피팅</title>
+<style>
+  :root {
+    --bg:#0a0a0a; --bg2:#141414; --bg3:#1e1e1e;
+    --accent:#00e5ff; --accent2:#7c4dff;
+    --text:#ffffff; --text2:#aaaaaa;
+    --card:#1a1a1a; --border:#2a2a2a;
+    --success:#00e676; --warn:#ffab40; --danger:#ff5252;
+    --r:16px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
+  .screen{display:none;min-height:100vh;flex-direction:column;animation:fadeIn .3s ease}
+  .screen.active{display:flex}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .header{display:flex;align-items:center;gap:12px;padding:20px 20px 0}
+  .back-btn{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:none;color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .header-title{font-size:18px;font-weight:700}
+  .btn{width:100%;padding:16px;border-radius:var(--r);border:none;font-size:16px;font-weight:700;cursor:pointer;transition:.2s}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000}
+  .btn-primary:active{opacity:.8;transform:scale(.98)}
+  .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a1a;
-            color: #ffffff;
-            overflow: hidden;
-        }
+  /* S1 LOGIN */
+  #s-login{background:radial-gradient(ellipse at 50% 0%,#0d1f3c 0%,var(--bg) 70%);align-items:center;justify-content:center;padding:40px 28px}
+  .logo-icon{width:80px;height:80px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;box-shadow:0 0 40px rgba(0,229,255,.3)}
+  .logo-name{font-size:36px;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+  .logo-sub{font-size:14px;color:var(--text2);margin-top:6px;text-align:center}
+  .feature-list{margin:36px 0;display:flex;flex-direction:column;gap:16px}
+  .feature-item{display:flex;align-items:center;gap:14px}
+  .feat-icon{width:44px;height:44px;border-radius:12px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .feat-text strong{display:block;font-size:14px}
+  .feat-text span{font-size:12px;color:var(--text2)}
+  .google-btn{width:100%;padding:16px;border-radius:var(--r);background:#fff;color:#222;font-size:15px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:.2s}
+  .google-btn:active{opacity:.85}
 
-        .container {
-            width: 100vw;
-            height: 100vh;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+  /* S2 PHOTO */
+  .photo-guide{background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(124,77,255,.08));border:1px solid rgba(0,229,255,.2);border-radius:var(--r);padding:14px 16px;margin:16px 0 24px;font-size:13px;color:var(--text2);line-height:1.6}
+  .photo-guide strong{color:var(--accent)}
+  .photo-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+  .photo-slot{aspect-ratio:3/4;border-radius:var(--r);border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;position:relative;overflow:hidden;background:var(--bg2);transition:.2s}
+  .photo-slot.captured{border-color:var(--success);border-style:solid}
+  .photo-slot .slot-icon{font-size:28px}
+  .photo-slot .slot-label{font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.5px}
+  .photo-slot .checkmark{position:absolute;top:8px;right:8px;width:20px;height:20px;background:var(--success);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:11px;color:#000;font-weight:900}
+  .photo-slot.captured .checkmark{display:flex}
+  .photo-slot img.preview{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .photo-slot input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
 
-        .screen {
-            display: none;
-            width: 100%;
-            height: 100%;
-            animation: fadeIn 0.5s ease-in;
-        }
+  /* S3 PROCESSING */
+  #s-processing{align-items:center;justify-content:center;text-align:center;padding:40px 28px}
+  .scan-container{position:relative;width:180px;height:280px;margin:0 auto 36px}
+  .scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scan 2s ease-in-out infinite;top:0}
+  @keyframes scan{0%{top:0;opacity:1}100%{top:280px;opacity:.2}}
+  .scan-glow{position:absolute;inset:0;background:radial-gradient(ellipse,rgba(0,229,255,.12) 0%,transparent 70%);animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+  .step-list{display:flex;flex-direction:column;gap:12px;text-align:left;width:100%;max-width:260px}
+  .step-item{display:flex;align-items:center;gap:12px}
+  .step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:.4s}
+  .step-circle.done{background:var(--success);border-color:var(--success);color:#000;font-weight:900}
+  .step-circle.running{border-color:var(--accent);animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .step-text{font-size:13px;color:var(--text2)}
+  .step-item.done .step-text{color:var(--text)}
 
-        .screen.active {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
+  /* S4 BODY */
+  .body-card{background:var(--bg2);border-radius:20px;padding:20px;margin:16px 0 16px;display:flex;gap:16px;align-items:center}
+  .measurements{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .measure-item{background:var(--bg3);border-radius:10px;padding:10px 12px}
+  .measure-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+  .measure-value{font-size:18px;font-weight:800;color:var(--accent)}
+  .measure-unit{font-size:11px;color:var(--text2)}
+  .acc-bar{background:var(--bg2);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
+  .acc-track{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:8px}
+  .acc-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:3px;transition:width 1.5s ease}
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
+  /* S5 SEARCH */
+  .search-bar{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 16px;margin:16px 0 16px;transition:.2s}
+  .search-bar:focus-within{border-color:var(--accent)}
+  .search-bar input{flex:1;background:none;border:none;color:var(--text);font-size:16px;outline:none}
+  .search-bar input::placeholder{color:var(--text2)}
+  .brand-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
+  .chip{padding:8px 16px;border-radius:100px;background:var(--bg3);border:1.5px solid var(--border);font-size:13px;cursor:pointer;transition:.2s;white-space:nowrap;flex-shrink:0}
+  .chip.selected{background:rgba(0,229,255,.12);border-color:var(--accent);color:var(--accent)}
+  .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .product-card{background:var(--bg2);border-radius:var(--r);overflow:hidden;cursor:pointer;border:1.5px solid var(--border);transition:.2s}
+  .product-card:active{border-color:var(--accent);transform:scale(.97)}
+  .product-img{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:64px;background:var(--bg3)}
+  .product-info{padding:10px 12px 12px}
+  .product-brand{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+  .product-name{font-size:13px;font-weight:700;margin:2px 0 4px;line-height:1.3}
+  .product-price{font-size:14px;font-weight:800;color:var(--accent)}
 
-        .gold {
-            color: #C9A96E;
-        }
+  /* S6 FITTING */
+  .fitting-preview{position:relative;background:var(--bg2);margin:16px 20px;border-radius:20px;display:flex;align-items:center;justify-content:center;padding:24px;min-height:320px}
+  .size-selector{padding:0 20px;margin-bottom:16px}
+  .size-label{font-size:12px;color:var(--text2);margin-bottom:10px}
+  .size-btns{display:flex;gap:8px;flex-wrap:wrap}
+  .size-btn{padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;transition:.2s;min-width:48px;text-align:center}
+  .size-btn.active{background:rgba(0,229,255,.12);border-color:var(--accent);color:var(--accent)}
+  .fit-score-card{background:var(--bg2);border-radius:var(--r);padding:16px;margin:0 20px 16px}
+  .fit-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .fit-bar-label{font-size:12px;width:48px;color:var(--text2)}
+  .fit-bar-track{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+  .fit-bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+  .fit-bar-val{font-size:12px;font-weight:700;width:30px;text-align:right}
+  .buy-section{padding:0 20px 32px}
+  .product-detail-row{display:flex;align-items:center;gap:12px;background:var(--bg2);border-radius:var(--r);padding:14px;margin-bottom:12px}
+  .pd-emoji{font-size:32px;width:50px;height:50px;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .pd-price{margin-left:auto;font-size:16px;font-weight:900;color:var(--accent);white-space:nowrap}
 
-        /* Welcome Screen */
-        .welcome-screen {
-            text-align: center;
-            gap: 40px;
-        }
+  /* S7 PURCHASE */
+  #s-purchase{align-items:center;justify-content:center;text-align:center;padding:40px 28px}
+  .purchase-icon{width:80px;height:80px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:24px;font-size:36px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
+  .retailer-btn{width:100%;padding:16px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:12px;transition:.2s;text-decoration:none;margin-bottom:10px}
+  .retailer-btn:active{border-color:var(--accent)}
 
-        .welcome-logo {
-            font-size: 72px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
+  /* NAV */
+  .nav{display:flex;justify-content:space-around;padding:12px 0 max(12px,env(safe-area-inset-bottom));background:var(--bg2);border-top:1px solid var(--border);position:fixed;bottom:0;left:0;right:0;z-index:100}
+  .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--text2);cursor:pointer;padding:4px 16px}
+  .nav-item.active{color:var(--accent)}
+  .nav-icon{font-size:20px}
 
-        .welcome-tagline {
-            font-size: 24px;
-            color: #C9A96E;
-            margin-bottom: 60px;
-            font-weight: 300;
-        }
-
-        .welcome-description {
-            font-size: 16px;
-            max-width: 500px;
-            line-height: 1.8;
-            margin-bottom: 60px;
-            color: #cccccc;
-        }
-
-        /* How It Works Screen */
-        .how-it-works-screen {
-            text-align: center;
-            gap: 40px;
-        }
-
-        .how-it-works-title {
-            font-size: 48px;
-            font-weight: bold;
-            margin-bottom: 40px;
-        }
-
-        .steps-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
-            max-width: 1000px;
-            margin-bottom: 60px;
-        }
-
-        .step {
-            padding: 30px;
-            background: rgba(201, 169, 110, 0.1);
-            border: 1px solid #C9A96E;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .step:hover {
-            background: rgba(201, 169, 110, 0.2);
-            transform: translateY(-5px);
-        }
-
-        .step-number {
-            font-size: 36px;
-            color: #C9A96E;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        .step-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .step-description {
-            font-size: 14px;
-            color: #cccccc;
-        }
-
-        /* Camera Screen */
-        .camera-screen {
-            gap: 30px;
-        }
-
-        .camera-title {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-
-        .camera-box {
-            width: 400px;
-            height: 500px;
-            background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);
-            border: 2px solid #C9A96E;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .camera-placeholder {
-            font-size: 64px;
-            color: #C9A96E;
-            opacity: 0.3;
-        }
-
-        .camera-info {
-            font-size: 16px;
-            color: #cccccc;
-            margin-top: 20px;
-        }
-
-        /* 3D Scan Screen */
-        .scan-screen {
-            gap: 30px;
-        }
-
-        .scan-title {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-
-        .scan-visualization {
-            width: 400px;
-            height: 500px;
-            background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);
-            border: 2px solid #C9A96E;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .scan-animation {
-            font-size: 80px;
-            animation: pulse 1.5s infinite;
-            color: #C9A96E;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.1);
-                opacity: 0.7;
-            }
-        }
-
-        .scan-progress {
-            font-size: 16px;
-            color: #C9A96E;
-            margin-top: 20px;
-            font-weight: bold;
-        }
-
-        /* Clothing Selection Screen */
-        .clothing-screen {
-            gap: 30px;
-        }
-
-        .clothing-title {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-
-        .clothing-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 150px);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .clothing-item {
-            width: 150px;
-            height: 150px;
-            background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);
-            border: 2px solid #C9A96E;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 40px;
-        }
-
-        .clothing-item:hover {
-            background: rgba(201, 169, 110, 0.2);
-            transform: scale(1.05);
-        }
-
-        .clothing-item.selected {
-            background: rgba(201, 169, 110, 0.3);
-            border-color: #C9A96E;
-            box-shadow: 0 0 20px rgba(201, 169, 110, 0.5);
-        }
-
-        /* Fit Result Screen */
-        .result-screen {
-            gap: 30px;
-        }
-
-        .result-title {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-
-        .result-visualization {
-            width: 400px;
-            height: 500px;
-            background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);
-            border: 2px solid #C9A96E;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .result-figure {
-            font-size: 120px;
-            color: #C9A96E;
-        }
-
-        .result-info {
-            font-size: 16px;
-            color: #cccccc;
-            margin-top: 20px;
-            text-align: center;
-            max-width: 500px;
-        }
-
-        .result-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 30px;
-            max-width: 500px;
-        }
-
-        .stat {
-            padding: 15px;
-            background: rgba(201, 169, 110, 0.1);
-            border: 1px solid #C9A96E;
-            border-radius: 8px;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            color: #C9A96E;
-            font-weight: bold;
-        }
-
-        /* Navigation */
-        .nav-buttons {
-            display: flex;
-            gap: 20px;
-            margin-top: 40px;
-        }
-
-        button {
-            padding: 12px 30px;
-            font-size: 14px;
-            font-weight: bold;
-            border: 2px solid #C9A96E;
-            background: transparent;
-            color: #C9A96E;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        button:hover {
-            background: #C9A96E;
-            color: #1a1a1a;
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .progress-indicator {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            font-size: 14px;
-            color: #C9A96E;
-        }
-
-        .screen-counter {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: rgba(201, 169, 110, 0.3);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .dot.active {
-            background: #C9A96E;
-            width: 30px;
-            border-radius: 5px;
-        }
-    </style>
+  /* TOAST */
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--success);color:#000;padding:12px 24px;border-radius:100px;font-size:13px;font-weight:700;opacity:0;transition:.3s;pointer-events:none;z-index:999;white-space:nowrap}
+  .toast.show{opacity:1}
+</style>
 </head>
 <body>
-    <div class="progress-indicator">
-        <span id="screenNumber">1</span> / 6
+
+<!-- S1: LOGIN -->
+<div id="s-login" class="screen active">
+  <div style="margin:auto;width:100%;max-width:420px;padding:60px 28px 40px">
+    <div style="margin-bottom:40px">
+      <div class="logo-icon">👗</div>
+      <div class="logo-name">MyFit</div>
+      <div class="logo-sub">AI 기반 가상 피팅 · 완벽한 사이즈 선택</div>
     </div>
-
-    <div class="container">
-        <!-- Screen 1: Welcome -->
-        <div class="screen welcome-screen active" data-screen="1">
-            <div class="welcome-logo">
-                <span class="gold">My Fit</span>
-            </div>
-            <div class="welcome-tagline">AI 기반 가상 피팅 앱</div>
-            <div class="welcome-description">
-                당신의 신체에 가장 잘 어울리는 옷을 찾아보세요.<br>
-                AI 기술로 완벽한 피팅을 경험하세요.
-            </div>
-            <div class="nav-buttons">
-                <button onclick="nextScreen()">시작하기</button>
-            </div>
-        </div>
-
-        <!-- Screen 2: How It Works -->
-        <div class="screen how-it-works-screen" data-screen="2">
-            <h1 class="how-it-works-title">어떻게 작동하나요?</h1>
-            <div class="steps-container">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-title">카메라로 촬영</div>
-                    <div class="step-description">정확한 신체 측정을 위해 카메라로 촬영합니다.</div>
-                </div>
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-title">3D 스캔</div>
-                    <div class="step-description">AI가 신체를 3D로 분석합니다.</div>
-                </div>
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-title">의상 선택</div>
-                    <div class="step-description">당신의 스타일에 맞는 의상을 선택합니다.</div>
-                </div>
-            </div>
-            <div class="nav-buttons">
-                <button onclick="prevScreen()">돌아가기</button>
-                <button onclick="nextScreen()">다음</button>
-            </div>
-        </div>
-
-        <!-- Screen 3: Camera -->
-        <div class="screen camera-screen" data-screen="3">
-            <h2 class="camera-title">카메라로 촬영하기</h2>
-            <div class="camera-box">
-                <div class="camera-placeholder">📷</div>
-            </div>
-            <div class="camera-info">
-                정면을 바라보고 카메라에서 1-2m 떨어져 서세요.
-            </div>
-            <div class="nav-buttons">
-                <button onclick="prevScreen()">돌아가기</button>
-                <button onclick="nextScreen()">촬영 완료</button>
-            </div>
-        </div>
-
-        <!-- Screen 4: 3D Scan -->
-        <div class="screen scan-screen" data-screen="4">
-            <h2 class="scan-title">3D 신체 스캔 중...</h2>
-            <div class="scan-visualization">
-                <div class="scan-animation">⚙️</div>
-            </div>
-            <div class="scan-progress">스캔 진행 중... 95%</div>
-            <div class="nav-buttons">
-                <button onclick="nextScreen()" style="margin-top: 20px;">스캔 완료</button>
-            </div>
-        </div>
-
-        <!-- Screen 5: Clothing Selection -->
-        <div class="screen clothing-screen" data-screen="5">
-            <h2 class="clothing-title">의상을 선택하세요</h2>
-            <div class="clothing-grid">
-                <div class="clothing-item" onclick="selectClothing(this)">👕</div>
-                <div class="clothing-item" onclick="selectClothing(this)">👔</div>
-                <div class="clothing-item" onclick="selectClothing(this)">👗</div>
-                <div class="clothing-item" onclick="selectClothing(this)">👖</div>
-                <div class="clothing-item" onclick="selectClothing(this)">🧥</div>
-                <div class="clothing-item" onclick="selectClothing(this)">🩳</div>
-            </div>
-            <div class="nav-buttons">
-                <button onclick="prevScreen()">돌아가기</button>
-                <button onclick="nextScreen()">피팅 보기</button>
-            </div>
-        </div>
-
-        <!-- Screen 6: Fit Result -->
-        <div class="screen result-screen" data-screen="6">
-            <h2 class="result-title">피팅 결과</h2>
-            <div class="result-visualization">
-                <div class="result-figure">👤</div>
-            </div>
-            <div class="result-info">
-                당신의 신체에 완벽하게 어울리는 스타일입니다!
-            </div>
-            <div class="result-stats">
-                <div class="stat">
-                    <div class="stat-label">핏 점수</div>
-                    <div class="stat-value">9.2</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">편의성</div>
-                    <div class="stat-value">8.8</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-label">추천도</div>
-                    <div class="stat-value">95%</div>
-                </div>
-            </div>
-            <div class="nav-buttons">
-                <button onclick="resetToStart()">처음부터 시작</button>
-                <button onclick="shareResult()">결과 공유</button>
-            </div>
-        </div>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feat-icon">📸</div>
+        <div class="feat-text"><strong>사진 3장으로 3D 신체 생성</strong><span>정면·측면·후면 촬영으로 정밀 분석</span></div>
+      </div>
+      <div class="feature-item">
+        <div class="feat-icon">👔</div>
+        <div class="feat-text"><strong>가상 피팅 시뮬레이션</strong><span>실제 옷이 내 몸에 어떻게 보이는지 확인</span></div>
+      </div>
+      <div class="feature-item">
+        <div class="feat-icon">🛒</div>
+        <div class="feat-text"><strong>사이즈 확신, 바로 구매</strong><span>Nike·무신사·Zara 등 즉시 구매 연동</span></div>
+      </div>
     </div>
+    <button class="google-btn" onclick="doGoogleLogin()">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Google로 계속하기
+    </button>
+    <p style="text-align:center;font-size:11px;color:var(--text2);margin-top:16px">계속하면 이용약관 및 개인정보처리방침에 동의합니다</p>
+  </div>
+</div>
 
-    <div class="screen-counter" id="screenCounter"></div>
+<!-- S2: PHOTO CAPTURE -->
+<div id="s-photo" class="screen">
+  <div class="header"><button class="back-btn" onclick="goTo('s-login')">←</button><div class="header-title">신체 사진 촬영</div></div>
+  <div style="flex:1;padding:0 20px 100px;max-width:500px;margin:0 auto;width:100%">
+    <div class="photo-guide"><strong>촬영 가이드</strong> — 전신이 나오도록 · 단색 배경 권장 · 밝은 환경에서 촬영해주세요.</div>
+    <div class="photo-slots">
+      <div class="photo-slot" id="slot-front">
+        <span class="slot-icon">🧍</span><span class="slot-label">정면</span>
+        <span class="checkmark">✓</span>
+        <img id="prev-front" class="preview" style="display:none">
+        <input type="file" id="inp-front" accept="image/*" capture="user" onchange="photoUploaded('front',this)">
+      </div>
+      <div class="photo-slot" id="slot-side">
+        <span class="slot-icon">🚶</span><span class="slot-label">측면</span>
+        <span class="checkmark">✓</span>
+        <img id="prev-side" class="preview" style="display:none">
+        <input type="file" id="inp-side" accept="image/*" onchange="photoUploaded('side',this)">
+      </div>
+      <div class="photo-slot" id="slot-back">
+        <span class="slot-icon">🔙</span><span class="slot-label">후면</span>
+        <span class="checkmark">✓</span>
+        <img id="prev-back" class="preview" style="display:none">
+        <input type="file" id="inp-back" accept="image/*" onchange="photoUploaded('back',this)">
+      </div>
+    </div>
+    <p id="photo-count" style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:20px">사진을 촬영하거나 데모 모드로 시작하세요</p>
+    <button class="btn btn-primary" onclick="startAnalysis()">▶ 3D 신체 분석 시작 (데모)</button>
+    <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:10px">📌 실 기기 사용 시 카메라로 직접 촬영</p>
+  </div>
+</div>
 
-    <script>
-        let currentScreen = 1;
-        const totalScreens = 6;
+<!-- S3: PROCESSING -->
+<div id="s-processing" class="screen">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center">
+    <div class="scan-container">
+      <div class="scan-glow"></div>
+      <svg width="180" height="280" viewBox="0 0 100 200" fill="none">
+        <ellipse cx="50" cy="18" rx="14" ry="14" stroke="#00e5ff" stroke-width="1.5" opacity=".8"/>
+        <rect x="34" y="34" width="32" height="52" rx="8" stroke="#00e5ff" stroke-width="1.5" opacity=".8"/>
+        <rect x="14" y="36" width="18" height="44" rx="7" stroke="#7c4dff" stroke-width="1.5" opacity=".7"/>
+        <rect x="68" y="36" width="18" height="44" rx="7" stroke="#7c4dff" stroke-width="1.5" opacity=".7"/>
+        <rect x="36" y="88" width="12" height="58" rx="7" stroke="#00e5ff" stroke-width="1.5" opacity=".8"/>
+        <rect x="52" y="88" width="12" height="58" rx="7" stroke="#00e5ff" stroke-width="1.5" opacity=".8"/>
+        <circle cx="50" cy="18" r="3" fill="#00e5ff" opacity=".6"/>
+        <circle cx="34" cy="55" r="2" fill="#7c4dff"/>
+        <circle cx="66" cy="55" r="2" fill="#7c4dff"/>
+        <circle cx="44" cy="145" r="2" fill="#00e5ff" opacity=".6"/>
+        <circle cx="56" cy="145" r="2" fill="#00e5ff" opacity=".6"/>
+      </svg>
+      <div class="scan-line"></div>
+    </div>
+    <div style="font-size:24px;font-weight:800;margin-bottom:8px">3D 신체 생성 중</div>
+    <div style="color:var(--text2);font-size:14px;margin-bottom:32px">AI가 신체를 분석하고 있습니다</div>
+    <div class="step-list" id="step-list">
+      <div class="step-item" id="step-1"><div class="step-circle running" id="sc-1">◌</div><span class="step-text">키포인트 추출 (MediaPipe)</span></div>
+      <div class="step-item" id="step-2"><div class="step-circle" id="sc-2">2</div><span class="step-text">실루엣 분석</span></div>
+      <div class="step-item" id="step-3"><div class="step-circle" id="sc-3">3</div><span class="step-text">신체 측정값 계산</span></div>
+      <div class="step-item" id="step-4"><div class="step-circle" id="sc-4">4</div><span class="step-text">3D 모델 생성 완료</span></div>
+    </div>
+  </div>
+</div>
 
-        function showScreen(screenNum) {
-            // Hide all screens
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-            });
+<!-- S4: BODY PROFILE -->
+<div id="s-body" class="screen">
+  <div class="header"><button class="back-btn" onclick="goTo('s-photo')">←</button><div class="header-title">내 신체 프로필</div><span style="margin-left:auto;background:rgba(0,230,118,.12);color:var(--success);font-size:11px;font-weight:700;padding:5px 12px;border-radius:100px;border:1px solid rgba(0,230,118,.3)">✓ 분석완료</span></div>
+  <div style="flex:1;padding:0 20px 100px;max-width:500px;margin:0 auto;width:100%">
+    <div class="body-card">
+      <svg width="80" height="160" viewBox="0 0 100 200" fill="none">
+        <ellipse cx="50" cy="18" rx="14" ry="14" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
+        <rect x="34" y="34" width="32" height="52" rx="8" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
+        <rect x="14" y="36" width="18" height="44" rx="7" fill="rgba(124,77,255,.06)" stroke="#7c4dff" stroke-width="2"/>
+        <rect x="68" y="36" width="18" height="44" rx="7" fill="rgba(124,77,255,.06)" stroke="#7c4dff" stroke-width="2"/>
+        <rect x="36" y="88" width="12" height="58" rx="7" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
+        <rect x="52" y="88" width="12" height="58" rx="7" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
+      </svg>
+      <div class="measurements">
+        <div class="measure-item"><div class="measure-label">키</div><span class="measure-value">175</span><span class="measure-unit">cm</span></div>
+        <div class="measure-item"><div class="measure-label">어깨</div><span class="measure-value">43</span><span class="measure-unit">cm</span></div>
+        <div class="measure-item"><div class="measure-label">가슴</div><span class="measure-value">94</span><span class="measure-unit">cm</span></div>
+        <div class="measure-item"><div class="measure-label">허리</div><span class="measure-value">78</span><span class="measure-unit">cm</span></div>
+        <div class="measure-item"><div class="measure-label">엉덩이</div><span class="measure-value">96</span><span class="measure-unit">cm</span></div>
+        <div class="measure-item"><div class="measure-label">인심</div><span class="measure-value">82</span><span class="measure-unit">cm</span></div>
+      </div>
+    </div>
+    <div class="acc-bar">
+      <div style="font-size:12px;color:var(--text2)">측정 정확도 <span style="float:right;color:var(--success);font-weight:700">94.2%</span></div>
+      <div class="acc-track"><div class="acc-fill" id="acc-fill"></div></div>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:10px">추천 사이즈</div>
+    <div style="display:flex;gap:8px;margin-bottom:24px">
+      <div style="flex:1;background:rgba(0,229,255,.1);border:1.5px solid var(--accent);border-radius:12px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text2)">상의</div><div style="font-size:22px;font-weight:900;color:var(--accent)">L</div></div>
+      <div style="flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text2)">하의</div><div style="font-size:22px;font-weight:900">32</div></div>
+      <div style="flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text2)">신발</div><div style="font-size:22px;font-weight:900">270</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="goTo('s-search')">👔 옷 가상 피팅 시작 →</button>
+  </div>
+  <div class="nav">
+    <div class="nav-item active" onclick="goTo('s-body')"><div class="nav-icon">🧍</div>내 몸</div>
+    <div class="nav-item" onclick="goTo('s-search')"><div class="nav-icon">🔍</div>검색</div>
+    <div class="nav-item"><div class="nav-icon">❤️</div>저장</div>
+    <div class="nav-item"><div class="nav-icon">👤</div>프로필</div>
+  </div>
+</div>
 
-            // Show selected screen
-            document.querySelector(`[data-screen="${screenNum}"]`).classList.add('active');
+<!-- S5: SEARCH -->
+<div id="s-search" class="screen">
+  <div class="header" style="padding-bottom:0"><div class="header-title" style="font-size:20px">🔍 가상 피팅</div></div>
+  <div style="flex:1;padding:0 20px 100px;max-width:500px;margin:0 auto;width:100%">
+    <div class="search-bar"><span style="font-size:18px">🔍</span><input id="search-input" type="text" placeholder="브랜드 또는 제품 검색..." oninput="filterProducts(this.value)"></div>
+    <div class="brand-chips">
+      <div class="chip selected" onclick="selectBrand('전체',this)">전체</div>
+      <div class="chip" onclick="selectBrand('Nike',this)">Nike</div>
+      <div class="chip" onclick="selectBrand('무신사',this)">무신사</div>
+      <div class="chip" onclick="selectBrand('Adidas',this)">Adidas</div>
+      <div class="chip" onclick="selectBrand('Zara',this)">Zara</div>
+      <div class="chip" onclick="selectBrand('H&M',this)">H&M</div>
+    </div>
+    <div class="product-grid" id="product-grid"></div>
+  </div>
+  <div class="nav">
+    <div class="nav-item" onclick="goTo('s-body')"><div class="nav-icon">🧍</div>내 몸</div>
+    <div class="nav-item active"><div class="nav-icon">🔍</div>검색</div>
+    <div class="nav-item"><div class="nav-icon">❤️</div>저장</div>
+    <div class="nav-item"><div class="nav-icon">👤</div>프로필</div>
+  </div>
+</div>
 
-            // Update indicator
-            document.getElementById('screenNumber').textContent = screenNum;
+<!-- S6: FITTING -->
+<div id="s-fitting" class="screen">
+  <div class="header"><button class="back-btn" onclick="goTo('s-search')">←</button><div class="header-title" id="fitting-title">가상 피팅</div></div>
+  <div style="flex:1;max-width:500px;margin:0 auto;width:100%;padding-bottom:20px">
+    <div class="fitting-preview">
+      <div style="position:relative;width:110px">
+        <svg width="110" height="220" viewBox="0 0 100 200" fill="none">
+          <ellipse cx="50" cy="18" rx="14" ry="14" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
+          <rect x="34" y="34" width="32" height="52" rx="8" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
+          <rect x="14" y="36" width="18" height="44" rx="7" fill="rgba(124,77,255,.06)" stroke="#7c4dff" stroke-width="2"/>
+          <rect x="68" y="36" width="18" height="44" rx="7" fill="rgba(124,77,255,.06)" stroke="#7c4dff" stroke-width="2"/>
+          <rect x="36" y="88" width="12" height="58" rx="7" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
+          <rect x="52" y="88" width="12" height="58" rx="7" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
+        </svg>
+        <div id="fit-clothing" style="position:absolute;top:26px;left:50%;transform:translateX(-50%) scale(1);font-size:64px;transition:transform .4s ease;text-align:center;line-height:1">👕</div>
+      </div>
+      <div id="size-badge" style="position:absolute;top:14px;right:14px;background:rgba(0,229,255,.18);border:1.5px solid var(--accent);border-radius:100px;padding:5px 14px;font-size:13px;font-weight:800;color:var(--accent)">L</div>
+      <div id="fit-badge" style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);border-radius:100px;padding:7px 16px;font-size:12px;font-weight:700;white-space:nowrap;color:var(--success)">✓ 완벽한 핏</div>
+    </div>
+    <div class="size-selector">
+      <div class="size-label">사이즈 선택 — 내 추천: <strong style="color:var(--accent)">L</strong></div>
+      <div class="size-btns" id="size-btns"></div>
+    </div>
+    <div class="fit-score-card">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">핏 분석</div>
+      <div id="fit-bars"></div>
+      <div id="fit-comment" style="font-size:13px;color:var(--text2);margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"></div>
+    </div>
+    <div class="buy-section" style="padding:16px 20px 0">
+      <div class="product-detail-row">
+        <div class="pd-emoji" id="pd-emoji">👕</div>
+        <div><div id="pd-name" style="font-size:14px;font-weight:700"></div><div id="pd-size" style="font-size:12px;color:var(--text2)">사이즈: L</div></div>
+        <div class="pd-price" id="pd-price">₩99,000</div>
+      </div>
+      <button class="btn btn-primary" onclick="goToPurchase()">🛒 이 옷 구매하기 →</button>
+    </div>
+  </div>
+</div>
 
-            // Update dots
-            updateDots();
+<!-- S7: PURCHASE -->
+<div id="s-purchase" class="screen">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;max-width:480px;margin:0 auto;width:100%">
+    <div class="purchase-icon">🛒</div>
+    <div style="font-size:24px;font-weight:800;margin-bottom:8px">구매처 선택</div>
+    <div id="purchase-sub" style="font-size:14px;color:var(--text2);margin-bottom:28px;line-height:1.6"></div>
+    <div id="retailer-list" style="width:100%;margin-bottom:20px"></div>
+    <button class="btn btn-outline" onclick="goTo('s-search')">다른 옷 피팅하기</button>
+  </div>
+</div>
 
-            currentScreen = screenNum;
-        }
+<div class="toast" id="toast"></div>
 
-        function nextScreen() {
-            if (currentScreen < totalScreens) {
-                showScreen(currentScreen + 1);
-            }
-        }
+<script>
+const PRODUCTS = [
+  {id:1,brand:'Nike',name:'에어 포스 1 \'07',emoji:'👟',price:'₩129,000',sizes:['240','250','260','270','280'],url:'https://www.nike.com/kr/t/air-force-1-07',category:'신발'},
+  {id:2,brand:'Nike',name:'테크 플리스 풀집 후디',emoji:'🧥',price:'₩149,000',sizes:['S','M','L','XL','2XL'],url:'https://www.nike.com/kr',category:'상의'},
+  {id:3,brand:'Nike',name:'드라이핏 런닝 티셔츠',emoji:'👕',price:'₩55,000',sizes:['S','M','L','XL'],url:'https://www.nike.com/kr',category:'상의'},
+  {id:4,brand:'Adidas',name:'트레포일 후디',emoji:'🧣',price:'₩99,000',sizes:['S','M','L','XL','2XL'],url:'https://www.adidas.co.kr',category:'상의'},
+  {id:5,brand:'무신사',name:'오버핏 세미 와이드 팬츠',emoji:'👖',price:'₩49,000',sizes:['S','M','L','XL'],url:'https://www.musinsa.com',category:'하의'},
+  {id:6,brand:'Zara',name:'슬림핏 차이나 칼라 셔츠',emoji:'👔',price:'₩69,000',sizes:['XS','S','M','L','XL'],url:'https://www.zara.com/kr',category:'상의'},
+  {id:7,brand:'Nike',name:'조던 1 레트로 하이 OG',emoji:'🥿',price:'₩219,000',sizes:['255','260','265','270','275','280'],url:'https://www.nike.com/kr',category:'신발'},
+  {id:8,brand:'H&M',name:'오버사이즈 린넨 셔츠',emoji:'🎽',price:'₩39,000',sizes:['XS','S','M','L','XL','XXL'],url:'https://www2.hm.com/ko_kr',category:'상의'},
+];
 
-        function prevScreen() {
-            if (currentScreen > 1) {
-                showScreen(currentScreen - 1);
-            }
-        }
+const FIT = {
+  'XS':{c:38,s:35,w:60,comment:'<strong style="color:#ff5252">너무 작음</strong> — 착용이 불편할 수 있습니다. 반품 가능성 높음.',badge:'⚠️ 사이즈업 필요',color:'#ff5252'},
+  'S': {c:55,s:48,w:72,comment:'<strong style="color:#ffab40">약간 타이트</strong> — 가슴과 어깨에 여유가 적습니다. 슬림핏 선호 시 적합.',badge:'약간 타이트',color:'#ffab40'},
+  'M': {c:72,s:68,w:85,comment:'<strong style="color:#69f0ae">잘 맞음</strong> — 전반적으로 잘 맞습니다. 레이어링에도 적합.',badge:'✓ 잘 맞음',color:'#69f0ae'},
+  'L': {c:94,s:91,w:96,comment:'<strong style="color:#00e676">완벽한 핏</strong> — 신체 측정값과 가장 잘 맞는 사이즈입니다.',badge:'✓ 완벽한 핏',color:'#00e676'},
+  'XL':{c:80,s:75,w:88,comment:'<strong style="color:#40c4ff">약간 여유</strong> — 루즈핏 스타일이나 레이어링 시 적합.',badge:'여유있는 핏',color:'#40c4ff'},
+  '2XL':{c:62,s:58,w:72,comment:'<strong style="color:#b388ff">오버핏</strong> — 스트리트·힙합 스타일의 오버핏 연출에 적합.',badge:'오버핏 스타일',color:'#b388ff'},
+  'XXL':{c:55,s:50,w:65,comment:'<strong style="color:#b388ff">크게 오버핏</strong> — 드레이프 효과나 빅실루엣 연출에 적합.',badge:'빅실루엣',color:'#b388ff'},
+  '240':{c:60,s:55,w:70,comment:'<strong style="color:#ff5252">작음</strong> — 발볼이 좁게 느껴질 수 있습니다.',badge:'⚠️ 작음',color:'#ff5252'},
+  '250':{c:72,s:68,w:82,comment:'<strong style="color:#ffab40">약간 작음</strong> — 발가락 끝에 여유가 부족할 수 있습니다.',badge:'약간 작음',color:'#ffab40'},
+  '255':{c:80,s:78,w:88,comment:'<strong style="color:#69f0ae">잘 맞음</strong> — 일반적인 핏으로 잘 맞습니다.',badge:'✓ 잘 맞음',color:'#69f0ae'},
+  '260':{c:85,s:82,w:92,comment:'<strong style="color:#69f0ae">잘 맞음</strong> — 적당한 여유가 있어 편안합니다.',badge:'✓ 잘 맞음',color:'#69f0ae'},
+  '265':{c:90,s:88,w:95,comment:'<strong style="color:#00e676">거의 완벽</strong> — 신체 데이터와 잘 맞습니다.',badge:'✓ 추천 사이즈',color:'#00e676'},
+  '270':{c:94,s:93,w:97,comment:'<strong style="color:#00e676">완벽한 핏</strong> — 측정 발 길이와 가장 잘 맞는 사이즈입니다.',badge:'✓ 완벽한 핏',color:'#00e676'},
+  '275':{c:82,s:80,w:88,comment:'<strong style="color:#40c4ff">약간 여유</strong> — 두꺼운 양말 착용에 적합.',badge:'여유있는 핏',color:'#40c4ff'},
+  '280':{c:70,s:68,w:78,comment:'<strong style="color:#40c4ff">여유 있음</strong> — 편안한 착화감, 인솔 추가 가능.',badge:'여유있음',color:'#40c4ff'},
+  '32': {c:94,s:91,w:96,comment:'<strong style="color:#00e676">완벽한 핏</strong> — 허리 측정값과 가장 잘 맞습니다.',badge:'✓ 완벽한 핏',color:'#00e676'},
+};
 
-        function resetToStart() {
-            showScreen(1);
-            document.querySelectorAll('.clothing-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-        }
+let selProduct=null, selSize='L';
 
-        function shareResult() {
-            alert('결과가 공유되었습니다!');
-        }
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='s-body') setTimeout(()=>document.getElementById('acc-fill').style.width='94.2%',300);
+  if(id==='s-search') renderProducts('전체');
+}
 
-        function selectClothing(element) {
-            document.querySelectorAll('.clothing-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-            element.classList.add('selected');
-        }
+function doGoogleLogin(){
+  showToast('Google 계정으로 로그인 중...');
+  setTimeout(()=>{ showToast('강경구님 환영합니다! 👋'); goTo('s-photo'); },1200);
+}
 
-        function updateDots() {
-            const counter = document.getElementById('screenCounter');
-            counter.innerHTML = '';
+function photoUploaded(side,inp){
+  if(!inp.files[0]) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const p=document.getElementById('prev-'+side);
+    p.src=e.target.result; p.style.display='block';
+    document.getElementById('slot-'+side).classList.add('captured');
+    showToast(side==='front'?'정면 촬영 완료 ✓':side==='side'?'측면 촬영 완료 ✓':'후면 촬영 완료 ✓');
+  };
+  r.readAsDataURL(inp.files[0]);
+}
 
-            for (let i = 1; i <= totalScreens; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'dot' + (i === currentScreen ? ' active' : '');
-                dot.onclick = () => showScreen(i);
-                counter.appendChild(dot);
-            }
-        }
+function startAnalysis(){
+  goTo('s-processing');
+  const steps=[{id:1,d:700},{id:2,d:1600},{id:3,d:2500},{id:4,d:3400}];
+  steps.forEach(({id,d})=>{
+    setTimeout(()=>{
+      const sc=document.getElementById('sc-'+id);
+      sc.textContent='✓'; sc.classList.remove('running'); sc.classList.add('done');
+      document.getElementById('step-'+id).classList.add('done');
+      if(id<4){ document.getElementById('sc-'+(id+1)).classList.add('running'); }
+    },d);
+  });
+  setTimeout(()=>goTo('s-body'),4800);
+}
 
-        // Initialize dots on page load
-        updateDots();
+function renderProducts(brand){
+  const q=document.getElementById('search-input').value.toLowerCase();
+  let list=brand==='전체'?PRODUCTS:PRODUCTS.filter(p=>p.brand===brand);
+  if(q) list=list.filter(p=>p.name.toLowerCase().includes(q)||p.brand.toLowerCase().includes(q));
+  document.getElementById('product-grid').innerHTML=list.map(p=>`
+    <div class="product-card" onclick="openFitting(${p.id})">
+      <div class="product-img">${p.emoji}</div>
+      <div class="product-info">
+        <div class="product-brand">${p.brand}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">${p.price}</div>
+      </div>
+    </div>`).join('');
+}
 
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight') nextScreen();
-            if (e.key === 'ArrowLeft') prevScreen();
-        });
-    </script>
+function filterProducts(q){ const c=document.querySelector('.chip.selected'); renderProducts(c?c.textContent:'전체'); }
+
+function selectBrand(brand,el){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('search-input').value='';
+  renderProducts(brand);
+}
+
+function openFitting(id){
+  selProduct=PRODUCTS.find(p=>p.id===id);
+  selSize=selProduct.sizes.includes('L')?'L':selProduct.sizes[Math.floor(selProduct.sizes.length/2)];
+  document.getElementById('fitting-title').textContent=selProduct.name;
+  document.getElementById('fit-clothing').textContent=selProduct.emoji;
+  document.getElementById('pd-emoji').textContent=selProduct.emoji;
+  document.getElementById('pd-name').textContent=selProduct.name;
+  document.getElementById('pd-price').textContent=selProduct.price;
+  renderSizes(); updateFit(selSize); goTo('s-fitting');
+}
+
+function renderSizes(){
+  document.getElementById('size-btns').innerHTML=selProduct.sizes.map(s=>`
+    <button class="size-btn${s===selSize?' active':''}" onclick="selectSize('${s}')">${s}</button>`).join('');
+}
+
+function selectSize(s){
+  selSize=s;
+  document.getElementById('pd-size').textContent='사이즈: '+s;
+  document.getElementById('size-badge').textContent=s;
+  renderSizes(); updateFit(s);
+}
+
+function updateFit(s){
+  const f=FIT[s]||FIT['L'];
+  const bars=[{l:'가슴',v:f.c},{l:'어깨',v:f.s},{l:'허리',v:f.w}];
+  document.getElementById('fit-bars').innerHTML=bars.map(b=>{
+    const col=b.v>=90?'#00e676':b.v>=75?'#69f0ae':b.v>=60?'#ffab40':'#ff5252';
+    return `<div class="fit-bar-row"><span class="fit-bar-label">${b.l}</span><div class="fit-bar-track"><div class="fit-bar-fill" style="width:${b.v}%;background:${col}"></div></div><span class="fit-bar-val" style="color:${col}">${b.v}%</span></div>`;
+  }).join('');
+  document.getElementById('fit-comment').innerHTML=f.comment;
+  const badge=document.getElementById('fit-badge');
+  badge.textContent=f.badge; badge.style.color=f.color;
+  const scaleMap={'XS':'0.72','S':'0.86','M':'0.94','L':'1.0','XL':'1.1','2XL':'1.24','XXL':'1.32'};
+  const scale=scaleMap[s]||'1.0';
+  document.getElementById('fit-clothing').style.transform=`translateX(-50%) scale(${scale})`;
+}
+
+function goToPurchase(){
+  const p=selProduct;
+  const retailers=[
+    {n:p.brand+' 공식몰',sub:p.price+' · 무료배송',icon:'🏪',url:p.url},
+    {n:'무신사',sub:disc(p.price,8)+' · 회원 할인 8%',icon:'🛍',url:'https://www.musinsa.com'},
+    {n:'네이버쇼핑',sub:disc(p.price,5)+' · 포인트 적립',icon:'🟢',url:'https://shopping.naver.com'},
+    {n:'카카오쇼핑',sub:disc(p.price,3)+' · 카카오페이 할인',icon:'🟡',url:'https://shopping.kakao.com'},
+  ];
+  document.getElementById('purchase-sub').innerHTML=`<strong style="color:var(--accent)">${p.name} · ${selSize}</strong><br>가장 저렴한 가격을 찾았습니다.`;
+  document.getElementById('retailer-list').innerHTML=retailers.map(r=>`
+    <a class="retailer-btn" href="${r.url}" target="_blank" rel="noopener">
+      <span style="font-size:24px">${r.icon}</span>
+      <div style="text-align:left"><div style="font-size:14px;font-weight:700">${r.n}</div><div style="font-size:12px;color:var(--text2)">${r.sub}</div></div>
+      <span style="margin-left:auto;color:var(--text2)">→</span>
+    </a>`).join('');
+  goTo('s-purchase');
+}
+
+function disc(p,pct){ const n=parseInt(p.replace(/[^0-9]/g,'')); return '₩'+Math.round(n*(1-pct/100)).toLocaleString(); }
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+renderProducts('전체');
+</script>
 </body>
 </html>
