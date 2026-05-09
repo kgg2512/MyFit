@@ -32,3 +32,4 @@ Thumbs.db
 *.pem
 *.key
 *.cert
+api/pose_landmarker_lite.task
