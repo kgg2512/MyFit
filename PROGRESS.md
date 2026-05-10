@@ -22,6 +22,8 @@
 - [x] FastAPI 백엔드 (api/main.py) - MediaPipe tasks API
 - [x] render.yaml - Render.com 무료 배포 설정
 - [x] Ruflo MCP 연결
+- [x] Ruflo 기반 C-Level + 하위 전문 에이전트 조직 반영
+- [ ] `CLAUDE.md`에 모델/토큰 최적화와 멀티에이전트 워크플로우 문서화
 
 ---
 
