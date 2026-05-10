@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>MyFit — AI 가상 피팅</title>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <style>
   :root {
     --bg:#0a0a0a; --bg2:#141414; --bg3:#1e1e1e;
@@ -40,7 +41,7 @@
   .google-btn:active{opacity:.85}
 
   /* S2 PHOTO */
-  .photo-guide{background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(124,77,255,.08));border:1px solid rgba(0,229,255,.2);border-radius:var(--r);padding:14px 16px;margin:16px 0 24px;font-size:13px;color:var(--text2);line-height:1.6}
+  .photo-guide{background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(124,77,255,.08));border:1px solid rgba(0,229,255,.2);border-radius:var(--r);padding:14px 16px;margin:16px 0 20px;font-size:13px;color:var(--text2);line-height:1.6}
   .photo-guide strong{color:var(--accent)}
   .photo-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
   .photo-slot{aspect-ratio:3/4;border-radius:var(--r);border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;position:relative;overflow:hidden;background:var(--bg2);transition:.2s}
@@ -80,13 +81,13 @@
   .acc-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:3px;transition:width 1.5s ease}
 
   /* S5 SEARCH */
-  .search-bar{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 16px;margin:16px 0 16px;transition:.2s}
+  .search-bar{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 16px;transition:.2s}
   .search-bar:focus-within{border-color:var(--accent)}
   .search-bar input{flex:1;background:none;border:none;color:var(--text);font-size:16px;outline:none}
   .search-bar input::placeholder{color:var(--text2)}
-  .brand-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
-  .chip{padding:8px 16px;border-radius:100px;background:var(--bg3);border:1.5px solid var(--border);font-size:13px;cursor:pointer;transition:.2s;white-space:nowrap;flex-shrink:0}
-  .chip.selected{background:rgba(0,229,255,.12);border-color:var(--accent);color:var(--accent)}
+  .search-btn{padding:0 20px;height:52px;border-radius:var(--r);background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#000;font-weight:800;font-size:14px;cursor:pointer;flex-shrink:0;white-space:nowrap}
+  .search-tag{padding:6px 14px;border-radius:100px;background:var(--bg3);border:1px solid var(--border);font-size:12px;cursor:pointer;color:var(--text2);white-space:nowrap;transition:.15s}
+  .search-tag:active{border-color:var(--accent);color:var(--accent)}
   .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .product-card{background:var(--bg2);border-radius:var(--r);overflow:hidden;cursor:pointer;border:1.5px solid var(--border);transition:.2s}
   .product-card:active{border-color:var(--accent);transform:scale(.97)}
@@ -97,12 +98,19 @@
   .product-price{font-size:14px;font-weight:800;color:var(--accent)}
 
   /* S6 FITTING */
-  .fitting-preview{position:relative;background:var(--bg2);margin:16px 20px;border-radius:20px;display:flex;align-items:center;justify-content:center;padding:24px;min-height:320px}
-  .size-selector{padding:0 20px;margin-bottom:16px}
+  .fitting-canvas-wrap{position:relative;background:var(--bg2);margin:12px 20px;border-radius:20px;overflow:hidden;height:380px}
+  .fitting-canvas-wrap canvas{display:block;width:100%!important;height:100%!important}
+  .fitting-overlay-top{position:absolute;top:14px;right:14px;display:flex;gap:8px;align-items:center}
+  .fitting-overlay-bottom{position:absolute;bottom:14px;left:50%;transform:translateX(-50%)}
+  .size-badge{background:rgba(0,229,255,.18);border:1.5px solid var(--accent);border-radius:100px;padding:5px 14px;font-size:13px;font-weight:800;color:var(--accent)}
+  .fit-badge{background:rgba(0,0,0,.8);border-radius:100px;padding:7px 18px;font-size:12px;font-weight:700;white-space:nowrap}
+  .drag-hint{position:absolute;top:14px;left:14px;font-size:11px;color:rgba(255,255,255,.4);pointer-events:none}
+  .size-selector{padding:0 20px;margin-bottom:14px}
   .size-label{font-size:12px;color:var(--text2);margin-bottom:10px}
   .size-btns{display:flex;gap:8px;flex-wrap:wrap}
-  .size-btn{padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;transition:.2s;min-width:48px;text-align:center}
+  .size-btn{padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;transition:.2s;min-width:48px;text-align:center;position:relative}
   .size-btn.active{background:rgba(0,229,255,.12);border-color:var(--accent);color:var(--accent)}
+  .size-rec-dot{position:absolute;top:3px;right:4px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
   .fit-score-card{background:var(--bg2);border-radius:var(--r);padding:16px;margin:0 20px 16px}
   .fit-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
   .fit-bar-label{font-size:12px;width:48px;color:var(--text2)}
@@ -147,8 +155,8 @@
         <div class="feat-text"><strong>사진 3장으로 3D 신체 생성</strong><span>정면·측면·후면 촬영으로 정밀 분석</span></div>
       </div>
       <div class="feature-item">
-        <div class="feat-icon">👔</div>
-        <div class="feat-text"><strong>가상 피팅 시뮬레이션</strong><span>실제 옷이 내 몸에 어떻게 보이는지 확인</span></div>
+        <div class="feat-icon">🎮</div>
+        <div class="feat-text"><strong>실시간 3D 가상 피팅</strong><span>Three.js 기반 실제 3D 신체에 옷 입혀보기</span></div>
       </div>
       <div class="feature-item">
         <div class="feat-icon">🛒</div>
@@ -167,7 +175,12 @@
 <div id="s-photo" class="screen">
   <div class="header"><button class="back-btn" onclick="goTo('s-login')">←</button><div class="header-title">신체 사진 촬영</div></div>
   <div style="flex:1;padding:0 20px 100px;max-width:500px;margin:0 auto;width:100%">
-    <div class="photo-guide"><strong>촬영 가이드</strong> — 전신이 나오도록 · 단색 배경 권장 · 밝은 환경에서 촬영해주세요.</div>
+    <div class="photo-guide">
+      <strong>📋 촬영 가이드</strong><br>
+      • 전신이 나오도록 · 단색 배경 권장<br>
+      • 꽉 끼지 않는 옷 착용 · 밝은 환경<br>
+      • <strong>3장 모두 촬영</strong>해야 3D 신체가 정확하게 생성됩니다
+    </div>
     <div class="photo-slots">
       <div class="photo-slot" id="slot-front">
         <span class="slot-icon">🧍</span><span class="slot-label">정면</span>
@@ -188,9 +201,9 @@
         <input type="file" id="inp-back" accept="image/*" onchange="photoUploaded('back',this)">
       </div>
     </div>
-    <p id="photo-count" style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:20px">사진을 촬영하거나 데모 모드로 시작하세요</p>
-    <button class="btn btn-primary" onclick="startAnalysis()">▶ 3D 신체 분석 시작 (데모)</button>
-    <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:10px">📌 실 기기 사용 시 카메라로 직접 촬영</p>
+    <p id="photo-count" style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:20px">0 / 3장 촬영됨 — 모두 촬영하거나 데모로 진행하세요</p>
+    <button class="btn btn-primary" onclick="startAnalysis()" id="analyze-btn">▶ 3D 신체 분석 시작</button>
+    <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:10px">📌 PC에서는 파일 선택으로 업로드 · 모바일에서는 카메라 직접 촬영</p>
   </div>
 </div>
 
@@ -218,9 +231,9 @@
     <div style="color:var(--text2);font-size:14px;margin-bottom:32px">AI가 신체를 분석하고 있습니다</div>
     <div class="step-list" id="step-list">
       <div class="step-item" id="step-1"><div class="step-circle running" id="sc-1">◌</div><span class="step-text">키포인트 추출 (MediaPipe)</span></div>
-      <div class="step-item" id="step-2"><div class="step-circle" id="sc-2">2</div><span class="step-text">실루엣 분석</span></div>
-      <div class="step-item" id="step-3"><div class="step-circle" id="sc-3">3</div><span class="step-text">신체 측정값 계산</span></div>
-      <div class="step-item" id="step-4"><div class="step-circle" id="sc-4">4</div><span class="step-text">3D 모델 생성 완료</span></div>
+      <div class="step-item" id="step-2"><div class="step-circle" id="sc-2">2</div><span class="step-text">실루엣 분석 및 치수 계산</span></div>
+      <div class="step-item" id="step-3"><div class="step-circle" id="sc-3">3</div><span class="step-text">3D 메쉬 생성 (Three.js)</span></div>
+      <div class="step-item" id="step-4"><div class="step-circle" id="sc-4">4</div><span class="step-text">신체 프로필 완성</span></div>
     </div>
   </div>
 </div>
@@ -257,7 +270,7 @@
       <div style="flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text2)">하의</div><div style="font-size:22px;font-weight:900">32</div></div>
       <div style="flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text2)">신발</div><div style="font-size:22px;font-weight:900">270</div></div>
     </div>
-    <button class="btn btn-primary" onclick="goTo('s-search')">👔 옷 가상 피팅 시작 →</button>
+    <button class="btn btn-primary" onclick="goTo('s-search')">👗 의류 검색 & 가상 피팅 →</button>
   </div>
   <div class="nav">
     <div class="nav-item active" onclick="goTo('s-body')"><div class="nav-icon">🧍</div>내 몸</div>
@@ -269,17 +282,25 @@
 
 <!-- S5: SEARCH -->
 <div id="s-search" class="screen">
-  <div class="header" style="padding-bottom:0"><div class="header-title" style="font-size:20px">🔍 가상 피팅</div></div>
+  <div class="header" style="padding-bottom:0"><div class="header-title" style="font-size:20px">👗 의류 검색</div></div>
   <div style="flex:1;padding:0 20px 100px;max-width:500px;margin:0 auto;width:100%">
-    <div class="search-bar"><span style="font-size:18px">🔍</span><input id="search-input" type="text" placeholder="브랜드 또는 제품 검색..." oninput="filterProducts(this.value)"></div>
-    <div class="brand-chips">
-      <div class="chip selected" onclick="selectBrand('전체',this)">전체</div>
-      <div class="chip" onclick="selectBrand('Nike',this)">Nike</div>
-      <div class="chip" onclick="selectBrand('무신사',this)">무신사</div>
-      <div class="chip" onclick="selectBrand('Adidas',this)">Adidas</div>
-      <div class="chip" onclick="selectBrand('Zara',this)">Zara</div>
-      <div class="chip" onclick="selectBrand('H&M',this)">H&M</div>
+    <p style="font-size:13px;color:var(--text2);margin:12px 0 10px">원하는 의류를 검색하면 3D 가상 피팅을 해드립니다</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="search-bar" style="flex:1;margin:0">
+        <span style="font-size:18px">🔍</span>
+        <input id="search-input" type="text" placeholder="예: 나이키 트레이닝, 무신사 청바지..." onkeydown="if(event.key==='Enter')doSearch()">
+      </div>
+      <button class="search-btn" onclick="doSearch()">검색</button>
     </div>
+    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:16px">
+      <span style="font-size:11px;color:var(--text2);flex-shrink:0">추천:</span>
+      <span class="search-tag" onclick="quickSearch('나이키 트레이닝')">나이키 트레이닝</span>
+      <span class="search-tag" onclick="quickSearch('무신사 청바지')">무신사 청바지</span>
+      <span class="search-tag" onclick="quickSearch('아디다스 후디')">아디다스 후디</span>
+      <span class="search-tag" onclick="quickSearch('나이키 조던')">나이키 조던</span>
+      <span class="search-tag" onclick="quickSearch('자라 셔츠')">자라 셔츠</span>
+    </div>
+    <div id="search-result-label" style="font-size:12px;color:var(--text2);margin-bottom:12px">전체 15개 제품</div>
     <div class="product-grid" id="product-grid"></div>
   </div>
   <div class="nav">
@@ -290,35 +311,38 @@
   </div>
 </div>
 
-<!-- S6: FITTING -->
+<!-- S6: FITTING (Three.js 3D) -->
 <div id="s-fitting" class="screen">
   <div class="header"><button class="back-btn" onclick="goTo('s-search')">←</button><div class="header-title" id="fitting-title">가상 피팅</div></div>
   <div style="flex:1;max-width:500px;margin:0 auto;width:100%;padding-bottom:20px">
-    <div class="fitting-preview">
-      <div style="position:relative;width:110px">
-        <svg width="110" height="220" viewBox="0 0 100 200" fill="none">
-          <ellipse cx="50" cy="18" rx="14" ry="14" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
-          <rect x="34" y="34" width="32" height="52" rx="8" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
-          <rect x="14" y="36" width="18" height="44" rx="7" fill="rgba(124,77,255,.06)" stroke="#7c4dff" stroke-width="2"/>
-          <rect x="68" y="36" width="18" height="44" rx="7" fill="rgba(124,77,255,.06)" stroke="#7c4dff" stroke-width="2"/>
-          <rect x="36" y="88" width="12" height="58" rx="7" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
-          <rect x="52" y="88" width="12" height="58" rx="7" fill="rgba(0,229,255,.06)" stroke="#00e5ff" stroke-width="2"/>
-        </svg>
-        <div id="fit-clothing" style="position:absolute;top:26px;left:50%;transform:translateX(-50%) scale(1);font-size:64px;transition:transform .4s ease;text-align:center;line-height:1">👕</div>
+
+    <!-- Three.js Canvas -->
+    <div class="fitting-canvas-wrap" id="three-wrap">
+      <div id="three-mount" style="width:100%;height:380px"></div>
+      <div class="fitting-overlay-top">
+        <div class="size-badge" id="size-badge">L</div>
       </div>
-      <div id="size-badge" style="position:absolute;top:14px;right:14px;background:rgba(0,229,255,.18);border:1.5px solid var(--accent);border-radius:100px;padding:5px 14px;font-size:13px;font-weight:800;color:var(--accent)">L</div>
-      <div id="fit-badge" style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);border-radius:100px;padding:7px 16px;font-size:12px;font-weight:700;white-space:nowrap;color:var(--success)">✓ 완벽한 핏</div>
+      <div class="fitting-overlay-bottom">
+        <div class="fit-badge" id="fit-badge" style="color:var(--success)">✓ 완벽한 핏</div>
+      </div>
+      <div class="drag-hint">← 드래그 회전 →</div>
     </div>
+
+    <!-- Size Selector -->
     <div class="size-selector">
-      <div class="size-label">사이즈 선택 — 내 추천: <strong style="color:var(--accent)">L</strong></div>
+      <div class="size-label">사이즈 선택 — 추천: <strong style="color:var(--accent)" id="rec-size-label">L</strong></div>
       <div class="size-btns" id="size-btns"></div>
     </div>
+
+    <!-- Fit Analysis -->
     <div class="fit-score-card">
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px">핏 분석</div>
       <div id="fit-bars"></div>
       <div id="fit-comment" style="font-size:13px;color:var(--text2);margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"></div>
     </div>
-    <div class="buy-section" style="padding:16px 20px 0">
+
+    <!-- Buy Button -->
+    <div class="buy-section" style="padding:0 20px 0">
       <div class="product-detail-row">
         <div class="pd-emoji" id="pd-emoji">👕</div>
         <div><div id="pd-name" style="font-size:14px;font-weight:700"></div><div id="pd-size" style="font-size:12px;color:var(--text2)">사이즈: L</div></div>
@@ -343,82 +367,133 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== PRODUCT DATABASE =====
 const PRODUCTS = [
-  {id:1,brand:'Nike',name:'에어 포스 1 \'07',emoji:'👟',price:'₩129,000',sizes:['240','250','260','270','280'],url:'https://www.nike.com/kr/t/air-force-1-07',category:'신발'},
-  {id:2,brand:'Nike',name:'테크 플리스 풀집 후디',emoji:'🧥',price:'₩149,000',sizes:['S','M','L','XL','2XL'],url:'https://www.nike.com/kr',category:'상의'},
-  {id:3,brand:'Nike',name:'드라이핏 런닝 티셔츠',emoji:'👕',price:'₩55,000',sizes:['S','M','L','XL'],url:'https://www.nike.com/kr',category:'상의'},
-  {id:4,brand:'Adidas',name:'트레포일 후디',emoji:'🧣',price:'₩99,000',sizes:['S','M','L','XL','2XL'],url:'https://www.adidas.co.kr',category:'상의'},
-  {id:5,brand:'무신사',name:'오버핏 세미 와이드 팬츠',emoji:'👖',price:'₩49,000',sizes:['S','M','L','XL'],url:'https://www.musinsa.com',category:'하의'},
-  {id:6,brand:'Zara',name:'슬림핏 차이나 칼라 셔츠',emoji:'👔',price:'₩69,000',sizes:['XS','S','M','L','XL'],url:'https://www.zara.com/kr',category:'상의'},
-  {id:7,brand:'Nike',name:'조던 1 레트로 하이 OG',emoji:'🥿',price:'₩219,000',sizes:['255','260','265','270','275','280'],url:'https://www.nike.com/kr',category:'신발'},
-  {id:8,brand:'H&M',name:'오버사이즈 린넨 셔츠',emoji:'🎽',price:'₩39,000',sizes:['XS','S','M','L','XL','XXL'],url:'https://www2.hm.com/ko_kr',category:'상의'},
+  {id:1,  brand:'Nike',   name:'드라이핏 트레이닝 티셔츠',   emoji:'👕', price:'₩55,000',  sizes:['S','M','L','XL'],              url:'https://www.nike.com/kr',     keywords:'나이키 nike training tshirt 반팔 드라이핏 트레이닝', clothType:'tshirt', clothColor:0x1565C0},
+  {id:2,  brand:'Nike',   name:'테크 플리스 풀집 후디',       emoji:'🧥', price:'₩149,000', sizes:['S','M','L','XL','2XL'],        url:'https://www.nike.com/kr',     keywords:'나이키 nike hoodie 후디 후드 테크플리스 집업',       clothType:'jacket', clothColor:0x212121},
+  {id:3,  brand:'Nike',   name:'에어 포스 1 \'07 화이트',     emoji:'👟', price:'₩129,000', sizes:['250','260','270','280'],        url:'https://www.nike.com/kr',     keywords:'나이키 nike air force 에어포스 스니커즈 신발',       clothType:'shoe',   clothColor:0xF5F5F5},
+  {id:4,  brand:'Nike',   name:'조던 1 레트로 하이 OG',       emoji:'👟', price:'₩219,000', sizes:['255','260','265','270','275','280'], url:'https://www.nike.com/kr', keywords:'나이키 nike jordan 조던 농구화 하이탑',              clothType:'shoe',   clothColor:0xC62828},
+  {id:5,  brand:'Nike',   name:'드라이핏 런닝 하프팬츠',      emoji:'👖', price:'₩59,000',  sizes:['S','M','L','XL'],              url:'https://www.nike.com/kr',     keywords:'나이키 nike pants 런닝 반바지 하의 드라이핏',        clothType:'pants',  clothColor:0x1A237E},
+  {id:6,  brand:'Adidas', name:'트레포일 후디 그레이',         emoji:'🧥', price:'₩99,000',  sizes:['S','M','L','XL','2XL'],        url:'https://www.adidas.co.kr',    keywords:'아디다스 adidas hoodie 후디 트레이닝 트레포일',      clothType:'jacket', clothColor:0x616161},
+  {id:7,  brand:'Adidas', name:'울트라부스트 23 런닝화',       emoji:'👟', price:'₩189,000', sizes:['250','260','270','280'],        url:'https://www.adidas.co.kr',    keywords:'아디다스 adidas ultraboost 울트라부스트 런닝화 신발', clothType:'shoe',   clothColor:0x1B5E20},
+  {id:8,  brand:'Adidas', name:'슈퍼스타 클래식 스니커즈',     emoji:'👟', price:'₩109,000', sizes:['250','260','270','280'],        url:'https://www.adidas.co.kr',    keywords:'아디다스 adidas superstar 슈퍼스타 클래식 스니커즈', clothType:'shoe',   clothColor:0xFAFAFA},
+  {id:9,  brand:'무신사', name:'오버핏 와이드 청바지',         emoji:'👖', price:'₩59,000',  sizes:['28','30','32','34'],            url:'https://www.musinsa.com',     keywords:'무신사 청바지 데님 jeans denim 와이드 오버핏',       clothType:'pants',  clothColor:0x1565C0},
+  {id:10, brand:'무신사', name:'베이직 오버사이즈 티셔츠',     emoji:'👕', price:'₩29,000',  sizes:['S','M','L','XL','2XL'],        url:'https://www.musinsa.com',     keywords:'무신사 basic tshirt 반팔 오버핏 면 베이직',          clothType:'tshirt', clothColor:0xE0E0E0},
+  {id:11, brand:'무신사', name:'스탠다드 슬림핏 슬랙스',       emoji:'👖', price:'₩49,000',  sizes:['28','30','32','34','36'],       url:'https://www.musinsa.com',     keywords:'무신사 슬랙스 pants 바지 슬림 슬랙스',               clothType:'pants',  clothColor:0x37474F},
+  {id:12, brand:'Zara',   name:'슬림핏 옥스포드 셔츠',         emoji:'👔', price:'₩79,000',  sizes:['XS','S','M','L','XL'],         url:'https://www.zara.com/kr',     keywords:'자라 zara shirt 셔츠 옥스포드 슬림',                 clothType:'shirt',  clothColor:0xEEEEEE},
+  {id:13, brand:'Zara',   name:'트러커 데님 재킷',             emoji:'🧥', price:'₩119,000', sizes:['S','M','L','XL'],              url:'https://www.zara.com/kr',     keywords:'자라 zara jacket 재킷 데님 트러커',                  clothType:'jacket', clothColor:0x3949AB},
+  {id:14, brand:'H&M',   name:'오버사이즈 린넨 셔츠',         emoji:'🎽', price:'₩39,000',  sizes:['XS','S','M','L','XL','XXL'],   url:'https://www2.hm.com/ko_kr',   keywords:'HM 린넨 셔츠 shirt 오버사이즈 반팔',                 clothType:'shirt',  clothColor:0xF9A825},
+  {id:15, brand:'H&M',   name:'슬림 치노 팬츠',               emoji:'👖', price:'₩34,000',  sizes:['28','30','32','34','36'],       url:'https://www2.hm.com/ko_kr',   keywords:'HM 치노 chino pants 바지 슬림',                     clothType:'pants',  clothColor:0x8D6E63},
 ];
 
 const FIT = {
-  'XS':{c:38,s:35,w:60,comment:'<strong style="color:#ff5252">너무 작음</strong> — 착용이 불편할 수 있습니다. 반품 가능성 높음.',badge:'⚠️ 사이즈업 필요',color:'#ff5252'},
-  'S': {c:55,s:48,w:72,comment:'<strong style="color:#ffab40">약간 타이트</strong> — 가슴과 어깨에 여유가 적습니다. 슬림핏 선호 시 적합.',badge:'약간 타이트',color:'#ffab40'},
-  'M': {c:72,s:68,w:85,comment:'<strong style="color:#69f0ae">잘 맞음</strong> — 전반적으로 잘 맞습니다. 레이어링에도 적합.',badge:'✓ 잘 맞음',color:'#69f0ae'},
-  'L': {c:94,s:91,w:96,comment:'<strong style="color:#00e676">완벽한 핏</strong> — 신체 측정값과 가장 잘 맞는 사이즈입니다.',badge:'✓ 완벽한 핏',color:'#00e676'},
-  'XL':{c:80,s:75,w:88,comment:'<strong style="color:#40c4ff">약간 여유</strong> — 루즈핏 스타일이나 레이어링 시 적합.',badge:'여유있는 핏',color:'#40c4ff'},
-  '2XL':{c:62,s:58,w:72,comment:'<strong style="color:#b388ff">오버핏</strong> — 스트리트·힙합 스타일의 오버핏 연출에 적합.',badge:'오버핏 스타일',color:'#b388ff'},
-  'XXL':{c:55,s:50,w:65,comment:'<strong style="color:#b388ff">크게 오버핏</strong> — 드레이프 효과나 빅실루엣 연출에 적합.',badge:'빅실루엣',color:'#b388ff'},
-  '240':{c:60,s:55,w:70,comment:'<strong style="color:#ff5252">작음</strong> — 발볼이 좁게 느껴질 수 있습니다.',badge:'⚠️ 작음',color:'#ff5252'},
-  '250':{c:72,s:68,w:82,comment:'<strong style="color:#ffab40">약간 작음</strong> — 발가락 끝에 여유가 부족할 수 있습니다.',badge:'약간 작음',color:'#ffab40'},
-  '255':{c:80,s:78,w:88,comment:'<strong style="color:#69f0ae">잘 맞음</strong> — 일반적인 핏으로 잘 맞습니다.',badge:'✓ 잘 맞음',color:'#69f0ae'},
-  '260':{c:85,s:82,w:92,comment:'<strong style="color:#69f0ae">잘 맞음</strong> — 적당한 여유가 있어 편안합니다.',badge:'✓ 잘 맞음',color:'#69f0ae'},
-  '265':{c:90,s:88,w:95,comment:'<strong style="color:#00e676">거의 완벽</strong> — 신체 데이터와 잘 맞습니다.',badge:'✓ 추천 사이즈',color:'#00e676'},
-  '270':{c:94,s:93,w:97,comment:'<strong style="color:#00e676">완벽한 핏</strong> — 측정 발 길이와 가장 잘 맞는 사이즈입니다.',badge:'✓ 완벽한 핏',color:'#00e676'},
-  '275':{c:82,s:80,w:88,comment:'<strong style="color:#40c4ff">약간 여유</strong> — 두꺼운 양말 착용에 적합.',badge:'여유있는 핏',color:'#40c4ff'},
-  '280':{c:70,s:68,w:78,comment:'<strong style="color:#40c4ff">여유 있음</strong> — 편안한 착화감, 인솔 추가 가능.',badge:'여유있음',color:'#40c4ff'},
-  '32': {c:94,s:91,w:96,comment:'<strong style="color:#00e676">완벽한 핏</strong> — 허리 측정값과 가장 잘 맞습니다.',badge:'✓ 완벽한 핏',color:'#00e676'},
+  'XS' :{c:38,s:35,w:60, comment:'<strong style="color:#ff5252">너무 작음</strong> — 착용이 불편할 수 있습니다. 반품 가능성 높음.',      badge:'⚠️ 사이즈업 필요', color:'#ff5252'},
+  'S'  :{c:55,s:48,w:72, comment:'<strong style="color:#ffab40">약간 타이트</strong> — 가슴·어깨 여유가 적습니다. 슬림핏 선호 시 적합.',  badge:'약간 타이트',      color:'#ffab40'},
+  'M'  :{c:72,s:68,w:85, comment:'<strong style="color:#69f0ae">잘 맞음</strong> — 전반적으로 잘 맞습니다. 레이어링에도 적합.',           badge:'✓ 잘 맞음',        color:'#69f0ae'},
+  'L'  :{c:94,s:91,w:96, comment:'<strong style="color:#00e676">완벽한 핏</strong> — 신체 측정값과 가장 잘 맞는 사이즈입니다.',           badge:'✓ 완벽한 핏',      color:'#00e676'},
+  'XL' :{c:80,s:75,w:88, comment:'<strong style="color:#40c4ff">약간 여유</strong> — 루즈핏·레이어링에 적합.',                            badge:'여유있는 핏',      color:'#40c4ff'},
+  '2XL':{c:62,s:58,w:72, comment:'<strong style="color:#b388ff">오버핏</strong> — 스트리트·힙합 스타일 연출에 적합.',                    badge:'오버핏',           color:'#b388ff'},
+  'XXL':{c:55,s:50,w:65, comment:'<strong style="color:#b388ff">빅실루엣</strong> — 드레이프 효과·빅 실루엣 연출.',                       badge:'빅실루엣',         color:'#b388ff'},
+  '28' :{c:92,s:90,w:94, comment:'<strong style="color:#00e676">완벽한 핏</strong> — 허리 측정값과 잘 맞습니다.',                         badge:'✓ 완벽한 핏',      color:'#00e676'},
+  '30' :{c:82,s:80,w:87, comment:'<strong style="color:#69f0ae">잘 맞음</strong> — 적당한 여유.',                                          badge:'✓ 잘 맞음',        color:'#69f0ae'},
+  '32' :{c:94,s:91,w:96, comment:'<strong style="color:#00e676">완벽한 핏</strong> — 허리 측정값과 가장 잘 맞습니다.',                    badge:'✓ 완벽한 핏',      color:'#00e676'},
+  '34' :{c:80,s:78,w:85, comment:'<strong style="color:#40c4ff">약간 여유</strong> — 편안한 착화감.',                                     badge:'여유있는 핏',      color:'#40c4ff'},
+  '36' :{c:65,s:63,w:72, comment:'<strong style="color:#b388ff">여유 있음</strong> — 오버사이즈 스타일.',                                  badge:'오버핏',           color:'#b388ff'},
+  '240':{c:60,s:55,w:70, comment:'<strong style="color:#ff5252">작음</strong> — 발볼이 좁게 느껴질 수 있습니다.',                          badge:'⚠️ 작음',          color:'#ff5252'},
+  '250':{c:72,s:68,w:82, comment:'<strong style="color:#ffab40">약간 작음</strong> — 발가락 끝 여유 부족.',                                badge:'약간 작음',        color:'#ffab40'},
+  '255':{c:80,s:78,w:88, comment:'<strong style="color:#69f0ae">잘 맞음</strong>.',                                                        badge:'✓ 잘 맞음',        color:'#69f0ae'},
+  '260':{c:85,s:82,w:92, comment:'<strong style="color:#69f0ae">잘 맞음</strong> — 적당한 여유가 있어 편안합니다.',                        badge:'✓ 잘 맞음',        color:'#69f0ae'},
+  '265':{c:90,s:88,w:95, comment:'<strong style="color:#00e676">거의 완벽</strong> — 신체 데이터와 잘 맞습니다.',                          badge:'✓ 추천 사이즈',    color:'#00e676'},
+  '270':{c:94,s:93,w:97, comment:'<strong style="color:#00e676">완벽한 핏</strong> — 측정 발 길이와 가장 잘 맞는 사이즈입니다.',           badge:'✓ 완벽한 핏',      color:'#00e676'},
+  '275':{c:82,s:80,w:88, comment:'<strong style="color:#40c4ff">약간 여유</strong> — 두꺼운 양말 착용에 적합.',                            badge:'여유있는 핏',      color:'#40c4ff'},
+  '280':{c:70,s:68,w:78, comment:'<strong style="color:#40c4ff">여유 있음</strong> — 편안한 착화감, 인솔 추가 가능.',                      badge:'여유있음',         color:'#40c4ff'},
 };
 
-let selProduct=null, selSize='L';
+let selProduct = null, selSize = 'L';
+let scene3d, camera3d, renderer3d, bodyGroup, clothingGroup, animFrameId3d;
 
-function goTo(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+// ===== NAVIGATION =====
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  window.scrollTo(0,0);
-  if(id==='s-body') setTimeout(()=>document.getElementById('acc-fill').style.width='94.2%',300);
-  if(id==='s-search') renderProducts('전체');
+  window.scrollTo(0, 0);
+  if (id === 's-body') setTimeout(() => { document.getElementById('acc-fill').style.width = '94.2%'; }, 300);
+  if (id === 's-search') renderProducts(PRODUCTS);
 }
 
-function doGoogleLogin(){
+// ===== S1 LOGIN =====
+function doGoogleLogin() {
   showToast('Google 계정으로 로그인 중...');
-  setTimeout(()=>{ showToast('강경구님 환영합니다! 👋'); goTo('s-photo'); },1200);
+  setTimeout(() => { showToast('강경구님 환영합니다! 👋'); goTo('s-photo'); }, 1200);
 }
 
-function photoUploaded(side,inp){
-  if(!inp.files[0]) return;
-  const r=new FileReader();
-  r.onload=e=>{
-    const p=document.getElementById('prev-'+side);
-    p.src=e.target.result; p.style.display='block';
-    document.getElementById('slot-'+side).classList.add('captured');
-    showToast(side==='front'?'정면 촬영 완료 ✓':side==='side'?'측면 촬영 완료 ✓':'후면 촬영 완료 ✓');
+// ===== S2 PHOTO =====
+let photoCnt = 0;
+function photoUploaded(side, inp) {
+  if (!inp.files[0]) return;
+  const r = new FileReader();
+  r.onload = e => {
+    const p = document.getElementById('prev-' + side);
+    p.src = e.target.result; p.style.display = 'block';
+    const slot = document.getElementById('slot-' + side);
+    if (!slot.classList.contains('captured')) { photoCnt++; slot.classList.add('captured'); }
+    const labels = { front:'정면', side:'측면', back:'후면' };
+    showToast(labels[side] + ' 촬영 완료 ✓');
+    document.getElementById('photo-count').textContent = photoCnt + ' / 3장 촬영됨';
+    if (photoCnt === 3) {
+      showToast('3장 완료! 분석을 시작하세요 🎉');
+      document.getElementById('analyze-btn').textContent = '▶ 3D 신체 분석 시작 (3장 완료)';
+    }
   };
   r.readAsDataURL(inp.files[0]);
 }
 
-function startAnalysis(){
+function startAnalysis() {
   goTo('s-processing');
-  const steps=[{id:1,d:700},{id:2,d:1600},{id:3,d:2500},{id:4,d:3400}];
-  steps.forEach(({id,d})=>{
-    setTimeout(()=>{
-      const sc=document.getElementById('sc-'+id);
-      sc.textContent='✓'; sc.classList.remove('running'); sc.classList.add('done');
-      document.getElementById('step-'+id).classList.add('done');
-      if(id<4){ document.getElementById('sc-'+(id+1)).classList.add('running'); }
-    },d);
+  const steps = [{id:1,d:800},{id:2,d:1800},{id:3,d:2800},{id:4,d:3600}];
+  steps.forEach(({id,d}) => {
+    setTimeout(() => {
+      const sc = document.getElementById('sc-' + id);
+      sc.textContent = '✓'; sc.classList.remove('running'); sc.classList.add('done');
+      document.getElementById('step-' + id).classList.add('done');
+      if (id < 4) document.getElementById('sc-' + (id+1)).classList.add('running');
+    }, d);
   });
-  setTimeout(()=>goTo('s-body'),4800);
+  setTimeout(() => goTo('s-body'), 5000);
 }
 
-function renderProducts(brand){
-  const q=document.getElementById('search-input').value.toLowerCase();
-  let list=brand==='전체'?PRODUCTS:PRODUCTS.filter(p=>p.brand===brand);
-  if(q) list=list.filter(p=>p.name.toLowerCase().includes(q)||p.brand.toLowerCase().includes(q));
-  document.getElementById('product-grid').innerHTML=list.map(p=>`
+// ===== S5 SEARCH =====
+function doSearch() {
+  const raw = document.getElementById('search-input').value.trim();
+  if (!raw) { renderProducts(PRODUCTS); document.getElementById('search-result-label').textContent = '전체 ' + PRODUCTS.length + '개 제품'; return; }
+  const q = raw.toLowerCase()
+    .replace(/나이키/g,'nike').replace(/아디다스/g,'adidas').replace(/자라/g,'zara')
+    .replace(/조던/g,'jordan').replace(/에어포스/g,'air force').replace(/울트라부스트/g,'ultraboost')
+    .replace(/트레이닝/g,'training').replace(/후디|후드/g,'hoodie')
+    .replace(/청바지|데님|진$|진\s/g,'jeans denim').replace(/티셔츠|반팔/g,'tshirt')
+    .replace(/셔츠/g,'shirt').replace(/팬츠|바지|슬랙스/g,'pants')
+    .replace(/신발|슈즈|스니커즈/g,'shoe');
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const scored = PRODUCTS.map(p => {
+    const target = (p.name + ' ' + p.brand + ' ' + p.keywords).toLowerCase();
+    const score = tokens.filter(t => target.includes(t)).length;
+    return { p, score };
+  }).filter(({score}) => score > 0).sort((a,b) => b.score - a.score).map(({p}) => p);
+  const results = scored.length > 0 ? scored : PRODUCTS.filter(p =>
+    p.name.includes(raw) || p.brand.includes(raw) || p.keywords.includes(raw)
+  );
+  document.getElementById('search-result-label').textContent =
+    results.length > 0 ? '"' + raw + '" 검색 결과 ' + results.length + '개' : '검색 결과 없음 — 전체 제품 표시';
+  renderProducts(results.length > 0 ? results : PRODUCTS);
+}
+
+function quickSearch(q) {
+  document.getElementById('search-input').value = q;
+  doSearch();
+}
+
+function renderProducts(list) {
+  document.getElementById('product-grid').innerHTML = list.map(p => `
     <div class="product-card" onclick="openFitting(${p.id})">
       <div class="product-img">${p.emoji}</div>
       <div class="product-info">
@@ -429,80 +504,374 @@ function renderProducts(brand){
     </div>`).join('');
 }
 
-function filterProducts(q){ const c=document.querySelector('.chip.selected'); renderProducts(c?c.textContent:'전체'); }
-
-function selectBrand(brand,el){
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  document.getElementById('search-input').value='';
-  renderProducts(brand);
+// ===== S6 FITTING =====
+function getRecSize(product) {
+  if (product.sizes.includes('L')) return 'L';
+  if (product.sizes.includes('32')) return '32';
+  if (product.sizes.includes('270')) return '270';
+  return product.sizes[Math.floor(product.sizes.length / 2)];
 }
 
-function openFitting(id){
-  selProduct=PRODUCTS.find(p=>p.id===id);
-  selSize=selProduct.sizes.includes('L')?'L':selProduct.sizes[Math.floor(selProduct.sizes.length/2)];
-  document.getElementById('fitting-title').textContent=selProduct.name;
-  document.getElementById('fit-clothing').textContent=selProduct.emoji;
-  document.getElementById('pd-emoji').textContent=selProduct.emoji;
-  document.getElementById('pd-name').textContent=selProduct.name;
-  document.getElementById('pd-price').textContent=selProduct.price;
-  renderSizes(); updateFit(selSize); goTo('s-fitting');
+function openFitting(id) {
+  selProduct = PRODUCTS.find(p => p.id === id);
+  selSize = getRecSize(selProduct);
+  document.getElementById('fitting-title').textContent = selProduct.name;
+  document.getElementById('pd-emoji').textContent = selProduct.emoji;
+  document.getElementById('pd-name').textContent = selProduct.name;
+  document.getElementById('pd-price').textContent = selProduct.price;
+  document.getElementById('rec-size-label').textContent = selSize;
+  renderSizes(); updateFit(selSize);
+  goTo('s-fitting');
+  setTimeout(() => init3DFitting(selProduct), 80);
 }
 
-function renderSizes(){
-  document.getElementById('size-btns').innerHTML=selProduct.sizes.map(s=>`
-    <button class="size-btn${s===selSize?' active':''}" onclick="selectSize('${s}')">${s}</button>`).join('');
+function renderSizes() {
+  const rec = getRecSize(selProduct);
+  document.getElementById('size-btns').innerHTML = selProduct.sizes.map(s => `
+    <button class="size-btn${s === selSize ? ' active' : ''}" onclick="selectSize('${s}')">
+      ${s}${s === rec ? '<span class="size-rec-dot"></span>' : ''}
+    </button>`).join('');
 }
 
-function selectSize(s){
-  selSize=s;
-  document.getElementById('pd-size').textContent='사이즈: '+s;
-  document.getElementById('size-badge').textContent=s;
-  renderSizes(); updateFit(s);
+function selectSize(s) {
+  selSize = s;
+  document.getElementById('pd-size').textContent = '사이즈: ' + s;
+  document.getElementById('size-badge').textContent = s;
+  renderSizes(); updateFit(s); updateClothingScale(s);
 }
 
-function updateFit(s){
-  const f=FIT[s]||FIT['L'];
-  const bars=[{l:'가슴',v:f.c},{l:'어깨',v:f.s},{l:'허리',v:f.w}];
-  document.getElementById('fit-bars').innerHTML=bars.map(b=>{
-    const col=b.v>=90?'#00e676':b.v>=75?'#69f0ae':b.v>=60?'#ffab40':'#ff5252';
+function updateFit(s) {
+  const f = FIT[s] || FIT['L'];
+  const isShoe = selProduct && selProduct.clothType === 'shoe';
+  const isPants = selProduct && selProduct.clothType === 'pants';
+  const bars = isShoe
+    ? [{l:'길이',v:f.c},{l:'발볼',v:f.s},{l:'뒤꿈치',v:f.w}]
+    : isPants
+    ? [{l:'허리',v:f.w},{l:'힙',v:f.c},{l:'허벅지',v:f.s}]
+    : [{l:'가슴',v:f.c},{l:'어깨',v:f.s},{l:'허리',v:f.w}];
+  document.getElementById('fit-bars').innerHTML = bars.map(b => {
+    const col = b.v >= 90 ? '#00e676' : b.v >= 75 ? '#69f0ae' : b.v >= 60 ? '#ffab40' : '#ff5252';
     return `<div class="fit-bar-row"><span class="fit-bar-label">${b.l}</span><div class="fit-bar-track"><div class="fit-bar-fill" style="width:${b.v}%;background:${col}"></div></div><span class="fit-bar-val" style="color:${col}">${b.v}%</span></div>`;
   }).join('');
-  document.getElementById('fit-comment').innerHTML=f.comment;
-  const badge=document.getElementById('fit-badge');
-  badge.textContent=f.badge; badge.style.color=f.color;
-  const scaleMap={'XS':'0.72','S':'0.86','M':'0.94','L':'1.0','XL':'1.1','2XL':'1.24','XXL':'1.32'};
-  const scale=scaleMap[s]||'1.0';
-  document.getElementById('fit-clothing').style.transform=`translateX(-50%) scale(${scale})`;
+  document.getElementById('fit-comment').innerHTML = f.comment;
+  const badge = document.getElementById('fit-badge');
+  badge.textContent = f.badge; badge.style.color = f.color;
 }
 
-function goToPurchase(){
-  const p=selProduct;
-  const retailers=[
-    {n:p.brand+' 공식몰',sub:p.price+' · 무료배송',icon:'🏪',url:p.url},
-    {n:'무신사',sub:disc(p.price,8)+' · 회원 할인 8%',icon:'🛍',url:'https://www.musinsa.com'},
-    {n:'네이버쇼핑',sub:disc(p.price,5)+' · 포인트 적립',icon:'🟢',url:'https://shopping.naver.com'},
-    {n:'카카오쇼핑',sub:disc(p.price,3)+' · 카카오페이 할인',icon:'🟡',url:'https://shopping.kakao.com'},
+// ===== THREE.JS 3D FITTING =====
+function init3DFitting(product) {
+  if (typeof THREE === 'undefined') {
+    document.getElementById('three-mount').innerHTML =
+      '<div style="color:var(--text2);text-align:center;padding:160px 20px">3D 엔진 로딩 중...<br><small>잠시 후 다시 시도하세요</small></div>';
+    return;
+  }
+  const mount = document.getElementById('three-mount');
+  if (!mount) return;
+
+  // Cleanup previous
+  if (animFrameId3d) cancelAnimationFrame(animFrameId3d);
+  if (renderer3d) { try { renderer3d.dispose(); } catch(e){} }
+  mount.innerHTML = '';
+
+  const W = mount.offsetWidth || 360;
+  const H = 380;
+
+  scene3d = new THREE.Scene();
+  scene3d.background = new THREE.Color(0x141414);
+
+  camera3d = new THREE.PerspectiveCamera(42, W / H, 0.1, 50);
+  camera3d.position.set(0, 0.95, 3.6);
+  camera3d.lookAt(0, 0.85, 0);
+
+  renderer3d = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer3d.setSize(W, H);
+  renderer3d.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer3d.shadowMap.enabled = true;
+  renderer3d.shadowMap.type = THREE.PCFSoftShadowMap;
+  mount.appendChild(renderer3d.domElement);
+  renderer3d.domElement.style.width = '100%';
+  renderer3d.domElement.style.height = '100%';
+
+  // Lighting
+  scene3d.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const key = new THREE.DirectionalLight(0xffffff, 0.9);
+  key.position.set(2, 5, 3); key.castShadow = true;
+  key.shadow.camera.near = 0.1; key.shadow.camera.far = 20;
+  scene3d.add(key);
+  const fill = new THREE.DirectionalLight(0x88aaff, 0.4);
+  fill.position.set(-2, 2, -1);
+  scene3d.add(fill);
+  const rim = new THREE.DirectionalLight(0x00e5ff, 0.18);
+  rim.position.set(0, 0.5, -3);
+  scene3d.add(rim);
+
+  // Ground plane
+  const groundMat = new THREE.MeshPhongMaterial({ color: 0x1a1a1a });
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(2, 36), groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.02;
+  ground.receiveShadow = true;
+  scene3d.add(ground);
+
+  // Build body & clothing
+  bodyGroup = buildBody3D();
+  scene3d.add(bodyGroup);
+  clothingGroup = buildClothing3D(product);
+  scene3d.add(clothingGroup);
+
+  // Update clothing scale for current size
+  updateClothingScale(selSize);
+
+  // Rotation interaction
+  let isDragging = false, lastX = 0, rotY = 0, autoSpin = true, resumeTimer;
+
+  function pauseAuto() {
+    autoSpin = false;
+    clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(() => { autoSpin = true; }, 3500);
+  }
+
+  const el = renderer3d.domElement;
+  el.addEventListener('mousedown',  e => { isDragging = true; lastX = e.clientX; pauseAuto(); });
+  el.addEventListener('mousemove',  e => {
+    if (!isDragging) return;
+    rotY += (e.clientX - lastX) * 0.013;
+    lastX = e.clientX;
+    bodyGroup.rotation.y = rotY;
+    clothingGroup.rotation.y = rotY;
+  });
+  el.addEventListener('mouseup',    () => { isDragging = false; });
+  el.addEventListener('mouseleave', () => { isDragging = false; });
+  el.addEventListener('touchstart', e => { lastX = e.touches[0].clientX; pauseAuto(); }, { passive:true });
+  el.addEventListener('touchmove',  e => {
+    rotY += (e.touches[0].clientX - lastX) * 0.013;
+    lastX = e.touches[0].clientX;
+    bodyGroup.rotation.y = rotY;
+    clothingGroup.rotation.y = rotY;
+  }, { passive:true });
+
+  // Animate
+  let tick = 0;
+  (function loop() {
+    animFrameId3d = requestAnimationFrame(loop);
+    if (autoSpin) {
+      tick += 0.005;
+      const r = Math.sin(tick) * 0.55;
+      bodyGroup.rotation.y = r;
+      clothingGroup.rotation.y = r;
+    }
+    renderer3d.render(scene3d, camera3d);
+  })();
+}
+
+function mkMesh(geo, mat) {
+  const m = new THREE.Mesh(geo, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+
+function buildBody3D() {
+  const g = new THREE.Group();
+  const skin = new THREE.MeshPhongMaterial({ color: 0xFFDBAC, shininess: 15 });
+
+  function add(geo, x, y, z, rz) {
+    const m = mkMesh(geo, skin);
+    m.position.set(x, y, z);
+    if (rz) m.rotation.z = rz;
+    g.add(m); return m;
+  }
+
+  // Head
+  add(new THREE.SphereGeometry(0.148, 24, 24), 0, 1.76, 0);
+  // Neck
+  add(new THREE.CylinderGeometry(0.058, 0.068, 0.13, 12), 0, 1.60, 0);
+  // Chest/shoulders
+  add(new THREE.CylinderGeometry(0.255, 0.225, 0.21, 20), 0, 1.48, 0);
+  // Torso
+  add(new THREE.CylinderGeometry(0.225, 0.185, 0.54, 20), 0, 1.215, 0);
+  // Hips
+  add(new THREE.CylinderGeometry(0.215, 0.205, 0.22, 20), 0, 0.855, 0);
+
+  // Upper arms
+  add(new THREE.CylinderGeometry(0.068, 0.062, 0.29, 12), -0.325, 1.375, 0,  0.20);
+  add(new THREE.CylinderGeometry(0.068, 0.062, 0.29, 12),  0.325, 1.375, 0, -0.20);
+  // Lower arms
+  add(new THREE.CylinderGeometry(0.057, 0.049, 0.27, 12), -0.345, 1.065, 0,  0.10);
+  add(new THREE.CylinderGeometry(0.057, 0.049, 0.27, 12),  0.345, 1.065, 0, -0.10);
+  // Hands
+  add(new THREE.SphereGeometry(0.046, 10, 10), -0.358, 0.915, 0);
+  add(new THREE.SphereGeometry(0.046, 10, 10),  0.358, 0.915, 0);
+
+  // Upper legs
+  add(new THREE.CylinderGeometry(0.108, 0.094, 0.45, 14), -0.112, 0.598, 0);
+  add(new THREE.CylinderGeometry(0.108, 0.094, 0.45, 14),  0.112, 0.598, 0);
+  // Lower legs
+  add(new THREE.CylinderGeometry(0.084, 0.065, 0.39, 12), -0.112, 0.182, 0);
+  add(new THREE.CylinderGeometry(0.084, 0.065, 0.39, 12),  0.112, 0.182, 0);
+  // Feet
+  const footGeo = new THREE.BoxGeometry(0.102, 0.066, 0.225);
+  const lf = mkMesh(footGeo, skin); lf.position.set(-0.112, 0.018, 0.06); g.add(lf);
+  const rf = mkMesh(footGeo, skin); rf.position.set( 0.112, 0.018, 0.06); g.add(rf);
+
+  return g;
+}
+
+function buildClothing3D(product) {
+  const g = new THREE.Group();
+  const c = product.clothColor || 0x2196F3;
+  const mat  = new THREE.MeshPhongMaterial({ color: c, shininess: 50 });
+  const dark = new THREE.MeshPhongMaterial({ color: 0x0d0d0d, shininess: 5 });
+  const gold = new THREE.MeshPhongMaterial({ color: 0xFFD700, shininess: 80 });
+  const white = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, shininess: 30 });
+
+  function add(geo, m, x, y, z, rz) {
+    const mesh = mkMesh(geo, m || mat);
+    mesh.position.set(x, y, z);
+    if (rz) mesh.rotation.z = rz;
+    g.add(mesh); return mesh;
+  }
+
+  const t = product.clothType;
+
+  // ── T-SHIRT ────────────────────────────────────────────
+  if (t === 'tshirt') {
+    add(new THREE.CylinderGeometry(0.278, 0.215, 0.22, 20), null, 0, 1.48, 0);
+    add(new THREE.CylinderGeometry(0.248, 0.208, 0.55, 20), null, 0, 1.22, 0);
+    // Half sleeves
+    add(new THREE.CylinderGeometry(0.080, 0.072, 0.17, 12), null, -0.325, 1.375, 0,  0.20);
+    add(new THREE.CylinderGeometry(0.080, 0.072, 0.17, 12), null,  0.325, 1.375, 0, -0.20);
+  }
+
+  // ── SHIRT (collared) ────────────────────────────────────
+  if (t === 'shirt') {
+    add(new THREE.CylinderGeometry(0.278, 0.215, 0.22, 20), null, 0, 1.48, 0);
+    add(new THREE.CylinderGeometry(0.248, 0.208, 0.55, 20), null, 0, 1.22, 0);
+    // Full sleeves
+    add(new THREE.CylinderGeometry(0.078, 0.070, 0.30, 12), null, -0.325, 1.375, 0,  0.20);
+    add(new THREE.CylinderGeometry(0.078, 0.070, 0.30, 12), null,  0.325, 1.375, 0, -0.20);
+    add(new THREE.CylinderGeometry(0.066, 0.058, 0.28, 12), null, -0.345, 1.065, 0,  0.10);
+    add(new THREE.CylinderGeometry(0.066, 0.058, 0.28, 12), null,  0.345, 1.065, 0, -0.10);
+    // Collar
+    const collarMat = new THREE.MeshPhongMaterial({ color: c, shininess: 60 });
+    add(new THREE.TorusGeometry(0.075, 0.018, 8, 20), collarMat, 0, 1.57, 0);
+    // Button line
+    add(new THREE.BoxGeometry(0.015, 0.50, 0.015), dark, 0, 1.22, 0.24);
+  }
+
+  // ── JACKET ──────────────────────────────────────────────
+  if (t === 'jacket') {
+    add(new THREE.CylinderGeometry(0.285, 0.220, 0.23, 20), null, 0, 1.48, 0);
+    add(new THREE.CylinderGeometry(0.255, 0.215, 0.56, 20), null, 0, 1.22, 0);
+    // Full sleeves
+    add(new THREE.CylinderGeometry(0.082, 0.074, 0.31, 12), null, -0.325, 1.375, 0,  0.20);
+    add(new THREE.CylinderGeometry(0.082, 0.074, 0.31, 12), null,  0.325, 1.375, 0, -0.20);
+    add(new THREE.CylinderGeometry(0.070, 0.061, 0.29, 12), null, -0.345, 1.065, 0,  0.10);
+    add(new THREE.CylinderGeometry(0.070, 0.061, 0.29, 12), null,  0.345, 1.065, 0, -0.10);
+    // Zipper
+    add(new THREE.BoxGeometry(0.018, 0.53, 0.012), gold, 0, 1.22, 0.255);
+    // Cuffs
+    const cuffMat = new THREE.MeshPhongMaterial({ color: darken(c, 0.7), shininess: 20 });
+    add(new THREE.CylinderGeometry(0.073, 0.073, 0.04, 12), cuffMat, -0.348, 0.925, 0, 0.10);
+    add(new THREE.CylinderGeometry(0.073, 0.073, 0.04, 12), cuffMat,  0.348, 0.925, 0,-0.10);
+  }
+
+  // ── PANTS ───────────────────────────────────────────────
+  if (t === 'pants') {
+    add(new THREE.CylinderGeometry(0.235, 0.225, 0.24, 20), null, 0, 0.855, 0);
+    // Legs
+    add(new THREE.CylinderGeometry(0.118, 0.103, 0.47, 14), null, -0.112, 0.598, 0);
+    add(new THREE.CylinderGeometry(0.118, 0.103, 0.47, 14), null,  0.112, 0.598, 0);
+    add(new THREE.CylinderGeometry(0.095, 0.075, 0.41, 12), null, -0.112, 0.182, 0);
+    add(new THREE.CylinderGeometry(0.095, 0.075, 0.41, 12), null,  0.112, 0.182, 0);
+    // Belt
+    const beltMat = new THREE.MeshPhongMaterial({ color: darken(c, 0.5), shininess: 30 });
+    add(new THREE.CylinderGeometry(0.238, 0.238, 0.035, 20), beltMat, 0, 0.97, 0);
+    // Belt buckle
+    add(new THREE.BoxGeometry(0.055, 0.042, 0.015), gold, 0, 0.97, 0.238);
+  }
+
+  // ── SHOE ────────────────────────────────────────────────
+  if (t === 'shoe') {
+    // Upper
+    add(new THREE.BoxGeometry(0.125, 0.082, 0.248), null, -0.112, 0.040, 0.062);
+    add(new THREE.BoxGeometry(0.125, 0.082, 0.248), null,  0.112, 0.040, 0.062);
+    // Sole
+    add(new THREE.BoxGeometry(0.130, 0.026, 0.254), dark, -0.112, -0.008, 0.062);
+    add(new THREE.BoxGeometry(0.130, 0.026, 0.254), dark,  0.112, -0.008, 0.062);
+    // Toe box
+    const toeMat = new THREE.MeshPhongMaterial({ color: lighten(c, 1.3), shininess: 60 });
+    add(new THREE.BoxGeometry(0.128, 0.060, 0.060), toeMat, -0.112, 0.042, 0.155);
+    add(new THREE.BoxGeometry(0.128, 0.060, 0.060), toeMat,  0.112, 0.042, 0.155);
+    // Laces
+    for (let i = 0; i < 4; i++) {
+      add(new THREE.BoxGeometry(0.065, 0.009, 0.012), white, -0.112, 0.076, 0.030 + i * 0.030);
+      add(new THREE.BoxGeometry(0.065, 0.009, 0.012), white,  0.112, 0.076, 0.030 + i * 0.030);
+    }
+  }
+
+  return g;
+}
+
+function darken(hex, factor) {
+  const r = ((hex >> 16) & 0xff) * factor;
+  const gv = ((hex >> 8) & 0xff) * factor;
+  const b = (hex & 0xff) * factor;
+  return (Math.round(r) << 16) | (Math.round(gv) << 8) | Math.round(b);
+}
+function lighten(hex, factor) {
+  const r = Math.min(255, ((hex >> 16) & 0xff) * factor);
+  const gv = Math.min(255, ((hex >> 8) & 0xff) * factor);
+  const b = Math.min(255, (hex & 0xff) * factor);
+  return (Math.round(r) << 16) | (Math.round(gv) << 8) | Math.round(b);
+}
+
+function updateClothingScale(size) {
+  if (!clothingGroup) return;
+  const map = {
+    'XS':0.92,'S':0.96,'M':1.00,'L':1.04,'XL':1.09,'2XL':1.15,'XXL':1.21,
+    '28':0.96,'30':0.99,'32':1.02,'34':1.06,'36':1.11,
+    '250':0.96,'255':0.98,'260':1.01,'265':1.03,'270':1.05,'275':1.07,'280':1.10,
+  };
+  const s = map[size] || 1.0;
+  clothingGroup.scale.set(s, 1.0, s);
+}
+
+// ===== S7 PURCHASE =====
+function goToPurchase() {
+  const p = selProduct;
+  const retailers = [
+    { n: p.brand + ' 공식몰', sub: p.price + ' · 무료배송',         icon: '🏪', url: p.url },
+    { n: '무신사',             sub: disc(p.price,8) + ' · 회원 8%', icon: '🛍', url: 'https://www.musinsa.com' },
+    { n: '네이버쇼핑',         sub: disc(p.price,5) + ' · 포인트',  icon: '🟢', url: 'https://shopping.naver.com' },
+    { n: '카카오쇼핑',         sub: disc(p.price,3) + ' · 카카오페이', icon:'🟡', url: 'https://shopping.kakao.com' },
   ];
-  document.getElementById('purchase-sub').innerHTML=`<strong style="color:var(--accent)">${p.name} · ${selSize}</strong><br>가장 저렴한 가격을 찾았습니다.`;
-  document.getElementById('retailer-list').innerHTML=retailers.map(r=>`
+  document.getElementById('purchase-sub').innerHTML =
+    '<strong style="color:var(--accent)">' + p.name + ' · ' + selSize + '</strong><br>가장 저렴한 가격을 찾았습니다.';
+  document.getElementById('retailer-list').innerHTML = retailers.map(r => `
     <a class="retailer-btn" href="${r.url}" target="_blank" rel="noopener">
       <span style="font-size:24px">${r.icon}</span>
-      <div style="text-align:left"><div style="font-size:14px;font-weight:700">${r.n}</div><div style="font-size:12px;color:var(--text2)">${r.sub}</div></div>
+      <div style="text-align:left">
+        <div style="font-size:14px;font-weight:700">${r.n}</div>
+        <div style="font-size:12px;color:var(--text2)">${r.sub}</div>
+      </div>
       <span style="margin-left:auto;color:var(--text2)">→</span>
     </a>`).join('');
   goTo('s-purchase');
 }
 
-function disc(p,pct){ const n=parseInt(p.replace(/[^0-9]/g,'')); return '₩'+Math.round(n*(1-pct/100)).toLocaleString(); }
-
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+function disc(p, pct) {
+  const n = parseInt(p.replace(/[^0-9]/g,''));
+  return '₩' + Math.round(n * (1 - pct / 100)).toLocaleString();
 }
 
-renderProducts('전체');
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Init
+renderProducts(PRODUCTS);
 </script>
 </body>
 </html>
