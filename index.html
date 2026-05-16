@@ -201,7 +201,11 @@
         <input type="file" id="inp-back" accept="image/*" onchange="photoUploaded('back',this)">
       </div>
     </div>
-    <p id="photo-count" style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:20px">0 / 3장 촬영됨 — 모두 촬영하거나 데모로 진행하세요</p>
+    <p id="photo-count" style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:16px">0 / 3장 촬영됨 — 모두 촬영하거나 데모로 진행하세요</p>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;background:var(--bg2);border-radius:var(--r);padding:12px 16px">
+      <span style="font-size:13px;color:var(--text2);white-space:nowrap">키 (cm)</span>
+      <input type="number" id="inp-height" min="140" max="220" value="175" style="flex:1;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:15px;font-weight:600;text-align:center">
+    </div>
     <button class="btn btn-primary" onclick="startAnalysis()" id="analyze-btn">▶ 3D 신체 분석 시작</button>
     <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:10px">📌 PC에서는 파일 선택으로 업로드 · 모바일에서는 카메라 직접 촬영</p>
   </div>
@@ -411,6 +415,7 @@ const FIT = {
 
 let selProduct = null, selSize = 'L';
 let scene3d, camera3d, renderer3d, bodyGroup, clothingGroup, animFrameId3d;
+let userBodyMeasurements = null;
 
 // ===== NAVIGATION =====
 function goTo(id) {
@@ -448,9 +453,11 @@ function photoUploaded(side, inp) {
   r.readAsDataURL(inp.files[0]);
 }
 
-function startAnalysis() {
+async function startAnalysis() {
+  const heightCm = parseFloat(document.getElementById('inp-height').value) || 175;
   goTo('s-processing');
-  const steps = [{id:1,d:800},{id:2,d:1800},{id:3,d:2800},{id:4,d:3600}];
+
+  const steps = [{id:1,d:600},{id:2,d:1400},{id:3,d:2200},{id:4,d:3000}];
   steps.forEach(({id,d}) => {
     setTimeout(() => {
       const sc = document.getElementById('sc-' + id);
@@ -459,7 +466,39 @@ function startAnalysis() {
       if (id < 4) document.getElementById('sc-' + (id+1)).classList.add('running');
     }, d);
   });
-  setTimeout(() => goTo('s-body'), 5000);
+
+  // Try real API call with user's photos
+  try {
+    const frontFile = document.getElementById('inp-front').files[0];
+    const sideFile  = document.getElementById('inp-side').files[0];
+    const backFile  = document.getElementById('inp-back').files[0];
+    if (frontFile && sideFile) {
+      const fd = new FormData();
+      fd.append('front', frontFile);
+      fd.append('side',  sideFile);
+      fd.append('back',  backFile || sideFile);
+      fd.append('height_cm', heightCm);
+      const res = await fetch('http://localhost:8000/analyze/body', { method:'POST', body:fd });
+      const data = await res.json();
+      if (data.success && data.measurements) {
+        userBodyMeasurements = data.measurements;
+      }
+    }
+  } catch(e) {
+    // API not running — use proportional defaults based on height
+    const s = heightCm / 175;
+    userBodyMeasurements = {
+      height_cm: heightCm,
+      shoulder_width_cm: 44 * s,
+      chest_cm: 95 * s,
+      waist_cm: 78 * s,
+      hip_cm: 95 * s,
+      inseam_cm: 80 * s,
+      arm_length_cm: 58 * s
+    };
+  }
+
+  setTimeout(() => goTo('s-body'), 4000);
 }
 
 // ===== S5 SEARCH =====
@@ -580,8 +619,8 @@ function init3DFitting(product) {
   scene3d.background = new THREE.Color(0x141414);
 
   camera3d = new THREE.PerspectiveCamera(42, W / H, 0.1, 50);
-  camera3d.position.set(0, 0.95, 3.6);
-  camera3d.lookAt(0, 0.85, 0);
+  camera3d.position.set(0, 0.9, 3.2);
+  camera3d.lookAt(0, 0.88, 0);
 
   renderer3d = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   renderer3d.setSize(W, H);
@@ -614,9 +653,9 @@ function init3DFitting(product) {
   scene3d.add(ground);
 
   // Build body & clothing
-  bodyGroup = buildBody3D();
+  bodyGroup = buildBody3D(userBodyMeasurements);
   scene3d.add(bodyGroup);
-  clothingGroup = buildClothing3D(product);
+  clothingGroup = buildClothing3D(product, userBodyMeasurements);
   scene3d.add(clothingGroup);
 
   // Update clothing scale for current size
@@ -670,53 +709,157 @@ function mkMesh(geo, mat) {
   return m;
 }
 
-function buildBody3D() {
+function buildBody3D(m) {
+  m = m || { height_cm:175, shoulder_width_cm:44, chest_cm:95, waist_cm:78, hip_cm:95, inseam_cm:80, arm_length_cm:58 };
+
+  const S  = 1.75 / m.height_cm;  // scene units per cm
+  const TH = 1.75;                 // total height
+
+  // Derived scene-unit measurements
+  const shW  = m.shoulder_width_cm * S;  // shoulder width
+  const shR  = shW / 2;                  // shoulder half-width
+  const chR  = (m.chest_cm   * S) / (2 * Math.PI);
+  const wR   = (m.waist_cm   * S) / (2 * Math.PI);
+  const hipR = (m.hip_cm     * S) / (2 * Math.PI);
+  const inseam  = m.inseam_cm    * S;
+  const armLen  = m.arm_length_cm * S;
+
+  // Segment heights
+  const headH      = TH * 0.132;
+  const neckH      = TH * 0.038;
+  const torsoH     = TH * 0.335;
+  const pelvisH    = TH * 0.095;
+  const upperLegH  = inseam * 0.56;
+  const lowerLegH  = inseam * 0.44;
+  const upperArmH  = armLen * 0.50;
+  const lowerArmH  = armLen * 0.50;
+
+  // Y positions (bottom of each segment)
+  const groundY    = 0;
+  const ankleY     = groundY + lowerLegH * 0.08;
+  const kneeY      = ankleY  + lowerLegH;
+  const crotchY    = kneeY   + upperLegH;
+  const pelvisTopY = crotchY + pelvisH;
+  const torsoTopY  = pelvisTopY + torsoH;
+  const shoulderY  = torsoTopY;
+  const neckBotY   = torsoTopY - neckH * 0.1;
+  const headCenterY = neckBotY + neckH + headH * 0.5;
+  const armTopY    = shoulderY - neckH * 0.5;
+  const elbowY     = armTopY   - upperArmH;
+  const wristY     = elbowY    - lowerArmH;
+
   const g = new THREE.Group();
-  const skin = new THREE.MeshPhongMaterial({ color: 0xFFDBAC, shininess: 15 });
 
-  function add(geo, x, y, z, rz) {
-    const m = mkMesh(geo, skin);
-    m.position.set(x, y, z);
-    if (rz) m.rotation.z = rz;
-    g.add(m); return m;
-  }
+  const skin = new THREE.MeshPhongMaterial({
+    color: 0xF0C8A0, shininess: 12, specular: new THREE.Color(0.08, 0.05, 0.04)
+  });
 
-  // Head
-  add(new THREE.SphereGeometry(0.148, 24, 24), 0, 1.76, 0);
-  // Neck
-  add(new THREE.CylinderGeometry(0.058, 0.068, 0.13, 12), 0, 1.60, 0);
-  // Chest/shoulders
-  add(new THREE.CylinderGeometry(0.255, 0.225, 0.21, 20), 0, 1.48, 0);
-  // Torso
-  add(new THREE.CylinderGeometry(0.225, 0.185, 0.54, 20), 0, 1.215, 0);
-  // Hips
-  add(new THREE.CylinderGeometry(0.215, 0.205, 0.22, 20), 0, 0.855, 0);
+  function add(mesh) { mesh.castShadow = true; g.add(mesh); return mesh; }
 
-  // Upper arms
-  add(new THREE.CylinderGeometry(0.068, 0.062, 0.29, 12), -0.325, 1.375, 0,  0.20);
-  add(new THREE.CylinderGeometry(0.068, 0.062, 0.29, 12),  0.325, 1.375, 0, -0.20);
-  // Lower arms
-  add(new THREE.CylinderGeometry(0.057, 0.049, 0.27, 12), -0.345, 1.065, 0,  0.10);
-  add(new THREE.CylinderGeometry(0.057, 0.049, 0.27, 12),  0.345, 1.065, 0, -0.10);
-  // Hands
-  add(new THREE.SphereGeometry(0.046, 10, 10), -0.358, 0.915, 0);
-  add(new THREE.SphereGeometry(0.046, 10, 10),  0.358, 0.915, 0);
+  // ── Head ──
+  add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(headH * 0.52, 32, 24), skin),
+      { position: new THREE.Vector3(0, headCenterY, 0) }));
 
-  // Upper legs
-  add(new THREE.CylinderGeometry(0.108, 0.094, 0.45, 14), -0.112, 0.598, 0);
-  add(new THREE.CylinderGeometry(0.108, 0.094, 0.45, 14),  0.112, 0.598, 0);
-  // Lower legs
-  add(new THREE.CylinderGeometry(0.084, 0.065, 0.39, 12), -0.112, 0.182, 0);
-  add(new THREE.CylinderGeometry(0.084, 0.065, 0.39, 12),  0.112, 0.182, 0);
-  // Feet
-  const footGeo = new THREE.BoxGeometry(0.102, 0.066, 0.225);
-  const lf = mkMesh(footGeo, skin); lf.position.set(-0.112, 0.018, 0.06); g.add(lf);
-  const rf = mkMesh(footGeo, skin); rf.position.set( 0.112, 0.018, 0.06); g.add(rf);
+  // ── Neck ──
+  add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(neckH * 0.55, neckH * 0.65, neckH, 16), skin),
+      { position: new THREE.Vector3(0, neckBotY + neckH / 2, 0) }));
+
+  // ── Torso — LatheGeometry profile (half cross-section, revolved) ──
+  const tH = torsoH + pelvisH;
+  const torsoProfile = [
+    new THREE.Vector2(shR,          tH),
+    new THREE.Vector2(chR * 1.05,   tH * 0.82),
+    new THREE.Vector2(chR,          tH * 0.70),
+    new THREE.Vector2(wR  * 1.02,   tH * 0.52),
+    new THREE.Vector2(wR,           tH * 0.42),
+    new THREE.Vector2(hipR * 0.88,  tH * 0.25),
+    new THREE.Vector2(hipR,         tH * 0.10),
+    new THREE.Vector2(hipR * 0.80,  0),
+  ];
+  const torsoMesh = new THREE.Mesh(new THREE.LatheGeometry(torsoProfile, 36), skin);
+  torsoMesh.position.set(0, crotchY, 0);
+  torsoMesh.castShadow = true;
+  g.add(torsoMesh);
+
+  // ── Arms ──
+  const armX    = shR + 0.018;
+  const uArmR   = shR * 0.195;
+  const lArmR   = uArmR * 0.82;
+  const handR   = lArmR * 0.88;
+
+  [-1, 1].forEach(side => {
+    const ax = armX * side;
+    // upper arm
+    add(Object.assign(new THREE.Mesh(new THREE.CapsuleGeometry(uArmR, upperArmH, 8, 16), skin),
+        { position: new THREE.Vector3(ax, armTopY - upperArmH / 2, 0) }));
+    // lower arm
+    add(Object.assign(new THREE.Mesh(new THREE.CapsuleGeometry(lArmR, lowerArmH, 8, 16), skin),
+        { position: new THREE.Vector3(ax, elbowY - lowerArmH / 2, 0) }));
+    // hand
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(handR, 14, 10), skin);
+    hand.scale.set(1, 1.35, 0.62);
+    hand.position.set(ax, wristY, 0);
+    add(hand);
+  });
+
+  // ── Legs ──
+  const legX   = hipR * 0.46;
+  const uLegR  = hipR * 0.30;
+  const lLegR  = uLegR * 0.78;
+  const ankR   = lLegR * 0.68;
+
+  [-1, 1].forEach(side => {
+    const lx = legX * side;
+    // upper leg
+    add(Object.assign(new THREE.Mesh(new THREE.CapsuleGeometry(uLegR, upperLegH, 8, 16), skin),
+        { position: new THREE.Vector3(lx, kneeY + upperLegH / 2, 0) }));
+    // lower leg
+    add(Object.assign(new THREE.Mesh(new THREE.CapsuleGeometry(lLegR, lowerLegH, 8, 16), skin),
+        { position: new THREE.Vector3(lx, ankleY + lowerLegH / 2, 0) }));
+    // foot
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(ankR * 2.2, ankR * 1.1, ankR * 4.8), skin);
+    foot.position.set(lx, groundY + ankR * 0.55, ankR * 1.4);
+    add(foot);
+  });
 
   return g;
 }
 
-function buildClothing3D(product) {
+function buildClothing3D(product, m) {
+  m = m || { height_cm:175, shoulder_width_cm:44, chest_cm:95, waist_cm:78, hip_cm:95, inseam_cm:80, arm_length_cm:58 };
+
+  // Same proportions as buildBody3D
+  const S = 1.75 / m.height_cm;
+  const TH = 1.75;
+  const shR  = (m.shoulder_width_cm * S) / 2;
+  const chR  = (m.chest_cm   * S) / (2 * Math.PI);
+  const wR   = (m.waist_cm   * S) / (2 * Math.PI);
+  const hipR = (m.hip_cm     * S) / (2 * Math.PI);
+  const inseam = m.inseam_cm * S;
+  const armLen = m.arm_length_cm * S;
+  const torsoH   = TH * 0.335;
+  const pelvisH  = TH * 0.095;
+  const upperLegH = inseam * 0.56;
+  const lowerLegH = inseam * 0.44;
+  const upperArmH = armLen * 0.50;
+  const lowerArmH = armLen * 0.50;
+  const neckH     = TH * 0.038;
+  const ankleY    = lowerLegH * 0.08;
+  const kneeY     = ankleY + lowerLegH;
+  const crotchY   = kneeY + upperLegH;
+  const pelvisTopY = crotchY + pelvisH;
+  const shoulderY  = pelvisTopY + torsoH;
+  const armTopY    = shoulderY - neckH * 0.5;
+  const elbowY     = armTopY - upperArmH;
+  const armX       = shR + 0.018;
+  const legX       = hipR * 0.46;
+  const tH         = torsoH + pelvisH;
+  const uArmR      = shR * 0.195;
+  const lArmR      = uArmR * 0.82;
+  const uLegR      = hipR * 0.30;
+  const lLegR      = uLegR * 0.78;
+  const ankR       = lLegR * 0.68;
+
   const g = new THREE.Group();
   const c = product.clothColor || 0x2196F3;
   const mat  = new THREE.MeshPhongMaterial({ color: c, shininess: 50 });
@@ -724,89 +867,76 @@ function buildClothing3D(product) {
   const gold = new THREE.MeshPhongMaterial({ color: 0xFFD700, shininess: 80 });
   const white = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, shininess: 30 });
 
-  function add(geo, m, x, y, z, rz) {
-    const mesh = mkMesh(geo, m || mat);
+  function add(geo, m2, x, y, z, rz) {
+    const mesh = mkMesh(geo, m2 || mat);
     mesh.position.set(x, y, z);
     if (rz) mesh.rotation.z = rz;
     g.add(mesh); return mesh;
   }
 
   const t = product.clothType;
+  const torsoMidY = crotchY + tH * 0.56;  // chest center
+  const waistY    = crotchY + tH * 0.42;
+  const hipTopY   = crotchY + tH * 0.10;
 
-  // ── T-SHIRT ────────────────────────────────────────────
+  // ── T-SHIRT ──
   if (t === 'tshirt') {
-    add(new THREE.CylinderGeometry(0.278, 0.215, 0.22, 20), null, 0, 1.48, 0);
-    add(new THREE.CylinderGeometry(0.248, 0.208, 0.55, 20), null, 0, 1.22, 0);
-    // Half sleeves
-    add(new THREE.CylinderGeometry(0.080, 0.072, 0.17, 12), null, -0.325, 1.375, 0,  0.20);
-    add(new THREE.CylinderGeometry(0.080, 0.072, 0.17, 12), null,  0.325, 1.375, 0, -0.20);
+    add(new THREE.CylinderGeometry(chR * 1.08, wR  * 1.06, tH * 0.60, 24), null, 0, crotchY + tH * 0.50, 0);
+    add(new THREE.CylinderGeometry(chR * 1.10, chR * 1.08, tH * 0.25, 24), null, 0, crotchY + tH * 0.825, 0);
+    [-1, 1].forEach(s => add(new THREE.CylinderGeometry(uArmR * 1.12, uArmR * 1.08, upperArmH * 0.45, 14),
+        null, armX * s, armTopY - upperArmH * 0.22, 0));
   }
 
-  // ── SHIRT (collared) ────────────────────────────────────
+  // ── SHIRT ──
   if (t === 'shirt') {
-    add(new THREE.CylinderGeometry(0.278, 0.215, 0.22, 20), null, 0, 1.48, 0);
-    add(new THREE.CylinderGeometry(0.248, 0.208, 0.55, 20), null, 0, 1.22, 0);
-    // Full sleeves
-    add(new THREE.CylinderGeometry(0.078, 0.070, 0.30, 12), null, -0.325, 1.375, 0,  0.20);
-    add(new THREE.CylinderGeometry(0.078, 0.070, 0.30, 12), null,  0.325, 1.375, 0, -0.20);
-    add(new THREE.CylinderGeometry(0.066, 0.058, 0.28, 12), null, -0.345, 1.065, 0,  0.10);
-    add(new THREE.CylinderGeometry(0.066, 0.058, 0.28, 12), null,  0.345, 1.065, 0, -0.10);
-    // Collar
+    add(new THREE.CylinderGeometry(chR * 1.08, wR  * 1.06, tH * 0.60, 24), null, 0, crotchY + tH * 0.50, 0);
+    add(new THREE.CylinderGeometry(chR * 1.10, chR * 1.08, tH * 0.25, 24), null, 0, crotchY + tH * 0.825, 0);
+    [-1, 1].forEach(s => {
+      add(new THREE.CylinderGeometry(uArmR * 1.12, uArmR * 1.08, upperArmH, 14), null, armX * s, armTopY - upperArmH / 2, 0);
+      add(new THREE.CylinderGeometry(lArmR * 1.10, lArmR * 1.08, lowerArmH, 14), null, armX * s, elbowY - lowerArmH / 2, 0);
+    });
     const collarMat = new THREE.MeshPhongMaterial({ color: c, shininess: 60 });
-    add(new THREE.TorusGeometry(0.075, 0.018, 8, 20), collarMat, 0, 1.57, 0);
-    // Button line
-    add(new THREE.BoxGeometry(0.015, 0.50, 0.015), dark, 0, 1.22, 0.24);
+    add(new THREE.TorusGeometry(shR * 0.27, shR * 0.06, 8, 20), collarMat, 0, shoulderY - neckH, 0);
+    add(new THREE.BoxGeometry(0.012, tH * 0.62, 0.012), dark, 0, crotchY + tH * 0.50, chR * 1.09);
   }
 
-  // ── JACKET ──────────────────────────────────────────────
+  // ── JACKET ──
   if (t === 'jacket') {
-    add(new THREE.CylinderGeometry(0.285, 0.220, 0.23, 20), null, 0, 1.48, 0);
-    add(new THREE.CylinderGeometry(0.255, 0.215, 0.56, 20), null, 0, 1.22, 0);
-    // Full sleeves
-    add(new THREE.CylinderGeometry(0.082, 0.074, 0.31, 12), null, -0.325, 1.375, 0,  0.20);
-    add(new THREE.CylinderGeometry(0.082, 0.074, 0.31, 12), null,  0.325, 1.375, 0, -0.20);
-    add(new THREE.CylinderGeometry(0.070, 0.061, 0.29, 12), null, -0.345, 1.065, 0,  0.10);
-    add(new THREE.CylinderGeometry(0.070, 0.061, 0.29, 12), null,  0.345, 1.065, 0, -0.10);
-    // Zipper
-    add(new THREE.BoxGeometry(0.018, 0.53, 0.012), gold, 0, 1.22, 0.255);
-    // Cuffs
-    const cuffMat = new THREE.MeshPhongMaterial({ color: darken(c, 0.7), shininess: 20 });
-    add(new THREE.CylinderGeometry(0.073, 0.073, 0.04, 12), cuffMat, -0.348, 0.925, 0, 0.10);
-    add(new THREE.CylinderGeometry(0.073, 0.073, 0.04, 12), cuffMat,  0.348, 0.925, 0,-0.10);
+    add(new THREE.CylinderGeometry(chR * 1.12, wR  * 1.09, tH * 0.60, 24), null, 0, crotchY + tH * 0.50, 0);
+    add(new THREE.CylinderGeometry(chR * 1.14, chR * 1.12, tH * 0.26, 24), null, 0, crotchY + tH * 0.83, 0);
+    [-1, 1].forEach(s => {
+      add(new THREE.CylinderGeometry(uArmR * 1.14, uArmR * 1.10, upperArmH, 14), null, armX * s, armTopY - upperArmH / 2, 0);
+      add(new THREE.CylinderGeometry(lArmR * 1.12, lArmR * 1.09, lowerArmH, 14), null, armX * s, elbowY - lowerArmH / 2, 0);
+      const cuffMat = new THREE.MeshPhongMaterial({ color: darken(c, 0.7), shininess: 20 });
+      add(new THREE.CylinderGeometry(lArmR * 1.14, lArmR * 1.14, lowerArmH * 0.08, 14), cuffMat, armX * s, elbowY - lowerArmH + lowerArmH * 0.04, 0);
+    });
+    add(new THREE.BoxGeometry(0.015, tH * 0.64, 0.010), gold, 0, crotchY + tH * 0.50, chR * 1.13);
   }
 
-  // ── PANTS ───────────────────────────────────────────────
+  // ── PANTS ──
   if (t === 'pants') {
-    add(new THREE.CylinderGeometry(0.235, 0.225, 0.24, 20), null, 0, 0.855, 0);
-    // Legs
-    add(new THREE.CylinderGeometry(0.118, 0.103, 0.47, 14), null, -0.112, 0.598, 0);
-    add(new THREE.CylinderGeometry(0.118, 0.103, 0.47, 14), null,  0.112, 0.598, 0);
-    add(new THREE.CylinderGeometry(0.095, 0.075, 0.41, 12), null, -0.112, 0.182, 0);
-    add(new THREE.CylinderGeometry(0.095, 0.075, 0.41, 12), null,  0.112, 0.182, 0);
-    // Belt
+    add(new THREE.CylinderGeometry(hipR * 1.06, hipR * 1.04, tH * 0.18, 24), null, 0, crotchY + tH * 0.09, 0);
+    [-1, 1].forEach(s => {
+      add(new THREE.CylinderGeometry(uLegR * 1.10, uLegR * 1.06, upperLegH, 16), null, legX * s, kneeY + upperLegH / 2, 0);
+      add(new THREE.CylinderGeometry(lLegR * 1.08, lLegR * 1.04, lowerLegH, 14), null, legX * s, ankleY + lowerLegH / 2, 0);
+    });
     const beltMat = new THREE.MeshPhongMaterial({ color: darken(c, 0.5), shininess: 30 });
-    add(new THREE.CylinderGeometry(0.238, 0.238, 0.035, 20), beltMat, 0, 0.97, 0);
-    // Belt buckle
-    add(new THREE.BoxGeometry(0.055, 0.042, 0.015), gold, 0, 0.97, 0.238);
+    add(new THREE.CylinderGeometry(hipR * 1.07, hipR * 1.07, tH * 0.04, 24), beltMat, 0, crotchY + tH * 0.18, 0);
+    add(new THREE.BoxGeometry(hipR * 0.3, tH * 0.05, 0.012), gold, 0, crotchY + tH * 0.18, hipR * 1.08);
   }
 
-  // ── SHOE ────────────────────────────────────────────────
+  // ── SHOE ──
   if (t === 'shoe') {
-    // Upper
-    add(new THREE.BoxGeometry(0.125, 0.082, 0.248), null, -0.112, 0.040, 0.062);
-    add(new THREE.BoxGeometry(0.125, 0.082, 0.248), null,  0.112, 0.040, 0.062);
-    // Sole
-    add(new THREE.BoxGeometry(0.130, 0.026, 0.254), dark, -0.112, -0.008, 0.062);
-    add(new THREE.BoxGeometry(0.130, 0.026, 0.254), dark,  0.112, -0.008, 0.062);
-    // Toe box
-    const toeMat = new THREE.MeshPhongMaterial({ color: lighten(c, 1.3), shininess: 60 });
-    add(new THREE.BoxGeometry(0.128, 0.060, 0.060), toeMat, -0.112, 0.042, 0.155);
-    add(new THREE.BoxGeometry(0.128, 0.060, 0.060), toeMat,  0.112, 0.042, 0.155);
-    // Laces
-    for (let i = 0; i < 4; i++) {
-      add(new THREE.BoxGeometry(0.065, 0.009, 0.012), white, -0.112, 0.076, 0.030 + i * 0.030);
-      add(new THREE.BoxGeometry(0.065, 0.009, 0.012), white,  0.112, 0.076, 0.030 + i * 0.030);
-    }
+    const fw = ankR * 2.4, fh = ankR * 1.2, fd = ankR * 5.0;
+    [-1, 1].forEach(s => {
+      const lx = legX * s;
+      add(new THREE.BoxGeometry(fw, fh, fd), null, lx, ankleY * 0.5 + fh / 2, ankR * 1.5);
+      add(new THREE.BoxGeometry(fw + 0.006, fh * 0.28, fd + 0.006), dark, lx, ankleY * 0.5, ankR * 1.5);
+      const toeMat = new THREE.MeshPhongMaterial({ color: lighten(c, 1.3), shininess: 60 });
+      add(new THREE.BoxGeometry(fw, fh * 0.7, fd * 0.22), toeMat, lx, ankleY * 0.5 + fh * 0.65, ankR * 2.55);
+      for (let i = 0; i < 4; i++)
+        add(new THREE.BoxGeometry(fw * 0.55, fh * 0.09, 0.010), white, lx, ankleY * 0.5 + fh * 1.0, ankR * (1.1 + i * 0.28));
+    });
   }
 
   return g;
