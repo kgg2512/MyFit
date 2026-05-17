@@ -7,43 +7,44 @@
     <title>MyFit — AI 가상 피팅</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-base: #0a0a0a;
-            --bg-surface: #141414;
-            --bg-card: #1e1e1e;
+            --bg-surface: #111111;
+            --bg-card: #1a1a1a;
+            --bg-card2: #222222;
             --accent: #00e5ff;
-            --accent-dim: rgba(0, 229, 255, 0.12);
-            --accent-glow: rgba(0, 229, 255, 0.35);
+            --accent-dim: rgba(0,229,255,0.1);
+            --accent-glow: rgba(0,229,255,0.3);
             --purple: #7c4dff;
-            --purple-dim: rgba(124, 77, 255, 0.12);
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --text-muted: #555;
-            --border: rgba(255,255,255,0.08);
-            --border-accent: rgba(0, 229, 255, 0.4);
+            --purple-dim: rgba(124,77,255,0.1);
             --success: #00e676;
+            --warning: #ffb300;
+            --text-primary: #ffffff;
+            --text-secondary: #909090;
+            --text-muted: #484848;
+            --border: rgba(255,255,255,0.07);
+            --border-accent: rgba(0,229,255,0.35);
             --radius-sm: 8px;
-            --radius-md: 16px;
-            --radius-lg: 24px;
+            --radius-md: 14px;
+            --radius-lg: 22px;
             --font: 'Inter', -apple-system, sans-serif;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
         body {
             font-family: var(--font);
-            background: var(--bg-base);
+            background: #000;
             color: var(--text-primary);
             height: 100dvh;
             overflow: hidden;
             display: flex;
-            flex-direction: column;
             align-items: center;
+            justify-content: center;
         }
 
-        /* ── Layout Shell ── */
         .app-shell {
             width: 100%;
             max-width: 430px;
@@ -60,621 +61,274 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px;
+            padding: 14px 20px 10px;
             position: relative;
             z-index: 10;
+            flex-shrink: 0;
         }
-
         .topbar-logo {
-            font-size: 20px;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 800;
             background: linear-gradient(135deg, var(--accent), var(--purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            letter-spacing: -0.5px;
         }
-
         .topbar-step {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
             font-weight: 500;
             letter-spacing: 0.5px;
         }
 
-        /* ── Progress Bar ── */
+        /* ── Progress ── */
         .progress-track {
             height: 2px;
             background: var(--border);
             margin: 0 20px;
+            border-radius: 2px;
+            flex-shrink: 0;
         }
-
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--accent), var(--purple));
-            transition: width 0.4s ease;
+            transition: width 0.5s cubic-bezier(.4,0,.2,1);
             border-radius: 2px;
         }
 
-        /* ── Screen Container ── */
+        /* ── Screen ── */
         .screens-wrap {
             flex: 1;
             position: relative;
             overflow: hidden;
+            min-height: 0;
         }
-
         .screen {
             position: absolute;
             inset: 0;
             display: flex;
             flex-direction: column;
-            padding: 24px 20px;
+            padding: 20px 20px 0;
             opacity: 0;
             pointer-events: none;
-            transform: translateX(30px);
-            transition: opacity 0.35s ease, transform 0.35s ease;
+            transform: translateX(28px);
+            transition: opacity 0.32s ease, transform 0.32s ease;
+            overflow-y: auto;
         }
-
-        .screen.active {
-            opacity: 1;
-            pointer-events: all;
-            transform: translateX(0);
-        }
-
-        .screen.exit {
-            opacity: 0;
-            transform: translateX(-30px);
-        }
+        .screen.active { opacity:1; pointer-events:all; transform:translateX(0); }
+        .screen.exit { opacity:0; transform:translateX(-28px); }
 
         /* ── Bottom Nav ── */
         .bottom-nav {
-            padding: 16px 20px 28px;
+            padding: 12px 20px 28px;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-
         .dot-row {
             display: flex;
             justify-content: center;
-            gap: 6px;
-            margin-bottom: 8px;
+            gap: 5px;
         }
-
         .dot {
-            width: 6px;
-            height: 6px;
+            width: 5px; height: 5px;
             border-radius: 3px;
             background: var(--text-muted);
-            transition: all 0.3s ease;
+            transition: all 0.3s;
             cursor: pointer;
         }
-
-        .dot.active {
-            width: 20px;
-            background: var(--accent);
-        }
-
-        .btn-row {
-            display: flex;
-            gap: 10px;
-        }
+        .dot.active { width: 18px; background: var(--accent); }
+        .btn-row { display: flex; gap: 10px; }
 
         /* ── Buttons ── */
         .btn {
             flex: 1;
-            padding: 14px 20px;
+            padding: 13px 20px;
             border-radius: var(--radius-md);
             font-size: 14px;
             font-weight: 600;
             font-family: var(--font);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.18s;
             border: none;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.2px;
         }
-
         .btn-primary {
             background: linear-gradient(135deg, var(--accent), var(--purple));
             color: #000;
         }
-
-        .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
-        .btn-primary:active { transform: translateY(0); }
-
+        .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); filter: brightness(0.95); }
         .btn-ghost {
             background: var(--bg-card);
             color: var(--text-secondary);
             border: 1px solid var(--border);
         }
-
         .btn-ghost:hover { border-color: var(--border-accent); color: var(--accent); }
-
-        .btn-full { width: 100%; }
+        .btn-success {
+            background: var(--success);
+            color: #000;
+        }
 
         /* ── Typography ── */
-        .screen-title {
-            font-size: 26px;
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 6px;
-        }
+        .screen-title { font-size: 24px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; }
+        .screen-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 20px; }
 
-        .screen-sub {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-
-        /* ═══════════════════════════════════
+        /* ═══════════════════════════════
            SCREEN 1 — WELCOME
-        ═══════════════════════════════════ */
+        ═══════════════════════════════ */
         .welcome-screen {
             justify-content: center;
             align-items: center;
             text-align: center;
             gap: 0;
+            position: relative;
+            overflow: hidden;
         }
-
+        .welcome-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: orbFloat 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .orb1 {
+            width: 220px; height: 220px;
+            background: rgba(0,229,255,0.12);
+            top: -60px; left: -40px;
+            animation-delay: 0s;
+        }
+        .orb2 {
+            width: 180px; height: 180px;
+            background: rgba(124,77,255,0.12);
+            bottom: 20px; right: -30px;
+            animation-delay: 2s;
+        }
+        @keyframes orbFloat {
+            0%,100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
+        }
         .welcome-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 22px;
+            width: 76px; height: 76px;
+            border-radius: 20px;
             background: linear-gradient(135deg, var(--accent-dim), var(--purple-dim));
             border: 1px solid var(--border-accent);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 28px;
+            margin: 0 auto 24px;
+            position: relative;
+            z-index: 1;
         }
-
         .welcome-logo-text {
-            font-size: 42px;
+            font-size: 44px;
             font-weight: 800;
             background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            letter-spacing: -1px;
+            position: relative; z-index: 1;
         }
-
         .welcome-tagline {
-            font-size: 16px;
+            font-size: 15px;
             color: var(--text-secondary);
-            margin-bottom: 40px;
+            margin-bottom: 36px;
             font-weight: 400;
+            position: relative; z-index: 1;
         }
-
         .feature-pills {
             display: flex;
-            gap: 8px;
+            gap: 7px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-bottom: 40px;
+            margin-bottom: 36px;
+            position: relative; z-index: 1;
         }
-
         .pill {
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             background: var(--bg-card);
             border: 1px solid var(--border);
             color: var(--text-secondary);
         }
-
+        .pill.accent {
+            border-color: var(--border-accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
         .welcome-cta {
             width: 100%;
-            max-width: 320px;
-            margin-bottom: 16px;
+            max-width: 300px;
+            padding: 15px;
+            font-size: 15px;
+            margin-bottom: 14px;
+            position: relative; z-index: 1;
         }
-
         .privacy-notice {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-muted);
             line-height: 1.5;
-            max-width: 280px;
-            text-align: center;
+            max-width: 270px;
+            position: relative; z-index: 1;
         }
 
-        /* ═══════════════════════════════════
-           SCREEN 2 — HOW IT WORKS
-        ═══════════════════════════════════ */
-        .steps-list {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            flex: 1;
-        }
-
-        .step-card {
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-            padding: 18px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            transition: border-color 0.2s;
-        }
-
-        .step-card:hover { border-color: var(--border-accent); }
-
-        .step-num {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--accent-dim), var(--purple-dim));
-            border: 1px solid var(--border-accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--accent);
-            flex-shrink: 0;
-        }
-
-        .step-text h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-        .step-text p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
-
-        /* ═══════════════════════════════════
-           SCREEN 3 — CAMERA
-        ═══════════════════════════════════ */
-        .camera-viewport {
-            flex: 1;
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
-        }
-
-        .camera-guide {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .body-guide {
-            width: 120px;
-            height: 260px;
-            border: 2px dashed rgba(0, 229, 255, 0.3);
-            border-radius: 60px 60px 40px 40px;
-            position: relative;
-        }
-
-        .head-guide {
-            width: 54px;
-            height: 54px;
-            border: 2px dashed rgba(0, 229, 255, 0.3);
-            border-radius: 50%;
-            position: absolute;
-            top: -66px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .corner {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border-color: var(--accent);
-            border-style: solid;
-            opacity: 0.8;
-        }
-        .corner-tl { top: 16px; left: 16px; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
-        .corner-tr { top: 16px; right: 16px; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
-        .corner-bl { bottom: 16px; left: 16px; border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
-        .corner-br { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
-
-        .camera-scan-line {
-            position: absolute;
-            left: 16px; right: 16px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            animation: scanLine 2.5s ease-in-out infinite;
-        }
-
-        @keyframes scanLine {
-            0% { top: 20%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 80%; opacity: 0; }
-        }
-
-        .photo-counter {
-            position: absolute;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 6px;
-        }
-
-        .photo-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-muted);
-            border: 1px solid var(--border);
-        }
-
-        .photo-dot.done { background: var(--accent); }
-        .photo-dot.current { background: var(--purple); animation: photoPulse 1s infinite; }
-
-        @keyframes photoPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .camera-hint {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 10px 14px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-align: center;
-            margin-bottom: 12px;
-        }
-
-        .privacy-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            color: var(--text-muted);
-            justify-content: center;
-        }
-
-        /* ═══════════════════════════════════
-           SCREEN 4 — SCAN
-        ═══════════════════════════════════ */
-        .scan-area {
-            flex: 1;
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+        /* ═══════════════════════════════
+           SCREEN 2 — BODY PROFILE
+        ═══════════════════════════════ */
+        .gender-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
             margin-bottom: 20px;
         }
-
-        .scan-figure {
-            position: relative;
-            z-index: 2;
-        }
-
-        .scan-rings {
-            position: absolute;
+        .gender-btn {
+            padding: 12px;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            font-family: var(--font);
+            cursor: pointer;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 8px;
         }
-
-        .ring {
-            position: absolute;
-            border-radius: 50%;
-            border: 1px solid var(--accent);
-            animation: ringExpand 2.5s ease-out infinite;
-            opacity: 0;
-        }
-
-        .ring:nth-child(1) { width: 80px; height: 80px; animation-delay: 0s; }
-        .ring:nth-child(2) { width: 140px; height: 140px; animation-delay: 0.7s; }
-        .ring:nth-child(3) { width: 200px; height: 200px; animation-delay: 1.4s; }
-
-        @keyframes ringExpand {
-            0% { transform: scale(0.5); opacity: 0.8; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-
-        .scan-status {
-            font-size: 13px;
-            color: var(--accent);
-            font-weight: 500;
-            margin-bottom: 16px;
-            z-index: 2;
-        }
-
-        .scan-bar-wrap {
-            width: 80%;
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            overflow: hidden;
-            z-index: 2;
-        }
-
-        .scan-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), var(--purple));
-            border-radius: 2px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .scan-pct {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 8px;
-            z-index: 2;
-        }
-
-        /* ═══════════════════════════════════
-           SCREEN 5 — CLOTHING
-        ═══════════════════════════════════ */
-        .filter-tabs {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 16px;
-        }
-
-        .tab {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: var(--font);
-        }
-
-        .tab.active {
-            background: var(--accent-dim);
+        .gender-btn.active {
             border-color: var(--accent);
             color: var(--accent);
+            background: var(--accent-dim);
         }
-
-        .clothing-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .clothing-card {
+        .measure-input-group {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             padding: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
         }
-
-        .clothing-card:hover { border-color: var(--border-accent); }
-
-        .clothing-card.selected {
-            border-color: var(--accent);
-            background: var(--accent-dim);
-            box-shadow: 0 0 16px var(--accent-glow);
-        }
-
-        .clothing-thumb {
-            width: 100%;
-            aspect-ratio: 1;
-            background: var(--bg-surface);
-            border-radius: var(--radius-sm);
+        .measure-input-group:focus-within { border-color: var(--border-accent); }
+        .measure-label-row {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-        }
-
-        .clothing-info { display: flex; flex-direction: column; gap: 2px; }
-        .clothing-name { font-size: 13px; font-weight: 600; }
-        .clothing-brand { font-size: 11px; color: var(--text-muted); }
-
-        .clothing-meta {
-            display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
         }
-
-        .size-tag {
-            font-size: 10px;
-            padding: 2px 8px;
-            background: var(--purple-dim);
-            border: 1px solid rgba(124, 77, 255, 0.3);
-            border-radius: 4px;
-            color: var(--purple);
-            font-weight: 600;
+        .measure-label-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
-
-        .selected-badge {
-            display: none;
-            width: 18px; height: 18px;
-            border-radius: 50%;
-            background: var(--accent);
-            align-items: center;
-            justify-content: center;
-        }
-
-        .clothing-card.selected .selected-badge { display: flex; }
-
-        /* ═══════════════════════════════════
-           SCREEN 6 — RESULT
-        ═══════════════════════════════════ */
-        .result-layout {
-            display: flex;
-            gap: 12px;
-            flex: 1;
-            margin-bottom: 16px;
-        }
-
-        .result-figure-area {
-            flex: 1;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .result-glow {
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: var(--accent-glow);
-            filter: blur(40px);
-        }
-
-        .result-silhouette {
-            z-index: 2;
-        }
-
-        .size-badge {
-            z-index: 2;
-            padding: 6px 18px;
-            background: linear-gradient(135deg, var(--accent), var(--purple));
-            border-radius: 20px;
-            font-size: 16px;
-            font-weight: 700;
-            color: #000;
-        }
-
-        .result-stats-col {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 130px;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 14px;
-            flex: 1;
-        }
-
-        .stat-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
-
-        .stat-value {
+        .measure-display {
             font-size: 22px;
             font-weight: 700;
             background: linear-gradient(135deg, var(--accent), var(--purple));
@@ -682,165 +336,706 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+        .measure-unit {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-left: 2px;
+            -webkit-text-fill-color: var(--text-muted);
+        }
+        .measure-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border);
+            outline: none;
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+        .measure-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+        .slider-range {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .bmi-card {
+            background: linear-gradient(135deg, var(--accent-dim), var(--purple-dim));
+            border: 1px solid var(--border-accent);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 4px;
+        }
+        .bmi-left { display: flex; flex-direction: column; gap: 2px; }
+        .bmi-label { font-size: 11px; color: var(--text-muted); }
+        .bmi-type { font-size: 16px; font-weight: 700; color: var(--accent); }
+        .bmi-num { font-size: 11px; color: var(--text-secondary); }
+        .bmi-meter {
+            width: 80px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .bmi-meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--purple));
+            border-radius: 3px;
+            transition: width 0.4s;
+        }
 
-        .stat-bar {
+        /* ═══════════════════════════════
+           SCREEN 3 — CAMERA
+        ═══════════════════════════════ */
+        .camera-viewport {
+            flex: 1;
+            min-height: 0;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+        .camera-bg {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, #0d0d0d 0%, #141414 100%);
+        }
+        .corner {
+            position: absolute;
+            width: 22px; height: 22px;
+            border-color: var(--accent);
+            border-style: solid;
+            opacity: 0.9;
+            z-index: 2;
+        }
+        .corner-tl { top:14px; left:14px; border-width:2px 0 0 2px; border-radius:4px 0 0 0; }
+        .corner-tr { top:14px; right:14px; border-width:2px 2px 0 0; border-radius:0 4px 0 0; }
+        .corner-bl { bottom:14px; left:14px; border-width:0 0 2px 2px; border-radius:0 0 0 4px; }
+        .corner-br { bottom:14px; right:14px; border-width:0 2px 2px 0; border-radius:0 0 4px 0; }
+        .camera-scan-line {
+            position: absolute;
+            left: 20px; right: 20px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            box-shadow: 0 0 8px var(--accent);
+            animation: scanLine 2.8s ease-in-out infinite;
+            z-index: 2;
+        }
+        @keyframes scanLine {
+            0% { top: 15%; opacity: 0; }
+            8% { opacity: 1; }
+            92% { opacity: 1; }
+            100% { top: 85%; opacity: 0; }
+        }
+        .body-guide-wrap {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .head-outline {
+            width: 50px; height: 50px;
+            border: 1.5px dashed rgba(0,229,255,0.35);
+            border-radius: 50%;
+        }
+        .body-outline {
+            width: 110px; height: 220px;
+            border: 1.5px dashed rgba(0,229,255,0.25);
+            border-radius: 55px 55px 40px 40px;
+        }
+        .pose-tag {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,230,118,0.15);
+            border: 1px solid var(--success);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 11px;
+            color: var(--success);
+            font-weight: 500;
+            white-space: nowrap;
+            z-index: 3;
+        }
+        .photo-strip {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 3;
+        }
+        .photo-pip {
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .photo-pip.done { background: var(--accent-dim); border-color: var(--accent); }
+        .photo-pip.active { background: rgba(124,77,255,0.2); border-color: var(--purple); animation: pipPulse 1s infinite; }
+        @keyframes pipPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        .photo-pip-label { font-size: 9px; font-weight: 600; color: var(--text-muted); }
+        .photo-pip.done .photo-pip-label { color: var(--accent); }
+        .photo-pip.active .photo-pip-label { color: var(--purple); }
+        .camera-hint {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 9px 14px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .privacy-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--text-muted);
+            justify-content: center;
+            margin-bottom: 2px;
+        }
+
+        /* ═══════════════════════════════
+           SCREEN 4 — SCAN
+        ═══════════════════════════════ */
+        .scan-area {
+            flex: 1;
+            min-height: 0;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+            gap: 10px;
+        }
+        .scan-rings {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            inset: 0;
+        }
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(0,229,255,0.3);
+            animation: ringExpand 3s ease-out infinite;
+            opacity: 0;
+        }
+        .ring:nth-child(1) { width:80px; height:80px; animation-delay:0s; }
+        .ring:nth-child(2) { width:150px; height:150px; animation-delay:0.8s; }
+        .ring:nth-child(3) { width:220px; height:220px; animation-delay:1.6s; }
+        @keyframes ringExpand {
+            0% { transform:scale(0.6); opacity:0.7; }
+            100% { transform:scale(1.4); opacity:0; }
+        }
+        .scan-figure { position:relative; z-index:2; }
+        .scan-status-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            z-index: 2;
+        }
+        .scan-status-text {
+            font-size: 13px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+        .scan-bar-wrap {
+            width: 160px;
             height: 3px;
             background: var(--border);
             border-radius: 2px;
-            margin-top: 6px;
             overflow: hidden;
         }
+        .scan-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--purple));
+            width: 0%;
+            transition: width 0.25s ease;
+        }
+        .scan-pct { font-size: 11px; color: var(--text-muted); }
+        .measurements-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            width: 100%;
+            z-index: 2;
+        }
+        .mchip {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 9px 10px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.4s, transform 0.4s;
+        }
+        .mchip.visible {
+            opacity: 1;
+            transform: translateY(0);
+            border-color: rgba(0,229,255,0.2);
+        }
+        .mchip-label { font-size: 10px; color: var(--text-muted); margin-bottom: 2px; }
+        .mchip-value { font-size: 14px; font-weight: 700; color: var(--accent); }
+        .mchip-unit { font-size: 9px; color: var(--text-muted); }
 
+        /* ═══════════════════════════════
+           SCREEN 5 — CLOTHING
+        ═══════════════════════════════ */
+        .filter-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .tab {
+            padding: 5px 13px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.18s;
+            font-family: var(--font);
+        }
+        .tab.active { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
+        .clothing-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 4px;
+        }
+        .clothing-card {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .clothing-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
+        .clothing-card.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 18px var(--accent-glow);
+        }
+        .clothing-thumb {
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .fit-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 10px;
+            padding: 3px 7px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--success);
+        }
+        .fit-type-tag {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-size: 9px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .clothing-body {
+            padding: 10px 12px 12px;
+        }
+        .clothing-name { font-size: 12px; font-weight: 600; margin-bottom: 1px; }
+        .clothing-brand { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; }
+        .clothing-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .clothing-price { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        .size-tag {
+            font-size: 9px;
+            padding: 2px 7px;
+            background: var(--purple-dim);
+            border: 1px solid rgba(124,77,255,0.3);
+            border-radius: 4px;
+            color: var(--purple);
+            font-weight: 700;
+        }
+        .check-circle {
+            display: none;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: var(--accent);
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .clothing-card.selected .check-circle { display: flex; }
+        .clothing-card.selected .size-tag { display: none; }
+
+        /* ═══════════════════════════════
+           SCREEN 6 — RESULT
+        ═══════════════════════════════ */
+        .result-hero {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .result-figure-col {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            padding: 16px 8px;
+            min-height: 200px;
+        }
+        .result-glow {
+            position: absolute;
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: rgba(0,229,255,0.15);
+            filter: blur(30px);
+        }
+        .size-badge {
+            z-index: 2;
+            padding: 5px 16px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 800;
+            color: #000;
+            letter-spacing: 0.5px;
+        }
+        .item-pill {
+            z-index: 2;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 0 8px;
+        }
+        .result-stats-col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 118px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            flex: 1;
+        }
+        .stat-label { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+        .stat-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
         .stat-bar-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--accent), var(--purple));
             border-radius: 2px;
-            transition: width 1s ease 0.3s;
             width: 0%;
+            transition: width 1s cubic-bezier(.4,0,.2,1) 0.2s;
         }
-
-        .result-item-info {
+        /* Body measurements */
+        .body-measurements {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
-            padding: 12px 16px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+        .bm-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
+            gap: 6px;
         }
-
-        .result-item-name { font-size: 13px; font-weight: 600; }
-        .result-item-size { font-size: 12px; color: var(--text-muted); }
+        .bm-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+        .bm-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .bm-cell { text-align: center; }
+        .bm-val { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+        .bm-key { font-size: 9px; color: var(--text-muted); margin-top: 1px; }
+        /* Fit spectrum */
+        .fit-spectrum {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            margin-bottom: 10px;
+        }
+        .fs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .fs-title { font-size: 11px; color: var(--text-muted); }
+        .fs-verdict {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--success);
+        }
+        .fs-track {
+            height: 6px;
+            background: linear-gradient(90deg, #ff6b6b 0%, var(--warning) 35%, var(--success) 50%, var(--warning) 65%, #ff6b6b 100%);
+            border-radius: 3px;
+            position: relative;
+            margin-bottom: 6px;
+        }
+        .fs-needle {
+            position: absolute;
+            top: -4px;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid var(--success);
+            transform: translateX(-50%);
+            box-shadow: 0 0 6px rgba(0,230,118,0.5);
+            transition: left 1.2s cubic-bezier(.4,0,.2,1) 0.3s;
+            left: 0%;
+        }
+        .fs-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--text-muted);
+        }
 
         /* ── Toast ── */
         .toast {
             position: fixed;
-            bottom: 100px;
+            bottom: 90px;
             left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: var(--bg-card);
+            transform: translateX(-50%) translateY(16px);
+            background: var(--bg-card2);
             border: 1px solid var(--border-accent);
             color: var(--text-primary);
-            padding: 10px 20px;
+            padding: 9px 18px;
             border-radius: var(--radius-md);
             font-size: 13px;
             font-weight: 500;
             opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 100;
+            transition: all 0.28s ease;
+            z-index: 200;
             white-space: nowrap;
+            pointer-events: none;
         }
+        .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+        svg { display:block; }
 
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        /* ── SVG Icons ── */
-        svg { display: block; }
+        /* scrollbar */
+        .clothing-grid::-webkit-scrollbar { width: 3px; }
+        .clothing-grid::-webkit-scrollbar-track { background: transparent; }
+        .clothing-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .screen::-webkit-scrollbar { width: 3px; }
+        .screen::-webkit-scrollbar-track { background: transparent; }
+        .screen::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
     </style>
 </head>
 <body>
 <div class="app-shell">
 
-    <!-- Top Bar -->
     <div class="topbar">
         <div class="topbar-logo">MyFit</div>
         <div class="topbar-step" id="stepLabel">1 / 6</div>
     </div>
-
-    <!-- Progress Bar -->
     <div class="progress-track">
         <div class="progress-fill" id="progressFill" style="width:16.6%"></div>
     </div>
 
-    <!-- Screens -->
     <div class="screens-wrap">
 
-        <!-- Screen 1: Welcome -->
+        <!-- S1: Welcome -->
         <div class="screen welcome-screen active" data-screen="1">
+            <div class="welcome-orb orb1"></div>
+            <div class="welcome-orb orb2"></div>
             <div class="welcome-icon">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                    <path d="M20 4C11.163 4 4 11.163 4 20s7.163 16 16 16 16-7.163 16-16S28.837 4 20 4z" fill="rgba(0,229,255,0.15)" stroke="#00e5ff" stroke-width="1.5"/>
-                    <path d="M20 12a4 4 0 100 8 4 4 0 000-8zM12 28c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round"/>
+                <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+                    <path d="M19 3C10.163 3 3 10.163 3 19s7.163 16 16 16 16-7.163 16-16S27.837 3 19 3z" fill="rgba(0,229,255,0.12)" stroke="#00e5ff" stroke-width="1.2"/>
+                    <path d="M19 11a4 4 0 100 8 4 4 0 000-8zM11 27c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round"/>
                 </svg>
             </div>
             <div class="welcome-logo-text">MyFit</div>
             <div class="welcome-tagline">입어보기 전에, 이미 알 수 있다</div>
             <div class="feature-pills">
-                <span class="pill">AI 사이즈 추천</span>
+                <span class="pill accent">AI 사이즈 추천</span>
                 <span class="pill">3D 신체 분석</span>
-                <span class="pill">반품 제로</span>
+                <span class="pill">반품률 -82%</span>
+                <span class="pill">15초 스캔</span>
             </div>
-            <button class="btn btn-primary welcome-cta" id="startBtn">시작하기</button>
-            <p class="privacy-notice">신체 정보는 가상 피팅 목적으로만 사용되며, 분석 완료 후 즉시 삭제됩니다.</p>
+            <button class="btn btn-primary welcome-cta" id="startBtn">무료로 시작하기</button>
+            <p class="privacy-notice">신체 정보는 가상 피팅 목적으로만 사용되며 분석 완료 후 즉시 삭제됩니다</p>
         </div>
 
-        <!-- Screen 2: How It Works -->
+        <!-- S2: Body Profile -->
         <div class="screen" data-screen="2">
-            <div class="screen-title">이렇게 작동해요</div>
-            <div class="screen-sub">3단계로 완벽한 가상 피팅을 경험하세요</div>
-            <div class="steps-list">
-                <div class="step-card">
-                    <div class="step-num">1</div>
-                    <div class="step-text">
-                        <h3>신체 촬영</h3>
-                        <p>정면·측면 사진 3장을 촬영해요. 1~2m 거리에서 전신이 나오게 서면 됩니다.</p>
-                    </div>
+            <div class="screen-title">신체 정보 입력</div>
+            <div class="screen-sub">기본 정보를 입력하면 AI 사이즈 정확도가 높아져요</div>
+
+            <div class="gender-row">
+                <button class="gender-btn active" data-gender="male">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M9.5 2.5L14 2.5M14 2.5V7M14 2.5L9.5 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                    남성
+                </button>
+                <button class="gender-btn" data-gender="female">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <circle cx="8" cy="5.5" r="4.5" stroke="currentColor" stroke-width="1.4"/>
+                        <path d="M8 10v5M5.5 13h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                    여성
+                </button>
+            </div>
+
+            <div class="measure-input-group">
+                <div class="measure-label-row">
+                    <span class="measure-label-text">키</span>
+                    <span>
+                        <span class="measure-display" id="heightVal">175</span>
+                        <span class="measure-unit">cm</span>
+                    </span>
                 </div>
-                <div class="step-card">
-                    <div class="step-num">2</div>
-                    <div class="step-text">
-                        <h3>AI 3D 분석</h3>
-                        <p>딥러닝 AI가 신체를 3D로 재현하고 정확한 치수를 측정합니다. (약 15초)</p>
-                    </div>
+                <input type="range" class="measure-slider" id="heightSlider" min="140" max="200" value="175">
+                <div class="slider-range"><span>140cm</span><span>200cm</span></div>
+            </div>
+
+            <div class="measure-input-group">
+                <div class="measure-label-row">
+                    <span class="measure-label-text">몸무게</span>
+                    <span>
+                        <span class="measure-display" id="weightVal">70</span>
+                        <span class="measure-unit">kg</span>
+                    </span>
                 </div>
-                <div class="step-card">
-                    <div class="step-num">3</div>
-                    <div class="step-text">
-                        <h3>가상 피팅 & 구매</h3>
-                        <p>3D 신체에 의류를 입혀보고 최적 사이즈를 추천 받아요. 바로 구매까지.</p>
+                <input type="range" class="measure-slider" id="weightSlider" min="40" max="120" value="70">
+                <div class="slider-range"><span>40kg</span><span>120kg</span></div>
+            </div>
+
+            <div class="bmi-card">
+                <div class="bmi-left">
+                    <span class="bmi-label">예상 체형</span>
+                    <span class="bmi-type" id="bmiType">보통 체형</span>
+                    <span class="bmi-num">BMI <span id="bmiNum">22.9</span></span>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                    <div class="bmi-meter">
+                        <div class="bmi-meter-fill" id="bmiMeter" style="width:55%"></div>
                     </div>
+                    <span style="font-size:9px;color:var(--text-muted)">저체중 — 표준 — 과체중</span>
                 </div>
             </div>
         </div>
 
-        <!-- Screen 3: Camera -->
+        <!-- S3: Camera -->
         <div class="screen" data-screen="3">
             <div class="screen-title">신체 촬영</div>
             <div class="screen-sub">정면을 바라보고 1~2m 거리에서 서주세요</div>
             <div class="camera-viewport">
+                <div class="camera-bg"></div>
                 <div class="corner corner-tl"></div>
                 <div class="corner corner-tr"></div>
                 <div class="corner corner-bl"></div>
                 <div class="corner corner-br"></div>
                 <div class="camera-scan-line"></div>
-                <div class="camera-guide">
-                    <div class="body-guide">
-                        <div class="head-guide"></div>
-                    </div>
+                <div class="pose-tag">자세 감지됨</div>
+                <div class="body-guide-wrap">
+                    <div class="head-outline"></div>
+                    <div class="body-outline"></div>
                 </div>
-                <div class="photo-counter" id="photoCounter">
-                    <div class="photo-dot done"></div>
-                    <div class="photo-dot current"></div>
-                    <div class="photo-dot"></div>
+                <div class="photo-strip">
+                    <div class="photo-pip done"><span class="photo-pip-label">정면</span></div>
+                    <div class="photo-pip active"><span class="photo-pip-label">측면</span></div>
+                    <div class="photo-pip"><span class="photo-pip-label">후면</span></div>
                 </div>
             </div>
-            <div class="camera-hint">사진 2 / 3 — 측면을 향해 서주세요</div>
+            <div class="camera-hint">사진 2 / 3 — 측면을 향해 서주세요 (약 1.5m 거리)</div>
             <div class="privacy-badge">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M6 1L1.5 3v3c0 2.486 1.95 4.815 4.5 5.4C8.55 10.815 10.5 8.486 10.5 6V3L6 1z" stroke="#555" stroke-width="1.2"/>
-                    <path d="M4 6l1.5 1.5L8 4" stroke="#555" stroke-width="1.2" stroke-linecap="round"/>
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                    <path d="M5.5 1L1.5 3v3c0 2.3 1.8 4.4 4 5C7.7 10.4 9.5 8.3 9.5 6V3L5.5 1z" stroke="#484848" stroke-width="1.2"/>
+                    <path d="M3.5 5.5l1.5 1.5L8 4" stroke="#484848" stroke-width="1.2" stroke-linecap="round"/>
                 </svg>
-                신체 사진은 분석 후 즉시 삭제됩니다 (개인정보보호법 준수)
+                사진은 분석 후 즉시 삭제됩니다 (개인정보보호법 준수)
             </div>
         </div>
 
-        <!-- Screen 4: Scan -->
+        <!-- S4: Scan -->
         <div class="screen" data-screen="4">
             <div class="screen-title">AI 분석 중</div>
-            <div class="screen-sub">신체를 3D로 재현하고 있어요</div>
+            <div class="screen-sub">신체를 3D로 재현하고 치수를 측정해요</div>
             <div class="scan-area">
                 <div class="scan-rings">
                     <div class="ring"></div>
@@ -848,24 +1043,27 @@
                     <div class="ring"></div>
                 </div>
                 <div class="scan-figure">
-                    <svg width="80" height="140" viewBox="0 0 80 140" fill="none">
-                        <circle cx="40" cy="18" r="14" fill="rgba(0,229,255,0.15)" stroke="#00e5ff" stroke-width="1.5"/>
-                        <path d="M20 45c0-11 8-19 20-19s20 8 20 19v40H20V45z" fill="rgba(124,77,255,0.1)" stroke="#7c4dff" stroke-width="1.5"/>
-                        <rect x="4" y="45" width="14" height="38" rx="7" fill="rgba(0,229,255,0.08)" stroke="#00e5ff" stroke-width="1.2"/>
-                        <rect x="62" y="45" width="14" height="38" rx="7" fill="rgba(0,229,255,0.08)" stroke="#00e5ff" stroke-width="1.2"/>
-                        <rect x="22" y="85" width="14" height="46" rx="7" fill="rgba(124,77,255,0.08)" stroke="#7c4dff" stroke-width="1.2"/>
-                        <rect x="44" y="85" width="14" height="46" rx="7" fill="rgba(124,77,255,0.08)" stroke="#7c4dff" stroke-width="1.2"/>
+                    <svg width="70" height="120" viewBox="0 0 70 120" fill="none">
+                        <circle cx="35" cy="15" r="12" fill="rgba(0,229,255,0.12)" stroke="#00e5ff" stroke-width="1.2"/>
+                        <path d="M17 38c0-9.4 7-17 18-17s18 7.6 18 17v34H17V38z" fill="rgba(124,77,255,0.08)" stroke="#7c4dff" stroke-width="1.2"/>
+                        <rect x="3" y="38" width="12" height="32" rx="6" fill="rgba(0,229,255,0.06)" stroke="#00e5ff" stroke-width="1"/>
+                        <rect x="55" y="38" width="12" height="32" rx="6" fill="rgba(0,229,255,0.06)" stroke="#00e5ff" stroke-width="1"/>
+                        <rect x="19" y="72" width="12" height="40" rx="6" fill="rgba(124,77,255,0.06)" stroke="#7c4dff" stroke-width="1"/>
+                        <rect x="39" y="72" width="12" height="40" rx="6" fill="rgba(124,77,255,0.06)" stroke="#7c4dff" stroke-width="1"/>
                     </svg>
                 </div>
-                <div class="scan-status" id="scanStatus">신체 키포인트 추출 중...</div>
-                <div class="scan-bar-wrap">
-                    <div class="scan-bar-fill" id="scanBar"></div>
+                <div class="scan-status-row">
+                    <div class="scan-status-text" id="scanStatus">신체 키포인트 추출 중...</div>
+                    <div class="scan-bar-wrap">
+                        <div class="scan-bar-fill" id="scanBar"></div>
+                    </div>
+                    <div class="scan-pct" id="scanPct">0%</div>
                 </div>
-                <div class="scan-pct" id="scanPct">0%</div>
+                <div class="measurements-grid" id="measureGrid"></div>
             </div>
         </div>
 
-        <!-- Screen 5: Clothing -->
+        <!-- S5: Clothing -->
         <div class="screen" data-screen="5">
             <div class="screen-title">의상 선택</div>
             <div class="filter-tabs" id="filterTabs">
@@ -877,310 +1075,412 @@
             <div class="clothing-grid" id="clothingGrid"></div>
         </div>
 
-        <!-- Screen 6: Result -->
+        <!-- S6: Result -->
         <div class="screen" data-screen="6">
             <div class="screen-title">피팅 결과</div>
-            <div class="result-item-info">
-                <div>
-                    <div class="result-item-name" id="resultItemName">오버핏 반팔 티</div>
-                    <div class="result-item-size" id="resultItemBrand">무신사 스탠다드</div>
-                </div>
-                <div class="size-badge" id="resultSize">M</div>
-            </div>
-            <div class="result-layout">
-                <div class="result-figure-area">
+            <div class="result-hero">
+                <div class="result-figure-col">
                     <div class="result-glow"></div>
-                    <div class="result-silhouette">
-                        <svg width="90" height="160" viewBox="0 0 90 160" fill="none">
-                            <circle cx="45" cy="20" r="16" fill="rgba(0,229,255,0.15)" stroke="#00e5ff" stroke-width="1.5"/>
-                            <path d="M18 52c0-12 9.4-21 27-21s27 9 27 21v48H18V52z" fill="rgba(0,229,255,0.1)" stroke="#00e5ff" stroke-width="1.5"/>
-                            <rect x="2" y="52" width="16" height="44" rx="8" fill="rgba(124,77,255,0.12)" stroke="#7c4dff" stroke-width="1.2"/>
-                            <rect x="72" y="52" width="16" height="44" rx="8" fill="rgba(124,77,255,0.12)" stroke="#7c4dff" stroke-width="1.2"/>
-                            <rect x="20" y="100" width="18" height="54" rx="9" fill="rgba(124,77,255,0.1)" stroke="#7c4dff" stroke-width="1.2"/>
-                            <rect x="52" y="100" width="18" height="54" rx="9" fill="rgba(124,77,255,0.1)" stroke="#7c4dff" stroke-width="1.2"/>
-                        </svg>
-                    </div>
+                    <svg width="80" height="140" viewBox="0 0 80 140" fill="none" style="position:relative;z-index:2">
+                        <circle cx="40" cy="17" r="14" fill="rgba(0,229,255,0.12)" stroke="#00e5ff" stroke-width="1.2"/>
+                        <path d="M18 45c0-11 8.8-20 22-20s22 9 22 20v46H18V45z" fill="rgba(0,229,255,0.08)" stroke="#00e5ff" stroke-width="1.2"/>
+                        <rect x="2" y="45" width="15" height="40" rx="7.5" fill="rgba(124,77,255,0.08)" stroke="#7c4dff" stroke-width="1"/>
+                        <rect x="63" y="45" width="15" height="40" rx="7.5" fill="rgba(124,77,255,0.08)" stroke="#7c4dff" stroke-width="1"/>
+                        <rect x="20" y="91" width="16" height="46" rx="8" fill="rgba(124,77,255,0.06)" stroke="#7c4dff" stroke-width="1"/>
+                        <rect x="44" y="91" width="16" height="46" rx="8" fill="rgba(124,77,255,0.06)" stroke="#7c4dff" stroke-width="1"/>
+                    </svg>
+                    <div class="size-badge" id="resultSize">M</div>
+                    <div class="item-pill" id="resultItemPill">무신사 스탠다드</div>
                 </div>
                 <div class="result-stats-col">
                     <div class="stat-card">
                         <div class="stat-label">핏 점수</div>
-                        <div class="stat-value">9.2</div>
-                        <div class="stat-bar"><div class="stat-bar-fill" data-width="92%"></div></div>
+                        <div class="stat-value" id="statFit">9.4</div>
+                        <div class="stat-bar"><div class="stat-bar-fill" data-width="94%"></div></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">편의성</div>
-                        <div class="stat-value">8.8</div>
+                        <div class="stat-label">착용 편의</div>
+                        <div class="stat-value" id="statComfort">8.8</div>
                         <div class="stat-bar"><div class="stat-bar-fill" data-width="88%"></div></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">추천도</div>
-                        <div class="stat-value">95%</div>
-                        <div class="stat-bar"><div class="stat-bar-fill" data-width="95%"></div></div>
+                        <div class="stat-label">추천 확률</div>
+                        <div class="stat-value" id="statReco">96%</div>
+                        <div class="stat-bar"><div class="stat-bar-fill" data-width="96%"></div></div>
                     </div>
+                </div>
+            </div>
+
+            <div class="body-measurements" id="bodyMeasCard">
+                <div class="bm-title">측정된 신체 치수</div>
+                <div class="bm-grid" id="bmGrid"></div>
+            </div>
+
+            <div class="fit-spectrum">
+                <div class="fs-header">
+                    <span class="fs-title">핏 분석</span>
+                    <span class="fs-verdict">완벽한 핏</span>
+                </div>
+                <div class="fs-track">
+                    <div class="fs-needle" id="fsNeedle"></div>
+                </div>
+                <div class="fs-labels">
+                    <span>너무 타이트</span>
+                    <span>완벽</span>
+                    <span>너무 루즈</span>
                 </div>
             </div>
         </div>
 
     </div><!-- /screens-wrap -->
 
-    <!-- Bottom Nav -->
     <div class="bottom-nav">
         <div class="dot-row" id="dotRow"></div>
         <div class="btn-row" id="btnRow"></div>
     </div>
 
-</div><!-- /app-shell -->
-
-<!-- Toast -->
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
-    /* ── State ── */
-    const state = {
-        currentScreen: 1,
-        totalScreens: 6,
-        selectedClothing: null,
-        scanRunning: false,
-    };
+/* ── State ── */
+const state = {
+    current: 1,
+    total: 6,
+    selected: null,
+    scanDone: false,
+    profile: { height: 175, weight: 70, gender: 'male' },
+};
 
-    /* ── Clothing Data ── */
-    const clothingData = [
-        { id: 1, name: '오버핏 반팔 티', brand: '무신사 스탠다드', icon: '👕', size: 'M', cat: 'top' },
-        { id: 2, name: '옥스퍼드 셔츠', brand: 'POLO', icon: '👔', size: 'M', cat: 'top' },
-        { id: 3, name: '와이드 데님', brand: 'Levi\'s', icon: '👖', size: '30', cat: 'bottom' },
-        { id: 4, name: '슬랙스 팬츠', brand: 'COS', icon: '🩳', size: '32', cat: 'bottom' },
-        { id: 5, name: '윈드브레이커', brand: 'Nike', icon: '🧥', size: 'L', cat: 'outer' },
-        { id: 6, name: '트렌치코트', brand: 'ZARA', icon: '🥼', size: 'M', cat: 'outer' },
+/* ── Clothing Data ── */
+const items = [
+    { id:1, name:'오버핏 반팔 티', brand:'무신사 스탠다드', cat:'top', size:'M', price:'₩29,900', fit:94, fitType:'오버핏', color:'#2a4a7a', fit2:9.4, comfort:8.8, reco:96 },
+    { id:2, name:'옥스퍼드 셔츠', brand:'POLO Ralph Lauren', cat:'top', size:'M', price:'₩89,000', fit:91, fitType:'레귤러', color:'#6b3a3a', fit2:9.1, comfort:9.2, reco:91 },
+    { id:3, name:'와이드 데님', brand:"Levi's", cat:'bottom', size:'30', price:'₩79,000', fit:88, fitType:'와이드', color:'#2a3560', fit2:8.8, comfort:9.5, reco:89 },
+    { id:4, name:'슬랙스 팬츠', brand:'COS', cat:'bottom', size:'30', price:'₩65,000', fit:96, fitType:'슬림', color:'#282828', fit2:9.6, comfort:8.5, reco:96 },
+    { id:5, name:'나이키 윈드브레이커', brand:'Nike', cat:'outer', size:'L', price:'₩129,000', fit:89, fitType:'오버핏', color:'#1a3a1a', fit2:8.9, comfort:9.0, reco:90 },
+    { id:6, name:'트렌치코트', brand:'ZARA', cat:'outer', size:'M', price:'₩149,000', fit:92, fitType:'레귤러', color:'#4a3a28', fit2:9.2, comfort:8.7, reco:93 },
+];
+
+/* ── Clothing SVG icons ── */
+function clothingIcon(cat, color) {
+    const c = color;
+    if (cat === 'top') return `<svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <path d="M10 20L20 12H24C24 12 25.5 19 28 19C30.5 19 32 12 32 12H36L46 20L40 28V46H16V28L10 20Z" fill="${c}" stroke="rgba(255,255,255,0.15)" stroke-width="1.2"/>
+        <path d="M24 12C24 12 25 17 28 17C31 17 32 12 32 12" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+    </svg>`;
+    if (cat === 'bottom') return `<svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <path d="M12 10H44L41 34L36 50H30L28 34L26 50H20L15 34L12 10Z" fill="${c}" stroke="rgba(255,255,255,0.15)" stroke-width="1.2"/>
+        <path d="M28 10V34" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+        <rect x="12" y="10" width="32" height="6" rx="2" fill="rgba(255,255,255,0.08)"/>
+    </svg>`;
+    return `<svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <path d="M6 20L18 10H22L28 20L34 10H38L50 20L46 48H36V30H20V48H10L6 20Z" fill="${c}" stroke="rgba(255,255,255,0.15)" stroke-width="1.2"/>
+        <path d="M22 10C22 10 24 16 28 16C32 16 34 10 34 10" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+    </svg>`;
+}
+
+/* ── Body measurements from profile ── */
+function calcMeasurements() {
+    const h = state.profile.height, w = state.profile.weight;
+    const f = state.profile.gender === 'male' ? 1 : 0.94;
+    return [
+        { label:'키', value: h, unit:'cm' },
+        { label:'몸무게', value: w, unit:'kg' },
+        { label:'가슴', value: Math.round(h * 0.523 * f + (w-70)*0.15), unit:'cm' },
+        { label:'허리', value: Math.round(h * 0.435 * f + (w-70)*0.2), unit:'cm' },
+        { label:'엉덩이', value: Math.round(h * 0.545 * f + (w-70)*0.12), unit:'cm' },
+        { label:'어깨', value: Math.round(h * 0.245 * f), unit:'cm' },
     ];
+}
 
-    /* ── DOM refs ── */
-    const progressFill = document.getElementById('progressFill');
-    const stepLabel = document.getElementById('stepLabel');
-    const dotRow = document.getElementById('dotRow');
-    const btnRow = document.getElementById('btnRow');
-    const toast = document.getElementById('toast');
+/* ── DOM ── */
+const progressFill = document.getElementById('progressFill');
+const stepLabel = document.getElementById('stepLabel');
+const dotRow = document.getElementById('dotRow');
+const btnRow = document.getElementById('btnRow');
+const toast = document.getElementById('toast');
 
-    /* ── Navigation ── */
-    function showScreen(n) {
-        const prev = document.querySelector('.screen.active');
-        const next = document.querySelector(`[data-screen="${n}"]`);
-        if (!next || n === state.currentScreen) return;
-
-        if (prev) {
-            prev.classList.add('exit');
-            setTimeout(() => prev.classList.remove('active', 'exit'), 350);
-        }
-
-        next.classList.add('active');
-        state.currentScreen = n;
-
-        progressFill.style.width = (n / state.totalScreens * 100) + '%';
-        stepLabel.textContent = n + ' / ' + state.totalScreens;
-
-        renderDots();
-        renderButtons();
-        onScreenEnter(n);
-    }
-
-    function nextScreen() { showScreen(state.currentScreen + 1); }
-    function prevScreen() { showScreen(state.currentScreen - 1); }
-
-    /* ── Dots ── */
-    function renderDots() {
-        dotRow.innerHTML = '';
-        for (let i = 1; i <= state.totalScreens; i++) {
-            const d = document.createElement('div');
-            d.className = 'dot' + (i === state.currentScreen ? ' active' : '');
-            d.addEventListener('click', () => showScreen(i));
-            dotRow.appendChild(d);
-        }
-    }
-
-    /* ── Buttons per screen ── */
-    const btnConfigs = {
-        1: [],
-        2: [{ label: '돌아가기', cls: 'btn-ghost', fn: prevScreen }, { label: '다음', cls: 'btn-primary', fn: nextScreen }],
-        3: [{ label: '돌아가기', cls: 'btn-ghost', fn: prevScreen }, { label: '촬영 완료', cls: 'btn-primary', fn: nextScreen }],
-        4: [],
-        5: [{ label: '돌아가기', cls: 'btn-ghost', fn: prevScreen }, { label: '피팅 보기', cls: 'btn-primary', fn: goToResult }],
-        6: [{ label: '다시 선택', cls: 'btn-ghost', fn: () => showScreen(1) }, { label: '결과 공유', cls: 'btn-primary', fn: shareResult }],
-    };
-
-    function renderButtons() {
-        btnRow.innerHTML = '';
-        (btnConfigs[state.currentScreen] || []).forEach(cfg => {
-            const b = document.createElement('button');
-            b.className = 'btn ' + cfg.cls;
-            b.textContent = cfg.label;
-            b.addEventListener('click', cfg.fn);
-            btnRow.appendChild(b);
-        });
-    }
-
-    /* ── Screen enter hooks ── */
-    function onScreenEnter(n) {
-        if (n === 4) startScan();
-        if (n === 5) renderClothing('all');
-        if (n === 6) animateResultBars();
-    }
-
-    /* ── Scan Animation ── */
-    const scanMessages = [
-        '신체 키포인트 추출 중...',
-        '실루엣 분석 중...',
-        '3D 메시 생성 중...',
-        '신체 치수 계산 중...',
-        '사이즈 매핑 완료!',
-    ];
-
-    function startScan() {
-        if (state.scanRunning) return;
-        state.scanRunning = true;
-        const bar = document.getElementById('scanBar');
-        const pct = document.getElementById('scanPct');
-        const status = document.getElementById('scanStatus');
-        let progress = 0;
-
-        bar.style.width = '0%';
-        pct.textContent = '0%';
-
-        const interval = setInterval(() => {
-            progress += Math.random() * 4 + 1;
-            if (progress >= 100) progress = 100;
-            bar.style.width = progress + '%';
-            pct.textContent = Math.round(progress) + '%';
-
-            const msgIdx = Math.min(Math.floor(progress / 20), scanMessages.length - 1);
-            status.textContent = scanMessages[msgIdx];
-
-            if (progress >= 100) {
-                clearInterval(interval);
-                state.scanRunning = false;
-                setTimeout(nextScreen, 800);
-            }
-        }, 150);
-    }
-
-    /* ── Clothing ── */
-    let currentFilter = 'all';
-
-    function renderClothing(filter) {
-        currentFilter = filter;
-        const grid = document.getElementById('clothingGrid');
-        grid.innerHTML = '';
-
-        const items = filter === 'all' ? clothingData : clothingData.filter(c => c.cat === filter);
-
-        items.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'clothing-card' + (state.selectedClothing?.id === item.id ? ' selected' : '');
-            card.dataset.id = item.id;
-
-            const thumb = document.createElement('div');
-            thumb.className = 'clothing-thumb';
-            thumb.textContent = item.icon;
-
-            const info = document.createElement('div');
-            info.className = 'clothing-info';
-
-            const name = document.createElement('div');
-            name.className = 'clothing-name';
-            name.textContent = item.name;
-
-            const brand = document.createElement('div');
-            brand.className = 'clothing-brand';
-            brand.textContent = item.brand;
-
-            const meta = document.createElement('div');
-            meta.className = 'clothing-meta';
-
-            const sizeTag = document.createElement('div');
-            sizeTag.className = 'size-tag';
-            sizeTag.textContent = '추천 ' + item.size;
-
-            const badge = document.createElement('div');
-            badge.className = 'selected-badge';
-            badge.innerHTML = '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" stroke="#000" stroke-width="1.5" stroke-linecap="round"/></svg>';
-
-            meta.appendChild(sizeTag);
-            meta.appendChild(badge);
-            info.appendChild(name);
-            info.appendChild(brand);
-
-            card.appendChild(thumb);
-            card.appendChild(info);
-            card.appendChild(meta);
-
-            card.addEventListener('click', () => selectClothing(item, card));
-            grid.appendChild(card);
-        });
-    }
-
-    function selectClothing(item, card) {
-        state.selectedClothing = item;
-        document.querySelectorAll('.clothing-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-    }
-
-    function goToResult() {
-        if (!state.selectedClothing) {
-            showToast('의상을 선택해주세요');
-            return;
-        }
-        document.getElementById('resultItemName').textContent = state.selectedClothing.name;
-        document.getElementById('resultItemBrand').textContent = state.selectedClothing.brand;
-        document.getElementById('resultSize').textContent = state.selectedClothing.size;
-        showScreen(6);
-    }
-
-    function animateResultBars() {
-        setTimeout(() => {
-            document.querySelectorAll('.stat-bar-fill').forEach(el => {
-                el.style.width = el.dataset.width;
-            });
-        }, 100);
-    }
-
-    /* ── Filter Tabs ── */
-    document.getElementById('filterTabs').addEventListener('click', e => {
-        const tab = e.target.closest('.tab');
-        if (!tab) return;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        renderClothing(tab.dataset.filter);
-    });
-
-    /* ── Share ── */
-    function shareResult() {
-        const text = `MyFit 피팅 결과\n의상: ${state.selectedClothing?.name || '—'}\n추천 사이즈: ${state.selectedClothing?.size || 'M'}\n핏 점수: 9.2 / 10\nhttps://kgg2512.github.io/MyFit/`;
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(text).then(() => showToast('결과가 클립보드에 복사됐습니다'));
-        } else {
-            showToast('공유 기능은 HTTPS 환경에서 사용 가능합니다');
-        }
-    }
-
-    /* ── Toast ── */
-    let toastTimer;
-    function showToast(msg) {
-        toast.textContent = msg;
-        toast.classList.add('show');
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
-    }
-
-    /* ── Welcome button ── */
-    document.getElementById('startBtn').addEventListener('click', nextScreen);
-
-    /* ── Keyboard ── */
-    document.addEventListener('keydown', e => {
-        if (e.key === 'ArrowRight') nextScreen();
-        if (e.key === 'ArrowLeft') prevScreen();
-    });
-
-    /* ── Init ── */
+/* ── Navigation ── */
+function showScreen(n) {
+    const prev = document.querySelector('.screen.active');
+    const next = document.querySelector(`[data-screen="${n}"]`);
+    if (!next || n === state.current) return;
+    if (prev) { prev.classList.add('exit'); setTimeout(() => prev.classList.remove('active','exit'), 340); }
+    next.classList.add('active');
+    state.current = n;
+    progressFill.style.width = (n / state.total * 100) + '%';
+    stepLabel.textContent = n + ' / ' + state.total;
     renderDots();
     renderButtons();
+    onEnter(n);
+}
+const next = () => showScreen(state.current + 1);
+const prev = () => showScreen(state.current - 1);
+
+/* ── Dots ── */
+function renderDots() {
+    dotRow.innerHTML = '';
+    for (let i = 1; i <= state.total; i++) {
+        const d = document.createElement('div');
+        d.className = 'dot' + (i === state.current ? ' active' : '');
+        d.addEventListener('click', () => showScreen(i));
+        dotRow.appendChild(d);
+    }
+}
+
+/* ── Button configs ── */
+const btnCfg = {
+    1: [],
+    2: [{ l:'돌아가기', c:'btn-ghost', fn:prev }, { l:'다음', c:'btn-primary', fn:next }],
+    3: [{ l:'돌아가기', c:'btn-ghost', fn:prev }, { l:'촬영 완료', c:'btn-primary', fn:next }],
+    4: [],
+    5: [{ l:'돌아가기', c:'btn-ghost', fn:prev }, { l:'피팅 보기', c:'btn-primary', fn:goToResult }],
+    6: [{ l:'다시 선택', c:'btn-ghost', fn:() => showScreen(1) }, { l:'결과 공유', c:'btn-primary', fn:shareResult }],
+};
+function renderButtons() {
+    btnRow.innerHTML = '';
+    (btnCfg[state.current] || []).forEach(cfg => {
+        const b = document.createElement('button');
+        b.className = 'btn ' + cfg.c;
+        b.textContent = cfg.l;
+        b.addEventListener('click', cfg.fn);
+        btnRow.appendChild(b);
+    });
+}
+
+/* ── Screen enter ── */
+function onEnter(n) {
+    if (n === 4) startScan();
+    if (n === 5) renderClothing('all');
+    if (n === 6) enterResult();
+}
+
+/* ── Body Profile (S2) ── */
+function calcBMI() {
+    const h = state.profile.height / 100;
+    return (state.profile.weight / (h * h)).toFixed(1);
+}
+function updateBMI() {
+    const bmi = parseFloat(calcBMI());
+    let type, pct;
+    if (bmi < 18.5) { type = '저체중'; pct = 20; }
+    else if (bmi < 23) { type = '표준 체형'; pct = 50; }
+    else if (bmi < 25) { type = '약간 과체중'; pct = 70; }
+    else { type = '과체중'; pct = 90; }
+    document.getElementById('bmiType').textContent = type;
+    document.getElementById('bmiNum').textContent = bmi;
+    document.getElementById('bmiMeter').style.width = pct + '%';
+}
+document.getElementById('heightSlider').addEventListener('input', function() {
+    state.profile.height = +this.value;
+    document.getElementById('heightVal').textContent = this.value;
+    updateBMI();
+});
+document.getElementById('weightSlider').addEventListener('input', function() {
+    state.profile.weight = +this.value;
+    document.getElementById('weightVal').textContent = this.value;
+    updateBMI();
+});
+document.querySelectorAll('.gender-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        state.profile.gender = this.dataset.gender;
+        updateBMI();
+    });
+});
+
+/* ── Scan (S4) ── */
+const scanMessages = [
+    '신체 키포인트 추출 중...',
+    '실루엣 분석 중...',
+    '3D 메시 생성 중...',
+    '신체 치수 계산 중...',
+    '사이즈 데이터 매핑 중...',
+    '분석 완료!',
+];
+const measureLabels = ['키', '몸무게', '가슴', '허리', '엉덩이', '어깨'];
+
+function startScan() {
+    if (state.scanDone) return;
+    state.scanDone = true;
+
+    const bar = document.getElementById('scanBar');
+    const pct = document.getElementById('scanPct');
+    const status = document.getElementById('scanStatus');
+    const grid = document.getElementById('measureGrid');
+    const meas = calcMeasurements();
+
+    grid.innerHTML = '';
+    meas.forEach(m => {
+        const chip = document.createElement('div');
+        chip.className = 'mchip';
+        chip.innerHTML = `<div class="mchip-label">${m.label}</div><div class="mchip-value">${m.value}<span class="mchip-unit">${m.unit}</span></div>`;
+        grid.appendChild(chip);
+    });
+
+    bar.style.width = '0%';
+    pct.textContent = '0%';
+    let progress = 0;
+    const chips = grid.querySelectorAll('.mchip');
+
+    const iv = setInterval(() => {
+        progress += Math.random() * 3.5 + 1.2;
+        if (progress >= 100) progress = 100;
+        bar.style.width = progress + '%';
+        pct.textContent = Math.round(progress) + '%';
+
+        const msgIdx = Math.min(Math.floor(progress / 17), scanMessages.length - 1);
+        status.textContent = scanMessages[msgIdx];
+
+        const chipIdx = Math.floor(progress / 100 * chips.length);
+        chips.forEach((c, i) => { if (i < chipIdx) c.classList.add('visible'); });
+
+        if (progress >= 100) {
+            clearInterval(iv);
+            chips.forEach(c => c.classList.add('visible'));
+            setTimeout(next, 900);
+        }
+    }, 130);
+}
+
+/* ── Clothing (S5) ── */
+let currentFilter = 'all';
+function renderClothing(filter) {
+    currentFilter = filter;
+    const grid = document.getElementById('clothingGrid');
+    grid.innerHTML = '';
+    const list = filter === 'all' ? items : items.filter(i => i.cat === filter);
+    list.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'clothing-card' + (state.selected?.id === item.id ? ' selected' : '');
+
+        const thumb = document.createElement('div');
+        thumb.className = 'clothing-thumb';
+        thumb.style.background = `linear-gradient(160deg, ${item.color}cc, ${item.color}66)`;
+        thumb.innerHTML = clothingIcon(item.cat, item.color) +
+            `<div class="fit-badge">${item.fit}% 핏</div>` +
+            `<div class="fit-type-tag">${item.fitType}</div>`;
+
+        const body = document.createElement('div');
+        body.className = 'clothing-body';
+
+        const name = document.createElement('div');
+        name.className = 'clothing-name';
+        name.textContent = item.name;
+
+        const brand = document.createElement('div');
+        brand.className = 'clothing-brand';
+        brand.textContent = item.brand;
+
+        const foot = document.createElement('div');
+        foot.className = 'clothing-foot';
+
+        const price = document.createElement('div');
+        price.className = 'clothing-price';
+        price.textContent = item.price;
+
+        const sizeTag = document.createElement('div');
+        sizeTag.className = 'size-tag';
+        sizeTag.textContent = '추천 ' + item.size;
+
+        const check = document.createElement('div');
+        check.className = 'check-circle';
+        check.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+        foot.appendChild(price);
+        foot.appendChild(sizeTag);
+        foot.appendChild(check);
+        body.appendChild(name);
+        body.appendChild(brand);
+        body.appendChild(foot);
+        card.appendChild(thumb);
+        card.appendChild(body);
+        card.addEventListener('click', () => {
+            state.selected = item;
+            document.querySelectorAll('.clothing-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+        });
+        grid.appendChild(card);
+    });
+}
+
+document.getElementById('filterTabs').addEventListener('click', e => {
+    const tab = e.target.closest('.tab');
+    if (!tab) return;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderClothing(tab.dataset.filter);
+});
+
+/* ── Result (S6) ── */
+function goToResult() {
+    if (!state.selected) { showToast('의상을 선택해주세요'); return; }
+    document.getElementById('resultSize').textContent = state.selected.size;
+    document.getElementById('resultItemPill').textContent = state.selected.brand;
+    document.getElementById('statFit').textContent = state.selected.fit2;
+    document.getElementById('statComfort').textContent = state.selected.comfort;
+    document.getElementById('statReco').textContent = state.selected.reco + '%';
+    const fills = document.querySelectorAll('#screen6 .stat-bar-fill, [data-screen="6"] .stat-bar-fill');
+    fills.forEach(f => { f.style.width = '0%'; });
+    document.querySelector('[data-screen="6"] [data-width="94%"]').dataset.width = state.selected.fit2 * 10 + '%';
+    document.querySelector('[data-screen="6"] [data-width="88%"]').dataset.width = state.selected.comfort * 10 + '%';
+    document.querySelector('[data-screen="6"] [data-width="96%"]').dataset.width = state.selected.reco + '%';
+    showScreen(6);
+}
+
+function enterResult() {
+    setTimeout(() => {
+        document.querySelectorAll('[data-screen="6"] .stat-bar-fill').forEach(el => {
+            el.style.width = el.dataset.width;
+        });
+        const needle = document.getElementById('fsNeedle');
+        if (needle) needle.style.left = '50%';
+    }, 120);
+
+    const meas = calcMeasurements();
+    const grid = document.getElementById('bmGrid');
+    grid.innerHTML = '';
+    meas.forEach(m => {
+        const cell = document.createElement('div');
+        cell.className = 'bm-cell';
+        cell.innerHTML = `<div class="bm-val">${m.value}${m.unit}</div><div class="bm-key">${m.label}</div>`;
+        grid.appendChild(cell);
+    });
+}
+
+/* ── Share ── */
+function shareResult() {
+    const item = state.selected;
+    const meas = calcMeasurements();
+    const text = `MyFit 피팅 결과\n━━━━━━━━━━━━━\n의상: ${item?.name || '—'} (${item?.brand || ''})\n추천 사이즈: ${item?.size || 'M'}\n핏 점수: ${item?.fit2 || 9.4} / 10\n추천 확률: ${item?.reco || 96}%\n\n신체 치수 | 가슴 ${meas[2].value}cm · 허리 ${meas[3].value}cm · 엉덩이 ${meas[4].value}cm\n\nhttps://kgg2512.github.io/MyFit/`;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => showToast('결과가 클립보드에 복사됐어요'));
+    } else {
+        showToast('HTTPS 환경에서 공유 가능합니다');
+    }
+}
+
+/* ── Toast ── */
+let toastTimer;
+function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+/* ── Welcome ── */
+document.getElementById('startBtn').addEventListener('click', next);
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') next();
+    if (e.key === 'ArrowLeft') prev();
+});
+
+/* ── Init ── */
+renderDots();
+renderButtons();
 </script>
 </body>
 </html>
