@@ -746,6 +746,78 @@
         /* ═══════════════════════════════
            SCREEN 5 — CLOTHING
         ═══════════════════════════════ */
+        .search-bar {
+            position: relative;
+            margin-bottom: 12px;
+        }
+        .search-bar input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px 16px 12px 42px;
+            font-size: 13px;
+            font-family: var(--font);
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            backdrop-filter: blur(12px);
+        }
+        .search-bar input::placeholder { color: var(--text-muted); }
+        .search-bar input:focus {
+            border-color: var(--border-accent);
+            box-shadow: 0 0 0 1px rgba(0,240,255,0.08);
+        }
+        .search-bar-icon {
+            position: absolute;
+            left: 14px; top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--text-muted);
+        }
+        .search-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+            display: none;
+        }
+        .ai-reco-header {
+            background: linear-gradient(135deg, rgba(0,240,255,0.06), rgba(155,109,255,0.06));
+            border: 1px solid rgba(0,240,255,0.15);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(12px);
+        }
+        .ai-reco-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-dim), var(--purple-dim));
+            border: 1px solid var(--border-accent);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ai-reco-text { flex: 1; }
+        .ai-reco-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+        .ai-reco-sub { font-size: 11px; color: var(--text-secondary); }
+        .ai-reco-sub span { color: var(--accent); font-weight: 600; }
+        .rank-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            border-radius: 8px;
+            padding: 3px 7px;
+            font-size: 9px;
+            font-weight: 800;
+            color: #fff;
+            z-index: 3;
+            letter-spacing: 0.3px;
+        }
         .filter-tabs {
             display: flex;
             gap: 6px;
@@ -851,6 +923,28 @@
             color: var(--purple);
             font-weight: 700;
         }
+        .sizes-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+        .size-chip {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            background: transparent;
+            letter-spacing: 0.3px;
+        }
+        .size-chip.recommended {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+        .nike-swoosh { opacity: 0.5; }
         .check-circle {
             display: none;
             width: 22px; height: 22px;
@@ -1030,6 +1124,119 @@
             color: var(--text-muted);
             font-weight: 500;
         }
+
+        /* ═══════════════════════════════
+           SCREEN 7 — CHECKOUT
+        ═══════════════════════════════ */
+        .checkout-item-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            margin-bottom: 12px;
+            backdrop-filter: blur(12px);
+        }
+        .checkout-item-thumb {
+            width: 64px; height: 64px;
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .checkout-item-info { flex: 1; }
+        .checkout-item-name { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+        .checkout-item-brand { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+        .checkout-item-tags { display: flex; gap: 6px; }
+        .checkout-tag {
+            font-size: 10px; font-weight: 600;
+            padding: 3px 9px; border-radius: 6px;
+            background: var(--accent-dim); border: 1px solid var(--border-accent);
+            color: var(--accent);
+        }
+        .checkout-tag.purple {
+            background: var(--purple-dim); border-color: rgba(155,109,255,0.25);
+            color: var(--purple);
+        }
+        .checkout-price-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 12px;
+            backdrop-filter: blur(12px);
+        }
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 0;
+            font-size: 13px;
+        }
+        .price-row-label { color: var(--text-secondary); }
+        .price-row-value { font-weight: 600; }
+        .price-row-value.free { color: var(--success); font-size: 11px; }
+        .price-divider { height: 1px; background: var(--border); margin: 6px 0; }
+        .price-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0 4px;
+        }
+        .price-total-label { font-size: 13px; color: var(--text-secondary); }
+        .price-total-value {
+            font-size: 22px; font-weight: 900;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; letter-spacing: -0.5px;
+        }
+        .checkout-delivery {
+            background: var(--success-dim);
+            border: 1px solid rgba(0,255,136,0.2);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            display: flex; align-items: center; gap: 8px;
+            font-size: 12px; color: var(--success); font-weight: 600;
+            margin-bottom: 12px;
+        }
+        /* Order complete overlay */
+        .order-complete {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-surface);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 16px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.4s;
+            z-index: 10;
+            padding: 40px;
+            text-align: center;
+        }
+        .order-complete.show { opacity: 1; pointer-events: all; }
+        .order-check-ring {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: var(--success-dim);
+            border: 2px solid var(--success);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 40px rgba(0,255,136,0.2);
+            animation: checkPop 0.4s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes checkPop { 0%{transform:scale(0.5);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+        .order-complete-title { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
+        .order-complete-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+        .order-complete-detail {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 20px;
+            width: 100%;
+            backdrop-filter: blur(12px);
+        }
+        .order-num { font-size: 10px; color: var(--text-muted); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+        .order-num-val { font-size: 16px; font-weight: 800; color: var(--accent); letter-spacing: 1px; }
 
         /* ── Toast ── */
         .toast {
@@ -1221,7 +1428,27 @@
 
         <!-- S5: Clothing -->
         <div class="screen" data-screen="5">
-            <div class="screen-title">의상 선택</div>
+            <div class="screen-title">AI 맞춤 추천</div>
+            <div class="ai-reco-header" id="aiRecoHeader">
+                <div class="ai-reco-icon">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <circle cx="9" cy="4" r="2.5" stroke="#00f0ff" stroke-width="1.3"/>
+                        <path d="M3 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#00f0ff" stroke-width="1.3" stroke-linecap="round"/>
+                        <path d="M13 8l1.5 1.5L17 7" stroke="#9b6dff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="ai-reco-text">
+                    <div class="ai-reco-title">내 체형에 딱 맞는 의상 찾았어요</div>
+                    <div class="ai-reco-sub" id="aiRecoSub">키 <span id="rh">175</span>cm · 몸무게 <span id="rw">70</span>kg 기준 핏 순위</div>
+                </div>
+            </div>
+            <div class="search-bar">
+                <svg class="search-bar-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/>
+                    <path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+                <input type="text" id="clothingSearch" placeholder="브랜드 또는 의상 검색..." autocomplete="off">
+            </div>
             <div class="filter-tabs" id="filterTabs">
                 <button class="tab active" data-filter="all">전체</button>
                 <button class="tab" data-filter="top">상의</button>
@@ -1229,6 +1456,7 @@
                 <button class="tab" data-filter="outer">외투</button>
             </div>
             <div class="clothing-grid" id="clothingGrid"></div>
+            <div class="search-empty" id="searchEmpty">검색 결과가 없어요</div>
         </div>
 
         <!-- S6: Result -->
@@ -1288,6 +1516,65 @@
             </div>
         </div>
 
+        <!-- S7: Checkout -->
+        <div class="screen" data-screen="7">
+            <div class="screen-title">주문 확인</div>
+            <div class="screen-sub" id="checkoutSub">선택한 의상을 결제해요</div>
+
+            <div class="checkout-item-card" id="checkoutItemCard">
+                <div class="checkout-item-thumb" id="checkoutThumb"></div>
+                <div class="checkout-item-info">
+                    <div class="checkout-item-name" id="checkoutName">—</div>
+                    <div class="checkout-item-brand" id="checkoutBrand">—</div>
+                    <div class="checkout-item-tags">
+                        <span class="checkout-tag" id="checkoutSize">M</span>
+                        <span class="checkout-tag purple" id="checkoutFit">핏 9.4</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-delivery">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M1 4h8v6H1zM9 6l2 1v3H9" stroke="#00ff88" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="3.5" cy="11" r="1" fill="#00ff88"/>
+                    <circle cx="10.5" cy="11" r="1" fill="#00ff88"/>
+                </svg>
+                내일 도착 · 무료 배송
+            </div>
+
+            <div class="checkout-price-card">
+                <div class="price-row">
+                    <span class="price-row-label">상품 금액</span>
+                    <span class="price-row-value" id="checkoutPrice">₩29,900</span>
+                </div>
+                <div class="price-row">
+                    <span class="price-row-label">배송비</span>
+                    <span class="price-row-value free">무료</span>
+                </div>
+                <div class="price-divider"></div>
+                <div class="price-total-row">
+                    <span class="price-total-label">최종 결제금액</span>
+                    <span class="price-total-value" id="checkoutTotal">₩29,900</span>
+                </div>
+            </div>
+
+            <!-- Order complete overlay -->
+            <div class="order-complete" id="orderComplete">
+                <div class="order-check-ring">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M8 16l5 5 11-10" stroke="#00ff88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="order-complete-title">주문 완료!</div>
+                <div class="order-complete-sub">결제가 완료됐어요.<br>내일 문 앞까지 배송해 드려요.</div>
+                <div class="order-complete-detail">
+                    <div class="order-num">주문번호</div>
+                    <div class="order-num-val" id="orderNum">MF-20260518-0001</div>
+                </div>
+                <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="showScreen(1)">처음으로 돌아가기</button>
+            </div>
+        </div>
+
     </div><!-- /screens-wrap -->
 
     <div class="bottom-nav">
@@ -1302,21 +1589,71 @@
 /* ── State ── */
 const state = {
     current: 1,
-    total: 6,
+    total: 7,
     selected: null,
     scanDone: false,
     profile: { height: 175, weight: 70, gender: 'male' },
 };
 
-/* ── Clothing Data ── */
+/* ── Nike Product Data ── */
 const items = [
-    { id:1, name:'오버핏 반팔 티', brand:'무신사 스탠다드', cat:'top', size:'M', price:'₩29,900', fit:94, fitType:'오버핏', color:'#1a2d4a', fit2:9.4, comfort:8.8, reco:96 },
-    { id:2, name:'옥스퍼드 셔츠', brand:'POLO Ralph Lauren', cat:'top', size:'M', price:'₩89,000', fit:91, fitType:'레귤러', color:'#4a2020', fit2:9.1, comfort:9.2, reco:91 },
-    { id:3, name:'와이드 데님', brand:"Levi's", cat:'bottom', size:'30', price:'₩79,000', fit:88, fitType:'와이드', color:'#1a2040', fit2:8.8, comfort:9.5, reco:89 },
-    { id:4, name:'슬랙스 팬츠', brand:'COS', cat:'bottom', size:'30', price:'₩65,000', fit:96, fitType:'슬림', color:'#1a1a2a', fit2:9.6, comfort:8.5, reco:96 },
-    { id:5, name:'나이키 윈드브레이커', brand:'Nike', cat:'outer', size:'L', price:'₩129,000', fit:89, fitType:'오버핏', color:'#0a220a', fit2:8.9, comfort:9.0, reco:90 },
-    { id:6, name:'트렌치코트', brand:'ZARA', cat:'outer', size:'M', price:'₩149,000', fit:92, fitType:'레귤러', color:'#2e2010', fit2:9.2, comfort:8.7, reco:93 },
+    { id:1,  name:'스포츠웨어 클럽 플리스 크루', brand:'Nike', cat:'top',
+      sizes:['XS','S','M','L','XL','2XL'], price:'₩59,000',
+      fit:95, fitType:'레귤러핏', color:'#111111', colorName:'블랙',
+      fit2:9.5, comfort:9.2, reco:97 },
+    { id:2,  name:'드라이핏 UV 하이버 탑', brand:'Nike', cat:'top',
+      sizes:['S','M','L','XL'], price:'₩45,000',
+      fit:91, fitType:'슬림핏', color:'#0033aa', colorName:'코트 블루',
+      fit2:9.1, comfort:9.4, reco:92 },
+    { id:3,  name:'테크 플리스 풀집 후디', brand:'Nike', cat:'top',
+      sizes:['XS','S','M','L','XL','2XL'], price:'₩139,000',
+      fit:88, fitType:'레귤러핏', color:'#1c1c1e', colorName:'다크 헤더',
+      fit2:8.8, comfort:9.6, reco:90 },
+    { id:4,  name:'스포츠웨어 클럽 플리스 조거', brand:'Nike', cat:'bottom',
+      sizes:['XS','S','M','L','XL','2XL'], price:'₩69,000',
+      fit:93, fitType:'테이퍼드', color:'#2c2c2c', colorName:'카본 헤더',
+      fit2:9.3, comfort:9.5, reco:94 },
+    { id:5,  name:'테크 플리스 조거 팬츠', brand:'Nike', cat:'bottom',
+      sizes:['S','M','L','XL','2XL'], price:'₩149,000',
+      fit:96, fitType:'슬림핏', color:'#0a0a0a', colorName:'블랙/블랙',
+      fit2:9.6, comfort:9.3, reco:97 },
+    { id:6,  name:'나이키 런 디비전 챌린저 5" 쇼츠', brand:'Nike', cat:'bottom',
+      sizes:['S','M','L','XL'], price:'₩55,000',
+      fit:90, fitType:'레귤러핏', color:'#1a1a3a', colorName:'블랙/실버',
+      fit2:9.0, comfort:9.7, reco:91 },
+    { id:7,  name:'윈드러너 후디 재킷', brand:'Nike', cat:'outer',
+      sizes:['XS','S','M','L','XL'], price:'₩129,000',
+      fit:88, fitType:'오버핏', color:'#001a5e', colorName:'미드나잇 네이비',
+      fit2:8.8, comfort:9.1, reco:89 },
+    { id:8,  name:'써마-FIT ADV 다운 파카', brand:'Nike', cat:'outer',
+      sizes:['S','M','L','XL'], price:'₩329,000',
+      fit:85, fitType:'오버핏', color:'#0d0d0d', colorName:'블랙',
+      fit2:8.5, comfort:9.7, reco:86 },
+    { id:9,  name:'ACG 스톰-FIT ADV 고어텍스 재킷', brand:'Nike', cat:'outer',
+      sizes:['S','M','L','XL','2XL'], price:'₩279,000',
+      fit:82, fitType:'레귤러핏', color:'#0e2b14', colorName:'시콰이아',
+      fit2:8.2, comfort:8.8, reco:83 },
 ];
+
+/* ── Size Recommendation ── */
+const SIZE_ORDER = ['XS','S','M','L','XL','2XL'];
+function recommendSize(item) {
+    const h = state.profile.height, w = state.profile.weight;
+    let idx;
+    if      (h <= 163 && w <= 57) idx = 0;
+    else if (h <= 170 && w <= 67) idx = 1;
+    else if (h <= 178 && w <= 78) idx = 2;
+    else if (h <= 185 && w <= 90) idx = 3;
+    else if (h <= 192 && w <= 100) idx = 4;
+    else                           idx = 5;
+    const target = SIZE_ORDER[idx];
+    if (item.sizes.includes(target)) return target;
+    for (let d = 1; d <= 5; d++) {
+        if (idx-d >= 0 && item.sizes.includes(SIZE_ORDER[idx-d])) return SIZE_ORDER[idx-d];
+        if (idx+d < SIZE_ORDER.length && item.sizes.includes(SIZE_ORDER[idx+d])) return SIZE_ORDER[idx+d];
+    }
+    return item.sizes[0];
+}
 
 /* ── Clothing SVG icons ── */
 function clothingIcon(cat, color) {
@@ -1393,7 +1730,8 @@ const btnCfg = {
     3: [{ l:'돌아가기', c:'btn-ghost', fn:prev }, { l:'촬영 완료', c:'btn-primary', fn:next }],
     4: [],
     5: [{ l:'돌아가기', c:'btn-ghost', fn:prev }, { l:'피팅 보기', c:'btn-primary', fn:goToResult }],
-    6: [{ l:'다시 선택', c:'btn-ghost', fn:() => showScreen(1) }, { l:'결과 공유', c:'btn-primary', fn:shareResult }],
+    6: [{ l:'다시 선택', c:'btn-ghost', fn:() => showScreen(1) }, { l:'구매하기 →', c:'btn-primary', fn:goToCheckout }],
+    7: [{ l:'이전', c:'btn-ghost', fn:prev }, { l:'결제하기', c:'btn-success', fn:confirmOrder }],
 };
 function renderButtons() {
     btnRow.innerHTML = '';
@@ -1408,9 +1746,10 @@ function renderButtons() {
 
 /* ── Screen enter ── */
 function onEnter(n) {
-    if (n === 4) startScan();
-    if (n === 5) renderClothing('all');
+    if (n === 4) { state.scanDone = false; startScan(); }
+    if (n === 5) enterClothing();
     if (n === 6) enterResult();
+    if (n === 7) enterCheckout();
 }
 
 /* ── Body Profile (S2) ── */
@@ -1503,20 +1842,36 @@ function startScan() {
 }
 
 /* ── Clothing (S5) ── */
+function enterClothing() {
+    document.getElementById('rh').textContent = state.profile.height;
+    document.getElementById('rw').textContent = state.profile.weight;
+    document.getElementById('clothingSearch').value = '';
+    renderClothing('all');
+}
+
 let currentFilter = 'all';
 function renderClothing(filter) {
     currentFilter = filter;
     const grid = document.getElementById('clothingGrid');
+    const emptyEl = document.getElementById('searchEmpty');
     grid.innerHTML = '';
-    const list = filter === 'all' ? items : items.filter(i => i.cat === filter);
-    list.forEach(item => {
+    const query = (document.getElementById('clothingSearch')?.value || '').trim().toLowerCase();
+    let pool = filter === 'all' ? items : items.filter(i => i.cat === filter);
+    if (query) pool = pool.filter(i => i.name.toLowerCase().includes(query) || i.brand.toLowerCase().includes(query));
+    const sorted = [...pool].sort((a,b) => b.fit - a.fit);
+    if (emptyEl) emptyEl.style.display = sorted.length === 0 ? 'block' : 'none';
+    sorted.forEach((item, idx) => {
         const card = document.createElement('div');
         card.className = 'clothing-card' + (state.selected?.id === item.id ? ' selected' : '');
 
         const thumb = document.createElement('div');
         thumb.className = 'clothing-thumb';
         thumb.style.background = `linear-gradient(160deg, ${item.color}dd, ${item.color}44)`;
-        thumb.innerHTML = clothingIcon(item.cat, item.color) +
+        const recSize = recommendSize(item);
+        const rankLabel = idx === 0 ? '1위 추천' : idx === 1 ? '2위' : null;
+        thumb.innerHTML = `<svg class="nike-swoosh" style="position:absolute;bottom:10px;right:10px;z-index:1" width="32" height="12" viewBox="0 0 32 12" fill="none"><path d="M0 9L28 0C29.5 -0.4 31.5 0.8 30 3L20 12" fill="white" opacity="0.25"/></svg>` +
+            clothingIcon(item.cat, item.color) +
+            (rankLabel ? `<div class="rank-badge">${rankLabel}</div>` : '') +
             `<div class="fit-badge">${item.fit}% 핏</div>` +
             `<div class="fit-type-tag">${item.fitType}</div>`;
 
@@ -1529,7 +1884,16 @@ function renderClothing(filter) {
 
         const brand = document.createElement('div');
         brand.className = 'clothing-brand';
-        brand.textContent = item.brand;
+        brand.textContent = item.colorName || item.brand;
+
+        const sizesRow = document.createElement('div');
+        sizesRow.className = 'sizes-row';
+        item.sizes.forEach(s => {
+            const chip = document.createElement('span');
+            chip.className = 'size-chip' + (s === recSize ? ' recommended' : '');
+            chip.textContent = s;
+            sizesRow.appendChild(chip);
+        });
 
         const foot = document.createElement('div');
         foot.className = 'clothing-foot';
@@ -1538,19 +1902,15 @@ function renderClothing(filter) {
         price.className = 'clothing-price';
         price.textContent = item.price;
 
-        const sizeTag = document.createElement('div');
-        sizeTag.className = 'size-tag';
-        sizeTag.textContent = '추천 ' + item.size;
-
         const check = document.createElement('div');
         check.className = 'check-circle';
         check.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
         foot.appendChild(price);
-        foot.appendChild(sizeTag);
         foot.appendChild(check);
         body.appendChild(name);
         body.appendChild(brand);
+        body.appendChild(sizesRow);
         body.appendChild(foot);
         card.appendChild(thumb);
         card.appendChild(body);
@@ -1570,11 +1930,14 @@ document.getElementById('filterTabs').addEventListener('click', e => {
     tab.classList.add('active');
     renderClothing(tab.dataset.filter);
 });
+document.getElementById('clothingSearch').addEventListener('input', () => {
+    renderClothing(currentFilter);
+});
 
 /* ── Result (S6) ── */
 function goToResult() {
     if (!state.selected) { showToast('의상을 선택해주세요'); return; }
-    document.getElementById('resultSize').textContent = state.selected.size;
+    document.getElementById('resultSize').textContent = recommendSize(state.selected);
     document.getElementById('resultItemPill').textContent = state.selected.brand;
     document.getElementById('statFit').textContent = state.selected.fit2;
     document.getElementById('statComfort').textContent = state.selected.comfort;
@@ -1605,6 +1968,35 @@ function enterResult() {
         cell.innerHTML = `<div class="bm-val">${m.value}${m.unit}</div><div class="bm-key">${m.label}</div>`;
         grid.appendChild(cell);
     });
+}
+
+/* ── Checkout (S7) ── */
+function goToCheckout() {
+    if (!state.selected) { showToast('의상을 선택해주세요'); return; }
+    showScreen(7);
+}
+
+function enterCheckout() {
+    const item = state.selected;
+    if (!item) return;
+    document.getElementById('orderComplete').classList.remove('show');
+    document.getElementById('checkoutName').textContent = item.name;
+    document.getElementById('checkoutBrand').textContent = item.brand;
+    document.getElementById('checkoutSize').textContent = '사이즈 ' + recommendSize(item);
+    document.getElementById('checkoutFit').textContent = '핏 ' + item.fit2;
+    document.getElementById('checkoutPrice').textContent = item.price;
+    document.getElementById('checkoutTotal').textContent = item.price;
+    const thumb = document.getElementById('checkoutThumb');
+    thumb.style.background = `linear-gradient(160deg, ${item.color}dd, ${item.color}44)`;
+    thumb.innerHTML = clothingIcon(item.cat, item.color).replace('width="60" height="60"', 'width="48" height="48"');
+}
+
+function confirmOrder() {
+    const num = 'MF-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + String(Math.floor(Math.random()*9000)+1000);
+    document.getElementById('orderNum').textContent = num;
+    document.getElementById('orderComplete').classList.add('show');
+    document.querySelectorAll('.bottom-nav .btn').forEach(b => b.disabled = true);
+    btnRow.innerHTML = '';
 }
 
 /* ── Share ── */
