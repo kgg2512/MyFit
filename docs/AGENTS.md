@@ -4,13 +4,14 @@
 ```
 회장 강경구
     └── Alpha (CEO 에이전트)
-            ├── CTO (기술/개발)
-            ├── CFO (재무/투자)
-            ├── COO (운영/프로젝트)
-            ├── CMO (마케팅/사업)
-            └── CDO (디자인/UX)
+            ├── CTO  — 개발/AI/GitHub
+            ├── CFO  — 재무/투자/암호화폐
+            ├── COO  — 운영/일정/프로젝트
+            ├── CMO  — 마케팅/브랜딩/파트너십
+            ├── CDO  — 디자인/UI/UX
+            ├── CISO — 보안/컴플라이언스/개인정보
+            └── CLO  — 법무/계약/M&A/규제/IP
 ```
-RuFlo V3 기반: hierarchical-mesh 토폴로지, maxAgents=15
 
 ---
 
@@ -54,26 +55,37 @@ RuFlo V3 기반: hierarchical-mesh 토폴로지, maxAgents=15
 ---
 
 ## CDO — 디자인 총괄
-**위치:** agents/CDO/  
-**담당:** UI/UX 디자인, 브랜드 아이덴티티, 디자인 시스템, 사용자 경험  
-**주요 업무:** MyFit 앱 디자인 시스템, 피그마 프로토타입, 브랜드 가이드  
-**하위 에이전트:** UI Designer, UX Researcher, Brand Designer
+**위치:** `.claude/g2/CDO/`  
+**담당:** UI/UX, 브랜드 아이덴티티, 디자인 시스템  
+**주요 업무:** MyFit·신데렐라 디자인, DESIGN.md 관리  
+**하위 에이전트:** Brand Guardian, UI Designer, UX Researcher, Visual Storyteller
 
 ---
 
-## RuFlo V3 설정
-```
-CLAUDE_FLOW_TOPOLOGY=hierarchical-mesh
-maxAgents=15
-memory: .swarm/memory.db (HNSW indexing)
-MCP: C:\Users\kgg25\AppData\Roaming\npm\claude-flow.cmd
-```
+## CISO — 보안 총괄
+**위치:** `.claude/g2/CISO/`  
+**담당:** 정보보안, 개인정보보호, 컴플라이언스, 침해 대응  
+**주요 업무:** 생체정보 처리 보안, OWASP 코드 감사, GDPR·개인정보보호법  
+**하위 에이전트:** Security Auditor, Compliance Officer, Incident Responder, Threat Intelligence  
+**⚠️ 필수 연동:** 개인정보·보안 관련 개발 시 CTO 실행 전 CISO 검토 선행
+
+---
+
+## CLO — 법무 총괄
+**위치:** `.claude/g2/CLO/`  
+**담당:** 계약, M&A, 지식재산권, 개인정보법, 고용, 규제, AI 거버넌스  
+**주요 업무:** 파트너십 계약, 이용약관, 투자 계약 검토  
+**하위 에이전트:** Corporate, Commercial, IP, Employment, Privacy, Regulatory, AI Governance, Litigation (8개 전문팀)
+
+---
 
 ## 위임 기준표
-| 도메인 | C-Level | RuFlo 하위 에이전트 |
-|--------|---------|---------------------|
-| 개발/AI/GitHub/인프라 | CTO | Architect, ML, Frontend, Backend |
-| 재무/투자/암호화폐 | CFO | Market Analyst, Risk |
-| 일정/운영/마일스톤 | COO | PM, QA |
-| 마케팅/브랜딩/파트너 | CMO | Content, Growth, Partnership |
-| 디자인/UI/UX/브랜드 | CDO | UI, UX, Brand |
+| 도메인 | 담당 C-Level | 경로 |
+|--------|-------------|------|
+| 개발/AI/GitHub/인프라 | CTO | `.claude/g2/CTO/CLAUDE.md` |
+| 재무/투자/암호화폐 | CFO | `.claude/g2/CFO/CLAUDE.md` |
+| 운영/일정/마일스톤 | COO | `.claude/g2/COO/CLAUDE.md` |
+| 마케팅/브랜딩/파트너 | CMO | `.claude/g2/CMO/CLAUDE.md` |
+| 디자인/UI/UX/브랜드 | CDO | `.claude/g2/CDO/CLAUDE.md` |
+| 보안/컴플라이언스/개인정보 | CISO | `.claude/g2/CISO/CLAUDE.md` |
+| 법무/계약/M&A/규제/IP | CLO | `.claude/g2/CLO/CLAUDE.md` |
