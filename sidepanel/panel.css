@@ -471,6 +471,7 @@ body {
   background: var(--bg2); color: var(--text);
   box-shadow: 0 1px 4px rgba(0,0,0,.4);
 }
+.tab-badge-soon { font-size: 10px; opacity: .6; }
 .fitting-tab-panel { display: none; }
 .fitting-tab-panel.active { display: block; }
 
