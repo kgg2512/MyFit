@@ -8,7 +8,8 @@
     "activeTab",
     "storage",
     "scripting",
-    "sidePanel"
+    "sidePanel",
+    "tabs"
   ],
 
   "host_permissions": [
@@ -17,7 +18,8 @@
     "https://store.nike.com/*",
     "https://www.zara.com/*",
     "https://www.uniqlo.com/*",
-    "https://www.hnm.com/*"
+    "https://www.hm.com/*",
+    "https://www2.hm.com/*"
   ],
 
   "background": {
@@ -77,7 +79,8 @@
         "https://store.nike.com/*",
         "https://www.zara.com/*",
         "https://www.uniqlo.com/*",
-        "https://www.hnm.com/*"
+        "https://www.hm.com/*",
+        "https://www2.hm.com/*"
       ]
     }
   ]
