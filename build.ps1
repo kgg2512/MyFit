@@ -37,10 +37,10 @@ foreach ($size in $iconSizes) {
     }
 }
 
-# ── 4. 패키지 크기 체크 ──
-Write-Host "[4/4] 패키지 크기 분석..." -ForegroundColor Yellow
+# ── 4. 패키지 크기 체크 (node_modules 제외) ──
+Write-Host "[4/4] 패키지 크기 분석 (node_modules 제외)..." -ForegroundColor Yellow
 $totalSize = 0
-Get-ChildItem -Path $PSScriptRoot -Recurse -File | ForEach-Object {
+Get-ChildItem -Path $PSScriptRoot -Recurse -File | Where-Object { $_.FullName -notmatch 'node_modules' } | ForEach-Object {
     $totalSize += $_.Length
 }
 $sizeMB = [math]::Round($totalSize / 1MB, 2)
