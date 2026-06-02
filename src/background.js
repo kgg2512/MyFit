@@ -32,17 +32,30 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
 });
 
-// 세션 키 (service worker 생존 동안 메모리 유지)
+// 세션 키 — chrome.storage.session으로 SW 재시작 후에도 복원
 let _sessionKey = null;
 
 async function getSessionKey() {
   if (_sessionKey) return _sessionKey;
-  // Service worker 재시작 후 키 재생성 (storage 데이터도 재암호화 필요)
+
+  // SW 재시작 시 session storage에서 키 복원 시도
+  const stored = await chrome.storage.session.get('_mf_key_jwk');
+  if (stored._mf_key_jwk) {
+    _sessionKey = await crypto.subtle.importKey(
+      'jwk', stored._mf_key_jwk,
+      { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']
+    );
+    return _sessionKey;
+  }
+
+  // 새 키 생성 (최초 실행 또는 브라우저 재시작)
   _sessionKey = await crypto.subtle.generateKey(
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
+    { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
   );
+  const jwk = await crypto.subtle.exportKey('jwk', _sessionKey);
+  await chrome.storage.session.set({ '_mf_key_jwk': jwk });
+  // 이전 암호화 데이터 무효화 (키 변경 시 복호화 불가 방지)
+  await chrome.storage.local.remove('mf_measurements');
   return _sessionKey;
 }
 

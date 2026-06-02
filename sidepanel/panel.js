@@ -260,11 +260,10 @@ function updateFitScores(size, type) {
   updateFitRow('fit-waist', scores.waist);
 }
 
-function updateFitRow(rowId, score) {
-  const row = document.getElementById(rowId);
-  if (!row) return;
-  const fill = row.querySelector('.fit-fill');
-  const val = row.querySelector('.fit-val');
+function updateFitRow(baseId, score) {
+  const fill = document.getElementById(baseId);
+  const val = document.getElementById(baseId + '-val');
+  if (!fill || !val) return;
   const pct = Math.round(score * 100);
   fill.style.width = pct + '%';
   fill.style.background = pct >= 80

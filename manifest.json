@@ -8,13 +8,11 @@
     "activeTab",
     "storage",
     "scripting",
-    "sidePanel",
-    "tabs"
+    "sidePanel"
   ],
 
   "host_permissions": [
     "https://www.musinsa.com/*",
-    "https://kr.object.ncloudstorage.com/*",
     "https://store.nike.com/*",
     "https://www.zara.com/*",
     "https://www.uniqlo.com/*",
