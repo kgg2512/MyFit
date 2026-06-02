@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#7c4dff"/>
+    </linearGradient>
+    <!-- 16px에서도 선명한 글로우 없음 — 단순 형태 우선 -->
+  </defs>
+
+  <!-- 배경: 둥근 모서리 (16px: rx=4, 128px: rx=26) -->
+  <rect width="128" height="128" rx="26" fill="url(#g)"/>
+
+  <!-- 옷 실루엣 — 단순화: 16px 에서도 인식 가능한 티셔츠 -->
+  <!-- 몸통 -->
+  <rect x="34" y="52" width="60" height="52" rx="4" fill="white" opacity="0.95"/>
+  <!-- 왼쪽 소매 -->
+  <path d="M34 52 L18 44 L22 66 L34 64 Z" fill="white" opacity="0.95"/>
+  <!-- 오른쪽 소매 -->
+  <path d="M94 52 L110 44 L106 66 L94 64 Z" fill="white" opacity="0.95"/>
+  <!-- 넥라인 U -->
+  <path d="M50 52 Q64 68 78 52" fill="none" stroke="#0a0a0a" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- AI 도트 (오른쪽 하단) — 측정/AI 의미 -->
+  <circle cx="88" cy="96" r="8" fill="url(#g)"/>
+  <circle cx="88" cy="96" r="5" fill="white" opacity="0.9"/>
+</svg>

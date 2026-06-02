@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self';">
+  <title>MyFit</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════
+       동의 모달 (CISO/CLO 필수 — 최초 실행 시 표시)
+       ═══════════════════════════════════════════ -->
+  <div id="consent-overlay" class="consent-overlay hidden">
+    <div class="consent-sheet">
+      <div class="consent-title">MyFit 시작 전 동의</div>
+      <div class="consent-desc">서비스 이용을 위해 아래 항목에 동의해 주세요.</div>
+
+      <!-- 전체 동의 -->
+      <div class="consent-all" id="consent-all-btn">
+        <div class="consent-check" id="check-all"></div>
+        <span class="consent-all-label">전체 동의</span>
+      </div>
+
+      <!-- 개인정보 처리방침 (필수) -->
+      <div class="consent-item" id="consent-item-privacy">
+        <div class="consent-check" id="check-privacy"></div>
+        <div>
+          <div class="consent-item-text">[필수] 개인정보 처리방침 동의</div>
+          <div class="consent-item-sub">입력하신 신체 치수는 이 기기에만 저장되며 서버로 전송되지 않습니다.</div>
+        </div>
+      </div>
+
+      <!-- 제휴 마케팅 고지 (필수) -->
+      <div class="consent-item" id="consent-item-affiliate">
+        <div class="consent-check" id="check-affiliate"></div>
+        <div>
+          <div class="consent-item-text">[필수] 제휴 마케팅 링크 고지 동의</div>
+          <div class="consent-item-sub">이 서비스는 쿠팡파트너스 활동의 일환으로, 구매 시 수수료를 받을 수 있습니다. 이는 사용자에게 추가 비용을 발생시키지 않습니다.</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-consent-confirm" disabled>동의하고 시작하기</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 1: 온보딩 (최초 실행)
+       ═══════════════════════════════════════════ -->
+  <div id="s-onboard" class="screen active">
+    <div class="logo-wrap">
+      <div class="logo-icon">👗</div>
+      <div class="logo-name">MyFit</div>
+      <div class="logo-sub">쇼핑몰 AI 가상 피팅</div>
+    </div>
+
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-icon">📏</div>
+        <div class="feature-text">
+          <strong>치수 한 번만 입력</strong>
+          <span>이후 모든 쇼핑몰에서 자동 피팅</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">👗</div>
+        <div class="feature-text">
+          <strong>3D 가상 피팅</strong>
+          <span>내 몸에 맞는지 미리 확인</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📦</div>
+        <div class="feature-text">
+          <strong>사이즈 추천</strong>
+          <span>반품 걱정 없는 AI 사이즈 안내</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 지원 쇼핑몰 -->
+    <div class="info-box">
+      지원 쇼핑몰: <strong>무신사 · Nike · Zara · Uniqlo · H&amp;M</strong>
+      <br><span class="info-sub">상품 페이지 방문 시 자동으로 피팅이 시작됩니다.</span>
+    </div>
+
+    <button class="btn btn-primary" id="btn-start-onboard">시작하기</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 2: 신체 치수 입력
+       ═══════════════════════════════════════════ -->
+  <div id="s-manual" class="screen">
+    <div class="panel-header">
+      <button class="back-btn" id="btn-back-onboard">←</button>
+      <span class="header-title">내 치수 입력</span>
+    </div>
+
+    <div class="notice-box">
+      <strong>한 번만 입력하면 저장됩니다.</strong><br>
+      <span class="notice-sub">신체 사진은 수집하지 않습니다 (Phase 1)</span>
+    </div>
+
+    <!-- 빠른 입력 -->
+    <div class="quick-size">
+      <div class="quick-size-label">쇼핑몰 사이즈 기준 자동 입력:</div>
+      <button class="quick-btn" data-size="XS">XS</button>
+      <button class="quick-btn" data-size="S">S</button>
+      <button class="quick-btn" data-size="M">M</button>
+      <button class="quick-btn" data-size="L">L</button>
+      <button class="quick-btn" data-size="XL">XL</button>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">기본 정보</div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">키 (cm)</label>
+          <input class="field-input" type="number" id="inp-height" min="140" max="220" placeholder="175">
+        </div>
+        <div class="field-group">
+          <label class="field-label">몸무게 (kg)</label>
+          <input class="field-input" type="number" id="inp-weight" min="30" max="200" placeholder="70">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section form-section--gutter">
+      <div class="form-section-title">신체 둘레</div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">어깨 너비 (cm)</label>
+          <input class="field-input" type="number" id="inp-shoulder" min="30" max="70" placeholder="43">
+        </div>
+        <div class="field-group">
+          <label class="field-label">가슴 둘레 (cm)</label>
+          <input class="field-input" type="number" id="inp-chest" min="60" max="140" placeholder="94">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">허리 둘레 (cm)</label>
+          <input class="field-input" type="number" id="inp-waist" min="50" max="130" placeholder="78">
+        </div>
+        <div class="field-group">
+          <label class="field-label">엉덩이 둘레 (cm)</label>
+          <input class="field-input" type="number" id="inp-hip" min="60" max="150" placeholder="90">
+        </div>
+      </div>
+    </div>
+
+    <div class="privacy-note">이 기기에만 저장 · 서버 전송 없음</div>
+    <button class="btn btn-primary" id="btn-save-measurements">저장하고 피팅 시작 →</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 3: 대기 (상품 감지 대기 / 분석 중)
+       ═══════════════════════════════════════════ -->
+  <div id="s-waiting" class="screen">
+    <div class="panel-header">
+      <span class="header-title">MyFit</span>
+      <button class="btn-text" id="btn-edit-profile">수정</button>
+    </div>
+
+    <!-- 내 치수 요약 -->
+    <div class="profile-summary" id="profile-summary">
+      <!-- JS로 채워짐 -->
+    </div>
+
+    <!-- 상품 미감지 상태 -->
+    <div id="waiting-idle" class="waiting-idle">
+      <div class="waiting-icon">🔍</div>
+      <div class="waiting-text">쇼핑몰 상품 페이지로 이동하세요</div>
+      <div class="waiting-sub">무신사 · Nike · Zara · Uniqlo · H&amp;M<br>상품 페이지 방문 시 자동으로 피팅이 시작됩니다.</div>
+    </div>
+
+    <!-- 상품 감지 + 분석 중 (JS로 토글: .visible 클래스 추가) -->
+    <div id="waiting-analyzing" class="analyzing-container">
+      <!-- 감지된 상품 -->
+      <div class="detected-product" id="detected-product">
+        <div class="detected-thumb" id="detected-thumb">👗</div>
+        <div class="detected-info">
+          <div class="detected-brand" id="detected-brand">무신사</div>
+          <div class="detected-name" id="detected-name">상품명 로딩 중...</div>
+          <div class="detected-price" id="detected-price">-</div>
+        </div>
+      </div>
+
+      <!-- 스캔 애니메이션 -->
+      <div class="scan-wrap">
+        <div class="scan-ring"></div>
+        <div class="scan-ring"></div>
+        <div class="scan-ring"></div>
+        <div class="scan-center">👗</div>
+      </div>
+
+      <!-- 분석 단계 -->
+      <div class="step-list" id="step-list">
+        <div class="step-item" id="step-1">
+          <div class="step-dot done">✓</div>
+          <span class="step-label">치수 데이터 로드</span>
+        </div>
+        <div class="step-item" id="step-2">
+          <div class="step-dot running"></div>
+          <span class="step-label">3D 모델 생성 중...</span>
+        </div>
+        <div class="step-item" id="step-3">
+          <div class="step-dot pending"></div>
+          <span class="step-label">핏 분석</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 커미션 고지 (상시 표시 — CFO 필수) -->
+    <div class="commission-notice commission-notice--bottom">
+      <span class="commission-icon">ⓘ</span>
+      <span class="commission-text">이 서비스는 쿠팡파트너스 활동의 일환으로 수수료를 받을 수 있습니다.</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 4: 3D 피팅 결과
+       ═══════════════════════════════════════════ -->
+  <div id="s-fitting" class="screen">
+    <div class="panel-header">
+      <button class="back-btn" id="btn-back-waiting">←</button>
+      <span class="header-title" id="fitting-product-name">가상 피팅</span>
+    </div>
+
+    <div class="scroll-area">
+      <!-- 3D 캔버스 -->
+      <div class="canvas-wrap">
+        <canvas id="fitting-canvas"></canvas>
+        <div class="canvas-overlay-top">
+          <span class="size-badge" id="rec-size-badge">추천: M</span>
+        </div>
+        <div class="canvas-drag-hint">드래그로 회전</div>
+      </div>
+
+      <!-- 사이즈 선택 -->
+      <div class="size-section">
+        <div class="size-label">사이즈 선택 (● = AI 추천)</div>
+        <div class="size-btns" id="size-btns">
+          <!-- JS로 채워짐 -->
+        </div>
+      </div>
+
+      <!-- 핏 점수 -->
+      <div class="fit-score-card" id="fit-score-card">
+        <div class="fit-row">
+          <span class="fit-lbl">어깨</span>
+          <div class="fit-track"><div class="fit-fill fit-fill--init" id="fit-shoulder"></div></div>
+          <span class="fit-val" id="fit-shoulder-val">-</span>
+        </div>
+        <div class="fit-row">
+          <span class="fit-lbl">가슴</span>
+          <div class="fit-track"><div class="fit-fill fit-fill--init" id="fit-chest"></div></div>
+          <span class="fit-val" id="fit-chest-val">-</span>
+        </div>
+        <div class="fit-row">
+          <span class="fit-lbl">허리</span>
+          <div class="fit-track"><div class="fit-fill fit-fill--init" id="fit-waist"></div></div>
+          <span class="fit-val" id="fit-waist-val">-</span>
+        </div>
+      </div>
+
+      <!-- 상품 정보 -->
+      <div class="product-row">
+        <div class="product-thumb" id="fitting-thumb">👗</div>
+        <div class="product-info">
+          <div class="product-brand" id="fitting-brand">-</div>
+          <div class="product-name" id="fitting-name">-</div>
+        </div>
+        <div class="product-price" id="fitting-price">-</div>
+      </div>
+
+      <!-- 커미션 고지 (상시 표시) -->
+      <div class="commission-notice">
+        <span class="commission-icon">ⓘ</span>
+        <span class="commission-text">쿠팡파트너스 제휴 링크 — 구매 시 수수료가 발생할 수 있습니다. 사용자 추가 비용 없음.</span>
+      </div>
+    </div>
+
+    <button class="btn btn-buy" id="btn-buy">이 사이즈로 쿠팡에서 구매하기 →</button>
+  </div>
+
+  <script src="panel.js"></script>
+</body>
+</html>

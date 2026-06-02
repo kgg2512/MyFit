@@ -1,0 +1,453 @@
+/* MyFit Extension — Side Panel CSS v2 */
+/* CDO 개선: 동의 팝업, 커미션 고지, 분석 애니메이션 추가 */
+
+:root {
+  --bg: #0a0a0a;
+  --bg2: #141414;
+  --bg3: #1e1e1e;
+  --accent: #00e5ff;
+  --accent2: #7c4dff;
+  --text: #ffffff;
+  --text2: #aaaaaa;
+  --border: #2a2a2a;
+  --success: #00e676;
+  --warn: #ffab40;
+  --danger: #ff5252;
+  --r: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  width: 400px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.screen { display: none; flex-direction: column; min-height: 100vh; }
+.screen.active { display: flex; animation: fadeIn .25s ease; will-change: opacity, transform; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─────────────────────────────────────
+   CONSENT MODAL (동의 팝업 — CISO/CLO 필수)
+   ───────────────────────────────────── */
+.consent-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(0,0,0,.85);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.consent-overlay.hidden { display: none; }
+
+.consent-sheet {
+  background: var(--bg2);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px 32px;
+  width: 100%;
+  border-top: 1px solid var(--border);
+}
+.consent-title {
+  font-size: 16px; font-weight: 800; margin-bottom: 6px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.consent-desc {
+  font-size: 12px; color: var(--text2); line-height: 1.6; margin-bottom: 20px;
+}
+.consent-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 14px; cursor: pointer;
+}
+.consent-check {
+  width: 20px; height: 20px; border-radius: 6px;
+  border: 2px solid var(--border); background: var(--bg3);
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  transition: .15s; margin-top: 1px;
+}
+.consent-check.checked {
+  background: var(--accent); border-color: var(--accent);
+}
+.consent-check.checked::after {
+  content: '✓'; font-size: 12px; font-weight: 900; color: #000;
+}
+.consent-item-text { font-size: 13px; line-height: 1.5; }
+.consent-item-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.consent-all {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; background: var(--bg3); border-radius: 10px;
+  margin-bottom: 16px; cursor: pointer;
+  border: 1px solid var(--border);
+}
+.consent-all .consent-check { width: 22px; height: 22px; }
+.consent-all-label { font-size: 14px; font-weight: 700; }
+
+/* ─────────────────────────────────────
+   LOGO
+   ───────────────────────────────────── */
+.logo-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 36px 20px 16px;
+}
+.logo-icon {
+  width: 60px; height: 60px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 18px; font-size: 28px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10px;
+  box-shadow: 0 0 28px rgba(0,229,255,.25);
+}
+.logo-name {
+  font-size: 26px; font-weight: 900;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.logo-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+/* ─────────────────────────────────────
+   FEATURE LIST (온보딩)
+   ───────────────────────────────────── */
+.feature-list {
+  margin: 0 16px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.feature-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg2); border-radius: var(--r);
+  padding: 12px 14px; border: 1px solid var(--border);
+}
+.feature-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--bg3); display: flex; align-items: center;
+  justify-content: center; font-size: 18px; flex-shrink: 0;
+}
+.feature-text strong { display: block; font-size: 13px; }
+.feature-text span { font-size: 11px; color: var(--text2); }
+
+/* ─────────────────────────────────────
+   HEADER
+   ───────────────────────────────────── */
+.panel-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px 0;
+}
+.back-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--bg3); border: none; color: var(--text);
+  font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.header-title {
+  font-size: 15px; font-weight: 700; flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.btn-text {
+  background: none; border: none; color: var(--accent);
+  font-size: 13px; cursor: pointer; flex-shrink: 0; padding: 4px 8px;
+}
+
+/* ─────────────────────────────────────
+   BUTTONS
+   ───────────────────────────────────── */
+.btn {
+  padding: 14px 16px; border-radius: var(--r); border: none;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  width: calc(100% - 32px); margin: 8px 16px 0;
+  transition: opacity .2s, transform .15s;
+}
+.btn:active { opacity: .8; transform: scale(.98); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #000;
+}
+.btn-primary:disabled {
+  opacity: .4; cursor: not-allowed; transform: none;
+}
+.btn-buy {
+  background: linear-gradient(135deg, var(--success), #00c853);
+  color: #000; margin-top: auto; margin-bottom: 20px;
+}
+
+/* ─────────────────────────────────────
+   INFO / NOTICE
+   ───────────────────────────────────── */
+.info-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px; margin: 0 16px 14px;
+  line-height: 1.6; color: var(--text2); font-size: 13px;
+}
+.info-box strong { color: var(--accent); }
+
+.notice-box {
+  background: rgba(0,229,255,.06); border: 1px solid rgba(0,229,255,.2);
+  border-radius: var(--r); padding: 10px 14px; margin: 10px 16px 14px;
+  font-size: 12px; color: var(--text2); line-height: 1.5;
+}
+.notice-box strong { color: var(--accent); }
+
+.privacy-note {
+  font-size: 11px; color: var(--text2);
+  margin: 6px 16px 8px; padding: 8px 12px;
+  background: var(--bg3); border-radius: 8px;
+  border-left: 3px solid var(--success);
+}
+
+/* ─────────────────────────────────────
+   커미션 고지 (CFO 필수 — 상시 표시)
+   ───────────────────────────────────── */
+.commission-notice {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin: 6px 16px; padding: 8px 12px;
+  background: rgba(255,171,64,.06);
+  border: 1px solid rgba(255,171,64,.2);
+  border-radius: 8px;
+}
+.commission-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+.commission-text { font-size: 11px; color: #ffab40; line-height: 1.5; }
+
+/* ─────────────────────────────────────
+   FORM
+   ───────────────────────────────────── */
+.form-section { padding: 14px 16px 0; }
+.form-section-title {
+  font-size: 11px; color: var(--text2); text-transform: uppercase;
+  letter-spacing: .5px; margin-bottom: 10px;
+}
+.field-group { margin-bottom: 10px; }
+.field-label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 5px; }
+
+.field-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+
+.field-input {
+  width: 100%; background: var(--bg2);
+  border: 1.5px solid var(--border); border-radius: 8px;
+  color: var(--text); font-size: 16px; font-weight: 600;
+  padding: 10px 12px; outline: none; transition: border-color .2s;
+}
+.field-input:focus { border-color: var(--accent); }
+.field-input::placeholder { color: var(--bg3); }
+
+/* 빠른 입력 버튼 */
+.quick-size {
+  display: flex; gap: 6px; margin: 4px 16px 10px; flex-wrap: wrap;
+}
+.quick-size-label {
+  font-size: 11px; color: var(--text2); width: 100%; margin-bottom: 4px;
+}
+.quick-btn {
+  padding: 6px 14px; border-radius: 100px;
+  border: 1px solid var(--border); background: var(--bg3);
+  color: var(--text2); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: .15s;
+}
+.quick-btn:active { border-color: var(--accent); color: var(--accent); }
+
+/* ─────────────────────────────────────
+   PROFILE SUMMARY
+   ───────────────────────────────────── */
+.profile-summary {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 8px; margin: 12px 16px 14px;
+}
+.profile-chip {
+  background: var(--bg2); border-radius: 10px;
+  padding: 10px 8px; text-align: center;
+  border: 1px solid var(--border);
+}
+.profile-chip-label { font-size: 10px; color: var(--text2); }
+.profile-chip-value { font-size: 17px; font-weight: 800; color: var(--accent); }
+.profile-chip-unit  { font-size: 10px; color: var(--text2); }
+
+/* ─────────────────────────────────────
+   WAITING + 상품 감지 (화면3)
+   ───────────────────────────────────── */
+.detected-product {
+  display: flex; align-items: center; gap: 12px;
+  margin: 12px 16px; padding: 12px 14px;
+  background: var(--bg2); border-radius: var(--r);
+  border: 1px solid var(--accent);
+}
+.detected-thumb {
+  width: 56px; height: 56px; border-radius: 8px;
+  background: var(--bg3); overflow: hidden; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 28px;
+}
+.detected-info { flex: 1; overflow: hidden; }
+.detected-brand { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.detected-name  { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.detected-price { font-size: 14px; font-weight: 800; color: var(--accent); margin-top: 2px; }
+
+/* 스캔 애니메이션 */
+.scan-wrap {
+  position: relative; width: 120px; height: 120px;
+  margin: 20px auto; flex-shrink: 0;
+}
+.scan-ring {
+  position: absolute; inset: 0; border-radius: 50%;
+  border: 2px solid rgba(0,229,255,.3);
+  animation: ringPulse 1.8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.scan-ring:nth-child(2) { animation-delay: .6s; }
+.scan-ring:nth-child(3) { animation-delay: 1.2s; }
+@keyframes ringPulse {
+  0%   { transform: scale(.6); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+.scan-center {
+  position: absolute; inset: 25%; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+
+/* 분석 단계 */
+.step-list {
+  display: flex; flex-direction: column; gap: 10px;
+  margin: 0 16px; flex: 1;
+}
+.step-item {
+  display: flex; align-items: center; gap: 10px;
+}
+.step-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; flex-shrink: 0; transition: .3s;
+}
+.step-dot.done     { background: var(--success); border-color: var(--success); color: #000; font-weight: 900; }
+.step-dot.running  { border-color: var(--accent); animation: spin .8s linear infinite; will-change: transform; }
+.step-dot.pending  { border-color: var(--border); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.step-label { font-size: 13px; color: var(--text2); }
+.step-item.done .step-label { color: var(--text); }
+
+.waiting-idle {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px; padding: 40px 20px;
+}
+.waiting-icon  { font-size: 44px; }
+.waiting-text  { font-size: 14px; font-weight: 700; text-align: center; }
+.waiting-sub   { font-size: 11px; color: var(--text2); text-align: center; line-height: 1.5; }
+
+/* ─────────────────────────────────────
+   CANVAS / 피팅 결과 (화면4)
+   ───────────────────────────────────── */
+.canvas-wrap {
+  position: relative; background: var(--bg2);
+  margin: 10px 16px; border-radius: 16px; overflow: hidden; height: 300px;
+}
+.canvas-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
+
+.canvas-overlay-top {
+  position: absolute; top: 10px; right: 10px;
+  display: flex; gap: 6px; align-items: center;
+}
+.size-badge {
+  background: rgba(0,229,255,.18); border: 1.5px solid var(--accent);
+  border-radius: 100px; padding: 4px 12px;
+  font-size: 12px; font-weight: 800; color: var(--accent);
+}
+.canvas-drag-hint {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; color: rgba(255,255,255,.3); pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────
+   SIZE SELECTOR
+   ───────────────────────────────────── */
+.size-section { padding: 0 16px 10px; }
+.size-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.size-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.size-btn {
+  padding: 8px 12px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--bg2);
+  color: var(--text); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: .15s; min-width: 42px; text-align: center;
+  position: relative;
+}
+.size-btn.active {
+  background: rgba(0,229,255,.12); border-color: var(--accent); color: var(--accent);
+}
+.size-btn.recommended::after {
+  content: ''; position: absolute; top: 3px; right: 3px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
+}
+
+/* ─────────────────────────────────────
+   FIT SCORE
+   ───────────────────────────────────── */
+.fit-score-card { margin: 0 16px 10px; }
+.fit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.fit-lbl { font-size: 11px; color: var(--text2); width: 36px; flex-shrink: 0; }
+.fit-track { flex: 1; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.fit-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  transition: width .6s ease;
+}
+.fit-val { font-size: 11px; font-weight: 700; width: 28px; text-align: right; }
+
+/* ─────────────────────────────────────
+   PRODUCT ROW (피팅 결과 내 상품 정보)
+   ───────────────────────────────────── */
+.product-row {
+  display: flex; align-items: center; gap: 10px;
+  margin: 0 16px 8px; padding: 10px 12px;
+  background: var(--bg2); border-radius: var(--r);
+  border: 1px solid var(--border);
+}
+.product-thumb {
+  width: 44px; height: 44px; border-radius: 8px;
+  background: var(--bg3); font-size: 22px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.product-info { flex: 1; overflow: hidden; }
+.product-brand { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.product-name  { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.product-price { margin-left: auto; font-size: 15px; font-weight: 900; color: var(--accent); flex-shrink: 0; }
+
+/* ─────────────────────────────────────
+   SCROLLABLE AREA
+   ───────────────────────────────────── */
+.scroll-area {
+  flex: 1; overflow-y: auto;
+}
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* ─────────────────────────────────────
+   UTILITY — 인라인 스타일 대체 클래스
+   ───────────────────────────────────── */
+.info-sub {
+  font-size: 11px; margin-top: 4px; display: block;
+}
+.notice-sub {
+  font-size: 11px;
+}
+.form-section--gutter { padding-top: 8px; }
+
+/* waiting-analyzing: JS가 display:flex로 토글 */
+.analyzing-container {
+  display: none; flex-direction: column; flex: 1;
+}
+.analyzing-container.visible { display: flex; }
+
+/* 커미션 고지 — 화면3 하단 고정 */
+.commission-notice--bottom {
+  margin-top: auto; margin-bottom: 12px;
+}
+
+/* fit-fill 초기 상태 (JS가 width를 덮어씀) */
+.fit-fill--init { width: 0%; }
