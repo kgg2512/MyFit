@@ -38,11 +38,47 @@
   // 주의: DOM 텍스트/이미지 URL만 읽고 G2 서버에는 전송하지 않음
 
   function parseMusinsa() {
-    const name = document.querySelector('.product-title__name, h2.product-name')?.textContent?.trim();
-    const price = document.querySelector('.price-value, .product-price__original')?.textContent?.trim();
-    const brand = document.querySelector('.brand-name a, .product-title__brand')?.textContent?.trim();
-    const img = document.querySelector('.product-image__img, .product-img img')?.src;
-    return name ? { store: 'musinsa', name, price, brand, img } : null;
+    // 무신사 React 구조 — 여러 셀렉터 fallback
+    const name = (
+      document.querySelector('[class*="product_title"] h2') ||
+      document.querySelector('[class*="ProductTitle"] h2') ||
+      document.querySelector('h2[class*="title"]') ||
+      document.querySelector('.product-title__name') ||
+      document.querySelector('h2.product-name') ||
+      document.querySelector('h2')
+    )?.textContent?.trim();
+
+    const price = (
+      document.querySelector('[class*="price_original"]') ||
+      document.querySelector('[class*="Price"] [class*="original"]') ||
+      document.querySelector('.sale_price, .price-value') ||
+      document.querySelector('[class*="price"]')
+    )?.textContent?.trim();
+
+    const brand = (
+      document.querySelector('[class*="brand"] a') ||
+      document.querySelector('.product-title__brand') ||
+      document.querySelector('[class*="Brand"] a')
+    )?.textContent?.trim();
+
+    const img = (
+      document.querySelector('[class*="product_image"] img') ||
+      document.querySelector('[class*="ProductImage"] img') ||
+      document.querySelector('.product-image__img') ||
+      document.querySelector('img[class*="product"]')
+    )?.src;
+
+    // URL에 /products/ 있으면 파싱 실패해도 최소 데이터로 반환
+    const isProductPage = location.pathname.includes('/products/');
+    if (!name && !isProductPage) return null;
+    return {
+      store: 'musinsa',
+      name: name || '무신사 상품',
+      price: price || '',
+      brand: brand || 'MUSINSA',
+      img: img || '',
+      url: location.href,
+    };
   }
 
   function parseNike() {
