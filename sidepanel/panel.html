@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self';">
+        content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://myfit-fashn-proxy.*.workers.dev;">
   <title>MyFit</title>
   <link rel="stylesheet" href="panel.css">
 </head>
@@ -29,7 +29,16 @@
         <div class="consent-check" id="check-privacy"></div>
         <div>
           <div class="consent-item-text">[필수] 개인정보 처리방침 동의</div>
-          <div class="consent-item-sub">입력하신 신체 치수는 이 기기에만 저장되며 서버로 전송되지 않습니다.</div>
+          <div class="consent-item-sub">신체 치수는 이 기기에만 저장됩니다. AI 피팅 이용 시 사진이 외부 서버로 전송됩니다 (아래 동의 참고).</div>
+        </div>
+      </div>
+
+      <!-- AI 피팅 국외 이전 동의 (필수 — CLO/CISO 기준) -->
+      <div class="consent-item" id="consent-item-ai">
+        <div class="consent-check" id="check-ai"></div>
+        <div>
+          <div class="consent-item-text">[필수] AI 피팅 서비스 이용 동의</div>
+          <div class="consent-item-sub">AI 피팅 기능 사용 시 사진이 미국 소재 FASHN Inc. 서버로 전송되며, 피팅 완료 후 즉시 삭제됩니다. (개인정보보호법 제28조의8 국외이전 고지)</div>
         </div>
       </div>
 
@@ -221,7 +230,7 @@
   </div>
 
   <!-- ═══════════════════════════════════════════
-       SCREEN 4: 3D 피팅 결과
+       SCREEN 4: 피팅 결과 (3D 사이즈 가이드 + AI 피팅 탭)
        ═══════════════════════════════════════════ -->
   <div id="s-fitting" class="screen">
     <div class="panel-header">
@@ -229,7 +238,14 @@
       <span class="header-title" id="fitting-product-name">가상 피팅</span>
     </div>
 
-    <div class="scroll-area">
+    <!-- 탭 네비게이션 -->
+    <div class="fitting-tabs" role="tablist">
+      <button class="fitting-tab active" id="tab-3d" role="tab" aria-selected="true" aria-controls="panel-3d" type="button">3D 사이즈 가이드</button>
+      <button class="fitting-tab" id="tab-ai" role="tab" aria-selected="false" aria-controls="panel-ai" type="button">AI 피팅</button>
+    </div>
+
+    <!-- 탭 1: 3D 사이즈 가이드 (기존 Three.js 아바타) -->
+    <div id="panel-3d" class="fitting-tab-panel scroll-area" role="tabpanel" aria-labelledby="tab-3d">
       <!-- 3D 캔버스 -->
       <div class="canvas-wrap">
         <canvas id="fitting-canvas"></canvas>
@@ -277,6 +293,53 @@
       </div>
 
       <!-- 커미션 고지 (상시 표시) -->
+      <div class="commission-notice">
+        <span class="commission-icon">ⓘ</span>
+        <span class="commission-text">쿠팡파트너스 제휴 링크 — 구매 시 수수료가 발생할 수 있습니다. 사용자 추가 비용 없음.</span>
+      </div>
+    </div>
+
+    <!-- 탭 2: AI 피팅 (FASHN AI — 사진 업로드 → 결과 이미지) -->
+    <div id="panel-ai" class="fitting-tab-panel scroll-area hidden" role="tabpanel" aria-labelledby="tab-ai">
+      <div class="ai-fitting-section">
+        <div class="ai-fitting-desc">내 사진을 업로드하면 AI가 이 옷을 실제로 입혀드립니다.</div>
+
+        <!-- 사진 업로드 -->
+        <label class="ai-upload-label" id="ai-upload-label" for="ai-photo-input">
+          <span id="ai-upload-text">사진 선택</span>
+          <span class="ai-upload-hint">전신 또는 상반신 정면 사진 권장</span>
+        </label>
+        <input type="file" id="ai-photo-input" accept="image/*" class="ai-file-input" aria-label="사용자 사진 업로드">
+
+        <!-- 사진 미리보기 -->
+        <div class="ai-preview-wrap hidden" id="ai-preview-wrap">
+          <img id="ai-preview-img" class="ai-preview-img" alt="업로드한 사진 미리보기">
+        </div>
+
+        <!-- 피팅 시작 버튼 -->
+        <button class="btn btn-primary" id="btn-fashn-fit" disabled type="button">AI 피팅 시작</button>
+
+        <!-- 개인정보 고지 -->
+        <div class="ai-privacy-note">사진은 AI 피팅 처리 후 즉시 삭제됩니다. 서버에 저장되지 않습니다.</div>
+
+        <!-- 로딩 상태 -->
+        <div class="ai-loading hidden" id="ai-loading" aria-live="polite">
+          <div class="ai-loading-spinner"></div>
+          <span id="ai-loading-text">AI 분석 중... (15–30초)</span>
+        </div>
+
+        <!-- 에러 메시지 -->
+        <div class="ai-error hidden" id="ai-error" role="alert"></div>
+
+        <!-- 결과 이미지 -->
+        <div class="ai-result-wrap hidden" id="ai-result-wrap">
+          <div class="ai-result-label">AI 피팅 결과</div>
+          <img id="fashn-result" class="ai-result-img" alt="AI 피팅 결과 이미지">
+          <div class="ai-result-disclaimer">AI 생성 이미지입니다. 실제 착용과 차이가 있을 수 있습니다.</div>
+        </div>
+      </div>
+
+      <!-- 커미션 고지 -->
       <div class="commission-notice">
         <span class="commission-icon">ⓘ</span>
         <span class="commission-text">쿠팡파트너스 제휴 링크 — 구매 시 수수료가 발생할 수 있습니다. 사용자 추가 비용 없음.</span>

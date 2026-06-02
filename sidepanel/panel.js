@@ -551,6 +551,207 @@ function updateClothingScale(size) {
   applyScaleForSize(clothingGroup, size);
 }
 
+// ──────────────────────────────────────────────
+// FASHN AI 피팅 — Cloudflare Worker 프록시 경유
+// ──────────────────────────────────────────────
+
+/**
+ * CF Worker URL: 배포 후 실제 subdomain으로 교체
+ * wrangler deploy 완료 후 터미널 출력에서 확인 가능
+ * 예: https://myfit-fashn-proxy.kgg2512.workers.dev
+ */
+const CF_WORKER_URL = 'https://myfit-fashn-proxy.kgg2512.workers.dev';
+
+/**
+ * 이미지 File 객체를 base64 문자열로 변환
+ * @param {File} file
+ * @returns {Promise<string>} base64 (data: URI prefix 제거)
+ */
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      // data:image/jpeg;base64,XXXX → XXXX 만 추출
+      const base64 = result.split(',')[1];
+      if (!base64) {
+        reject(new Error('base64 변환 실패'));
+        return;
+      }
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error('파일 읽기 실패'));
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * FASHN AI 가상 피팅 요청
+ * @param {File} userPhotoFile - 사용자 업로드 사진
+ * @param {string} garmentImageUrl - 쇼핑몰 상품 이미지 https:// URL
+ * @param {'tops'|'bottoms'} category
+ * @returns {Promise<{output_image_url: string}>}
+ */
+async function requestFashnFit(userPhotoFile, garmentImageUrl, category) {
+  // Step 1: File → base64 (메모리 내 처리, 서버 전송 후 JS GC에 의해 해제)
+  const base64Image = await fileToBase64(userPhotoFile);
+
+  // Step 2: CF Worker 호출 (Worker → FASHN API)
+  const response = await fetch(`${CF_WORKER_URL}/try-on`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      human_image: base64Image,
+      garment_image_url: garmentImageUrl,
+      category,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    // 크레딧 소진 특별 처리
+    if (response.status === 402 || data.code === 'CREDITS_EXHAUSTED') {
+      throw new Error('AI 피팅 크레딧이 소진되었습니다. 잠시 후 다시 시도해 주세요.');
+    }
+    if (response.status === 429) {
+      const wait = data.retryAfter ? `${data.retryAfter}초 후` : '잠시 후';
+      throw new Error(`요청이 너무 많습니다. ${wait} 다시 시도해 주세요.`);
+    }
+    throw new Error(data.error || `서버 오류 (${response.status})`);
+  }
+
+  if (!data.output_image_url) {
+    throw new Error('AI 피팅 결과를 받지 못했습니다.');
+  }
+
+  return data;
+}
+
+// ── 피팅 탭 UI 상태 헬퍼 ──
+function setAiFittingLoading(isLoading, message) {
+  const loadingEl  = document.getElementById('ai-loading');
+  const loadingTxt = document.getElementById('ai-loading-text');
+  const btnFit     = document.getElementById('btn-fashn-fit');
+
+  loadingEl.classList.toggle('hidden', !isLoading);
+  btnFit.disabled = isLoading;
+  if (message && loadingTxt) loadingTxt.textContent = message;
+}
+
+function showAiFittingError(message) {
+  const errEl = document.getElementById('ai-error');
+  errEl.classList.remove('hidden');
+  errEl.textContent = message; // textContent — XSS 방지
+}
+
+function clearAiFittingError() {
+  const errEl = document.getElementById('ai-error');
+  errEl.classList.add('hidden');
+  errEl.textContent = '';
+}
+
+function showAiFittingResult(imageUrl) {
+  const resultWrap = document.getElementById('ai-result-wrap');
+  const resultImg  = document.getElementById('fashn-result');
+  resultWrap.classList.remove('hidden');
+  resultImg.src = imageUrl;
+  resultImg.alt = 'AI 피팅 결과 — ' + (currentProduct?.name || '상품');
+}
+
+// ── FASHN 피팅 탭 이벤트 바인딩 ──
+(function initFashnTab() {
+  const photoInput   = document.getElementById('ai-photo-input');
+  const uploadLabel  = document.getElementById('ai-upload-label');
+  const uploadText   = document.getElementById('ai-upload-text');
+  const previewWrap  = document.getElementById('ai-preview-wrap');
+  const previewImg   = document.getElementById('ai-preview-img');
+  const btnFit       = document.getElementById('btn-fashn-fit');
+
+  let selectedPhotoFile = null;
+
+  // 사진 선택 핸들러
+  photoInput.addEventListener('change', () => {
+    const file = photoInput.files[0];
+    if (!file) return;
+
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+      showAiFittingError('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+    // 크기 제한 (5MB)
+    if (file.size > 5_242_880) {
+      showAiFittingError('이미지 파일 크기는 5MB 이하여야 합니다.');
+      return;
+    }
+
+    clearAiFittingError();
+    selectedPhotoFile = file;
+    uploadText.textContent = file.name;
+
+    // 미리보기 표시 (blob URL — 로컬 전용, 서버 전송 없음)
+    const objectUrl = URL.createObjectURL(file);
+    previewImg.src = objectUrl;
+    previewImg.onload = () => URL.revokeObjectURL(objectUrl); // 즉시 해제
+    previewWrap.classList.remove('hidden');
+
+    btnFit.disabled = false;
+  });
+
+  // AI 피팅 시작 버튼
+  btnFit.addEventListener('click', async () => {
+    if (!selectedPhotoFile) return;
+
+    // 현재 상품의 garment_image_url 가져오기
+    const garmentUrl = currentProduct?.imageUrl || currentProduct?.image || null;
+    if (!garmentUrl || !garmentUrl.startsWith('https://')) {
+      showAiFittingError('상품 이미지 URL을 찾을 수 없습니다. 쇼핑몰 상품 페이지에서 다시 시도해 주세요.');
+      return;
+    }
+
+    // 카테고리 결정
+    const sizeType = currentProduct ? detectSizeType(currentProduct) : { type: 'tops' };
+    const category = sizeType.type === 'bottoms' ? 'bottoms' : 'tops';
+
+    clearAiFittingError();
+    document.getElementById('ai-result-wrap').classList.add('hidden');
+    setAiFittingLoading(true, 'AI가 옷을 입히는 중... (15–30초)');
+
+    try {
+      const result = await requestFashnFit(selectedPhotoFile, garmentUrl, category);
+      showAiFittingResult(result.output_image_url);
+    } catch (err) {
+      showAiFittingError(err.message || 'AI 피팅 중 오류가 발생했습니다.');
+    } finally {
+      setAiFittingLoading(false);
+    }
+  });
+})();
+
+// ── 피팅 탭 전환 로직 ──
+(function initFittingTabs() {
+  const tab3d   = document.getElementById('tab-3d');
+  const tabAi   = document.getElementById('tab-ai');
+  const panel3d = document.getElementById('panel-3d');
+  const panelAi = document.getElementById('panel-ai');
+
+  function activateTab(targetTab) {
+    const isThreeD = targetTab === '3d';
+
+    tab3d.classList.toggle('active', isThreeD);
+    tab3d.setAttribute('aria-selected', String(isThreeD));
+    tabAi.classList.toggle('active', !isThreeD);
+    tabAi.setAttribute('aria-selected', String(!isThreeD));
+
+    panel3d.classList.toggle('hidden', !isThreeD);
+    panelAi.classList.toggle('hidden', isThreeD);
+  }
+
+  tab3d.addEventListener('click', () => activateTab('3d'));
+  tabAi.addEventListener('click', () => activateTab('ai'));
+})();
+
 // ── 구매 버튼 ──
 document.getElementById('btn-buy').addEventListener('click', () => {
   if (!currentProduct?.url) return;
@@ -562,16 +763,18 @@ document.getElementById('btn-buy').addEventListener('click', () => {
   });
 });
 
-// ── 동의 모달 로직 ──
+// ── 동의 모달 로직 (CLO: 3항목 모두 필수) ──
 (function initConsent() {
   const overlay    = document.getElementById('consent-overlay');
   const btnConfirm = document.getElementById('btn-consent-confirm');
-  const checkAll   = document.getElementById('check-all');
-  const checkPrivacy   = document.getElementById('check-privacy');
+  const checkAll      = document.getElementById('check-all');
+  const checkPrivacy  = document.getElementById('check-privacy');
+  const checkAi       = document.getElementById('check-ai');
   const checkAffiliate = document.getElementById('check-affiliate');
 
   function updateAllState() {
     const allChecked = checkPrivacy.classList.contains('checked')
+                    && checkAi.classList.contains('checked')
                     && checkAffiliate.classList.contains('checked');
     checkAll.classList.toggle('checked', allChecked);
     btnConfirm.disabled = !allChecked;
@@ -579,6 +782,10 @@ document.getElementById('btn-buy').addEventListener('click', () => {
 
   document.getElementById('consent-item-privacy').addEventListener('click', () => {
     checkPrivacy.classList.toggle('checked');
+    updateAllState();
+  });
+  document.getElementById('consent-item-ai').addEventListener('click', () => {
+    checkAi.classList.toggle('checked');
     updateAllState();
   });
   document.getElementById('consent-item-affiliate').addEventListener('click', () => {
@@ -589,6 +796,7 @@ document.getElementById('btn-buy').addEventListener('click', () => {
     const target = !checkAll.classList.contains('checked');
     checkAll.classList.toggle('checked', target);
     checkPrivacy.classList.toggle('checked', target);
+    checkAi.classList.toggle('checked', target);
     checkAffiliate.classList.toggle('checked', target);
     btnConfirm.disabled = !target;
   });

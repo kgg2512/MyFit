@@ -17,7 +17,8 @@
     "https://www.zara.com/*",
     "https://www.uniqlo.com/*",
     "https://www.hm.com/*",
-    "https://www2.hm.com/*"
+    "https://www2.hm.com/*",
+    "https://*.workers.dev/*"
   ],
 
   "background": {
@@ -59,7 +60,7 @@
   },
 
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://*.workers.dev"
   },
 
   "web_accessible_resources": [
