@@ -197,23 +197,21 @@
     if (!store) return;
 
     const product = PARSERS[store]();
-    if (!product) {
-      // 상품 감지 실패 → SPA 라우팅 대기
-      observeSPANavigation();
-      return;
-    }
+    if (!product) return;
 
     injectFitButton(product);
     injectStoreBadge(store);
   }
 
-  // SPA(React/Next.js 기반 쇼핑몰) 대응 — URL 변경 감지
+  // SPA(React/Next.js 기반 쇼핑몰) 대응 — URL 변경 감지 (단일 옵저버, 최초 1회만 등록)
+  let _spaObserverActive = false;
   function observeSPANavigation() {
+    if (_spaObserverActive) return;
+    _spaObserverActive = true;
     let lastUrl = location.href;
     const observer = new MutationObserver(() => {
       if (location.href !== lastUrl) {
         lastUrl = location.href;
-        // 기존 버튼 제거 후 재시도
         document.getElementById('myfit-btn')?.remove();
         document.getElementById('myfit-badge')?.remove();
         setTimeout(main, 800); // DOM 렌더링 대기
@@ -222,14 +220,12 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  // DOM 준비 후 실행
+  // DOM 준비 후 실행 + SPA 대응 단일 등록
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', main);
   } else {
     main();
   }
-
-  // SPA 대응 항상 활성화
   observeSPANavigation();
 
 })();
