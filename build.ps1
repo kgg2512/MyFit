@@ -51,6 +51,52 @@ if ($sizeMB -gt 10) {
     Write-Host "  ✓ 크기 OK" -ForegroundColor Green
 }
 
+
+# ── 5. Chrome Web Store 제출용 ZIP 패키징 ──
+Write-Host "[5/5] CWS 제출용 ZIP 패키징..." -ForegroundColor Yellow
+$zipPath = "$PSScriptRoot\..\myfit-extension.zip"
+
+# 포함할 파일/폴더 (node_modules, .git, build.ps1, package*.json 제외)
+$includeItems = @(
+    "$PSScriptRoot\manifest.json",
+    "$PSScriptRoot\privacy-policy.html",
+    "$PSScriptRoot\icons",
+    "$PSScriptRoot\sidepanel",
+    "$PSScriptRoot\src",
+    "$PSScriptRoot\lib"
+)
+
+# popup 폴더가 있으면 포함
+if (Test-Path "$PSScriptRoot\popup") {
+    $includeItems += "$PSScriptRoot\popup"
+}
+
+# 기존 ZIP 삭제 후 재생성
+if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+
+# 임시 폴더에 복사 후 압축
+$tempDir = "$env:TEMP\myfit-build-$(Get-Random)"
+New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+
+foreach ($item in $includeItems) {
+    if (Test-Path $item) {
+        $dest = Join-Path $tempDir (Split-Path $item -Leaf)
+        Copy-Item -Path $item -Destination $dest -Recurse -Force
+    } else {
+        Write-Host "  ⚠ 없음: $item" -ForegroundColor Red
+    }
+}
+
+Compress-Archive -Path "$tempDir\*" -DestinationPath $zipPath -Force
+Remove-Item $tempDir -Recurse -Force
+
+if (Test-Path $zipPath) {
+    $zipSize = [math]::Round((Get-Item $zipPath).Length / 1KB, 1)
+    Write-Host "  ✓ ZIP 생성: myfit-extension.zip ($zipSize KB)" -ForegroundColor Green
+} else {
+    Write-Host "  ✗ ZIP 생성 실패" -ForegroundColor Red
+}
+
 Write-Host ""
 Write-Host "[MyFit Build] 완료!" -ForegroundColor Cyan
 Write-Host ""
@@ -58,4 +104,5 @@ Write-Host "다음 단계:"
 Write-Host "  1. chrome://extensions 열기"
 Write-Host "  2. '개발자 모드' 켜기"
 Write-Host "  3. '압축 해제된 확장 프로그램 로드' → myfit-extension/ 폴더 선택"
-Write-Host "  4. 무신사/Nike/Zara 상품 페이지 방문 → 👗 버튼 확인"
+Write-Host "  4. 무신사/Nike/Zara 상품 페이지 방문 → 버튼 확인"
+Write-Host "  5. CWS 제출: myfit-extension.zip → chrome.google.com/webstore/devconsole"
