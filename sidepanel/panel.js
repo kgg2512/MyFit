@@ -48,6 +48,15 @@ function showScreen(name) {
   screens[name].classList.add('active');
 }
 
+// ── 빠른 사이즈 입력 차트 ──
+const QUICK_SIZE_MAP = {
+  XS: { height: 163, weight: 50, shoulder: 37, chest: 82, waist: 62, hip: 86 },
+  S:  { height: 167, weight: 57, shoulder: 39, chest: 88, waist: 67, hip: 90 },
+  M:  { height: 171, weight: 65, shoulder: 41, chest: 94, waist: 74, hip: 96 },
+  L:  { height: 174, weight: 72, shoulder: 43, chest: 100, waist: 80, hip: 102 },
+  XL: { height: 177, weight: 80, shoulder: 45, chest: 106, waist: 87, hip: 108 },
+};
+
 // ── 이벤트 바인딩 ──
 document.getElementById('btn-start-onboard').addEventListener('click', () => {
   const overlay = document.getElementById('consent-overlay');
@@ -63,6 +72,22 @@ document.getElementById('btn-back-onboard').addEventListener('click', () => show
 document.getElementById('btn-save-measurements').addEventListener('click', saveMeasurements);
 document.getElementById('btn-edit-profile').addEventListener('click', () => showScreen('manual'));
 document.getElementById('btn-back-waiting').addEventListener('click', () => showScreen('waiting'));
+
+// ── 빠른 사이즈 버튼 이벤트 ──
+document.querySelectorAll('.quick-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const size = btn.getAttribute('data-size');
+    const preset = QUICK_SIZE_MAP[size];
+    if (!preset) return;
+    for (const [key, val] of Object.entries(preset)) {
+      const el = document.getElementById('inp-' + key);
+      if (el) el.value = val;
+    }
+    // 현재 선택 표시
+    document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
 
 // ── 초기화 ──
 async function init() {
