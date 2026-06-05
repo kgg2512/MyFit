@@ -33,7 +33,7 @@
         "https://store.nike.com/*/pd/*",
         "https://www.zara.com/*/article/*",
         "https://www.uniqlo.com/*/en/products/*",
-        "https://www.hnm.com/*/productpage.*"
+        "https://www.hm.com/*/productpage.*"
       ],
       "js": ["src/content.js"],
       "run_at": "document_idle"
@@ -69,8 +69,6 @@
     {
       "resources": [
         "lib/three.module.min.js",
-        "lib/mediapipe_pose.js",
-        "lib/mediapipe_pose.wasm",
         "sidepanel/panel.html",
         "sidepanel/panel.js",
         "sidepanel/panel.css"
