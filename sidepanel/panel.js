@@ -835,25 +835,31 @@ function showAiFittingResult(imageUrl) {
 
 // ── 피팅 탭 전환 로직 ──
 (function initFittingTabs() {
-  const tab3d   = document.getElementById('tab-3d');
-  const tabAi   = document.getElementById('tab-ai');
-  const panel3d = document.getElementById('panel-3d');
-  const panelAi = document.getElementById('panel-ai');
+  const tab3d    = document.getElementById('tab-3d');
+  const tabAi    = document.getElementById('tab-ai');
+  const tabFit   = document.getElementById('tab-fit');
+  const panel3d  = document.getElementById('panel-3d');
+  const panelAi  = document.getElementById('panel-ai');
+  const panelFit = document.getElementById('panel-fit');
 
-  function activateTab(targetTab) {
-    const isThreeD = targetTab === '3d';
+  function activateTab(t) {
+    tab3d.classList.toggle('active', t === '3d');
+    tab3d.setAttribute('aria-selected', String(t === '3d'));
+    tabAi.classList.toggle('active', t === 'ai');
+    tabAi.setAttribute('aria-selected', String(t === 'ai'));
+    tabFit.classList.toggle('active', t === 'fit');
+    tabFit.setAttribute('aria-selected', String(t === 'fit'));
 
-    tab3d.classList.toggle('active', isThreeD);
-    tab3d.setAttribute('aria-selected', String(isThreeD));
-    tabAi.classList.toggle('active', !isThreeD);
-    tabAi.setAttribute('aria-selected', String(!isThreeD));
+    panel3d.classList.toggle('hidden', t !== '3d');
+    panelAi.classList.toggle('hidden', t !== 'ai');
+    panelFit.classList.toggle('hidden', t !== 'fit');
 
-    panel3d.classList.toggle('hidden', !isThreeD);
-    panelAi.classList.toggle('hidden', isThreeD);
+    if (t === 'fit') window.fit2dRefresh?.();
   }
 
   tab3d.addEventListener('click', () => activateTab('3d'));
   tabAi.addEventListener('click', () => activateTab('ai'));
+  tabFit.addEventListener('click', () => activateTab('fit'));
 })();
 
 // ── 구매 버튼 ──
@@ -957,6 +963,418 @@ document.getElementById('btn-buy').addEventListener('click', () => {
       window.open(img.src, '_blank', 'noopener,noreferrer');
     }
   });
+})();
+
+// ── 2D 핏 분석 탭 ──
+(function initFit2DTab() {
+  // ── roundRect 폴리필 (Safari/구버전 Chrome) ──
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+      this.beginPath();
+      this.moveTo(x + r, y);
+      this.lineTo(x + w - r, y);
+      this.quadraticCurveTo(x + w, y, x + w, y + r);
+      this.lineTo(x + w, y + h - r);
+      this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      this.lineTo(x + r, y + h);
+      this.quadraticCurveTo(x, y + h, x, y + h - r);
+      this.lineTo(x, y + r);
+      this.quadraticCurveTo(x, y, x + r, y);
+      this.closePath();
+    };
+  }
+
+  const SIZE_CHARTS = {
+    nike: {
+      tshirt: { XS:{shoulder:41,chest:88,length:68,sleeve:19}, S:{shoulder:43,chest:93,length:70,sleeve:20}, M:{shoulder:45,chest:98,length:72,sleeve:21}, L:{shoulder:47,chest:103,length:74,sleeve:22}, XL:{shoulder:49,chest:108,length:76,sleeve:23}, '2XL':{shoulder:52,chest:116,length:79,sleeve:24} },
+      shirt:  { XS:{shoulder:43,chest:92,length:71,sleeve:59}, S:{shoulder:45,chest:97,length:73,sleeve:61}, M:{shoulder:47,chest:102,length:75,sleeve:63}, L:{shoulder:49,chest:107,length:77,sleeve:65}, XL:{shoulder:51,chest:112,length:79,sleeve:67}, '2XL':{shoulder:54,chest:120,length:82,sleeve:69} },
+      hoodie: { XS:{shoulder:44,chest:96,length:65,sleeve:60}, S:{shoulder:46,chest:102,length:67,sleeve:62}, M:{shoulder:48,chest:108,length:69,sleeve:64}, L:{shoulder:50,chest:114,length:71,sleeve:66}, XL:{shoulder:52,chest:120,length:73,sleeve:68}, '2XL':{shoulder:55,chest:128,length:76,sleeve:70} },
+      pants:  { XS:{waist:64,hip:88,length:98,thigh:52}, S:{waist:69,hip:93,length:100,thigh:55}, M:{waist:74,hip:98,length:102,thigh:58}, L:{waist:80,hip:104,length:104,thigh:61}, XL:{waist:86,hip:110,length:106,thigh:64}, '2XL':{waist:94,hip:118,length:108,thigh:68} },
+    },
+    uniqlo: {
+      tshirt: { XS:{shoulder:40,chest:86,length:65,sleeve:18}, S:{shoulder:42,chest:90,length:67,sleeve:19}, M:{shoulder:44,chest:96,length:69,sleeve:20}, L:{shoulder:46,chest:102,length:71,sleeve:21}, XL:{shoulder:48,chest:108,length:73,sleeve:22}, '2XL':{shoulder:51,chest:116,length:76,sleeve:23} },
+      shirt:  { XS:{shoulder:41,chest:88,length:68,sleeve:57}, S:{shoulder:43,chest:92,length:70,sleeve:59}, M:{shoulder:45,chest:98,length:72,sleeve:61}, L:{shoulder:47,chest:104,length:74,sleeve:63}, XL:{shoulder:49,chest:110,length:76,sleeve:65}, '2XL':{shoulder:52,chest:118,length:79,sleeve:67} },
+      hoodie: { XS:{shoulder:42,chest:92,length:62,sleeve:58}, S:{shoulder:44,chest:98,length:64,sleeve:60}, M:{shoulder:46,chest:104,length:66,sleeve:62}, L:{shoulder:48,chest:110,length:68,sleeve:64}, XL:{shoulder:50,chest:116,length:70,sleeve:66}, '2XL':{shoulder:53,chest:124,length:73,sleeve:68} },
+      pants:  { XS:{waist:62,hip:86,length:96,thigh:50}, S:{waist:67,hip:91,length:98,thigh:53}, M:{waist:72,hip:96,length:100,thigh:56}, L:{waist:78,hip:102,length:102,thigh:59}, XL:{waist:84,hip:108,length:104,thigh:62}, '2XL':{waist:92,hip:116,length:106,thigh:66} },
+    },
+    zara: {
+      tshirt: { XS:{shoulder:40,chest:84,length:66,sleeve:17}, S:{shoulder:42,chest:88,length:68,sleeve:18}, M:{shoulder:44,chest:94,length:70,sleeve:19}, L:{shoulder:46,chest:100,length:72,sleeve:20}, XL:{shoulder:48,chest:106,length:74,sleeve:21}, '2XL':{shoulder:51,chest:114,length:77,sleeve:22} },
+      shirt:  { XS:{shoulder:42,chest:88,length:70,sleeve:58}, S:{shoulder:44,chest:94,length:72,sleeve:60}, M:{shoulder:46,chest:100,length:74,sleeve:62}, L:{shoulder:48,chest:106,length:76,sleeve:64}, XL:{shoulder:50,chest:112,length:78,sleeve:66}, '2XL':{shoulder:53,chest:120,length:81,sleeve:68} },
+      hoodie: { XS:{shoulder:43,chest:90,length:63,sleeve:58}, S:{shoulder:45,chest:96,length:65,sleeve:60}, M:{shoulder:47,chest:102,length:67,sleeve:62}, L:{shoulder:49,chest:108,length:69,sleeve:64}, XL:{shoulder:51,chest:114,length:71,sleeve:66}, '2XL':{shoulder:54,chest:122,length:74,sleeve:68} },
+      pants:  { XS:{waist:60,hip:84,length:95,thigh:49}, S:{waist:65,hip:89,length:97,thigh:52}, M:{waist:70,hip:94,length:99,thigh:55}, L:{waist:76,hip:100,length:101,thigh:58}, XL:{waist:82,hip:106,length:103,thigh:61}, '2XL':{waist:90,hip:114,length:105,thigh:65} },
+    },
+    generic: {
+      tshirt: { XS:{shoulder:40,chest:86,length:66,sleeve:18}, S:{shoulder:42,chest:90,length:68,sleeve:19}, M:{shoulder:44,chest:96,length:70,sleeve:20}, L:{shoulder:46,chest:102,length:72,sleeve:21}, XL:{shoulder:48,chest:108,length:74,sleeve:22}, '2XL':{shoulder:51,chest:116,length:77,sleeve:23} },
+      shirt:  { XS:{shoulder:42,chest:88,length:70,sleeve:58}, S:{shoulder:44,chest:94,length:72,sleeve:60}, M:{shoulder:46,chest:100,length:74,sleeve:62}, L:{shoulder:48,chest:106,length:76,sleeve:64}, XL:{shoulder:50,chest:112,length:78,sleeve:66}, '2XL':{shoulder:53,chest:120,length:81,sleeve:68} },
+      hoodie: { XS:{shoulder:43,chest:92,length:64,sleeve:59}, S:{shoulder:45,chest:98,length:66,sleeve:61}, M:{shoulder:47,chest:104,length:68,sleeve:63}, L:{shoulder:49,chest:110,length:70,sleeve:65}, XL:{shoulder:51,chest:116,length:72,sleeve:67}, '2XL':{shoulder:54,chest:124,length:75,sleeve:69} },
+      pants:  { XS:{waist:62,hip:86,length:96,thigh:50}, S:{waist:67,hip:91,length:98,thigh:53}, M:{waist:72,hip:96,length:100,thigh:56}, L:{waist:78,hip:102,length:102,thigh:59}, XL:{waist:84,hip:108,length:104,thigh:62}, '2XL':{waist:92,hip:116,length:106,thigh:66} },
+    },
+  };
+
+  // ── 상태 ──
+  let f2ShowBody = true, f2ShowCloth = true, f2ShowFitColor = true;
+  let f2Result = null;
+
+  // ── DOM ──
+  const canvas   = document.getElementById('fit2d-canvas');
+  const ctx      = canvas.getContext('2d');
+  const selType  = document.getElementById('fit2d-type');
+  const selBrand = document.getElementById('fit2d-brand');
+
+  // ── 캔버스 크기 동기화 ──
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width) return;
+    canvas.width  = rect.width  * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    if (f2Result) drawFitting(f2Result);
+  }
+  window.addEventListener('resize', resizeCanvas);
+  // expose refresh for tab activation
+  window.fit2dRefresh = () => { resizeCanvas(); autoRun(); };
+
+  // ── 핏 계산 ──
+  function calcFit(user, chart, type) {
+    if (type === 'pants') {
+      return {
+        waist:  { diff: chart.waist - user.waist,            label: '허리 여유',   chartVal: chart.waist },
+        hip:    { diff: chart.hip   - user.hip,              label: '엉덩이 여유', chartVal: chart.hip },
+        length: { diff: null, label: '총장',                   chartVal: chart.length },
+        thigh:  { diff: chart.thigh - (user.hip * 0.55),     label: '허벅지 여유', chartVal: chart.thigh },
+      };
+    }
+    return {
+      shoulder: { diff: chart.shoulder - user.shoulder, label: '어깨 여유',  chartVal: chart.shoulder },
+      chest:    { diff: chart.chest    - user.chest,    label: '가슴 여유',  chartVal: chart.chest },
+      length:   { diff: null, label: '총장',              chartVal: chart.length },
+      sleeve:   { diff: null, label: '소매길이',           chartVal: chart.sleeve },
+    };
+  }
+
+  function fitGrade(diff) {
+    if (diff === null) return 'neutral';
+    if (diff < -2)  return 'tight';
+    if (diff > 12)  return 'loose';
+    if (diff >= 4 && diff <= 10) return 'good';
+    if (diff >= -2 && diff < 4)  return 'snug';
+    return 'warn';
+  }
+
+  function gradeColor(grade) {
+    return { tight:'#ff5252', snug:'#ff9800', good:'#00c853', loose:'#00b0ff', warn:'#ff9800', neutral:'#888888' }[grade] || '#888';
+  }
+
+  function gradeLabel(grade, diff) {
+    if (diff === null) return '—';
+    if (grade === 'tight') return `끼임 ${Math.abs(diff).toFixed(1)}cm`;
+    if (grade === 'snug')  return `슬림 +${diff.toFixed(1)}cm`;
+    if (grade === 'good')  return `적정 +${diff.toFixed(1)}cm`;
+    if (grade === 'loose') return `여유 +${diff.toFixed(1)}cm`;
+    return `+${diff.toFixed(1)}cm`;
+  }
+
+  function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  function recommendSize(user, brand, type) {
+    const chart = SIZE_CHARTS[brand]?.[type];
+    if (!chart) return 'M';
+    let best = 'M', minScore = Infinity;
+    const isPants = type === 'pants';
+    Object.entries(chart).forEach(([size, d]) => {
+      const score = isPants
+        ? Math.abs(d.waist - user.waist - 5) + Math.abs(d.hip - user.hip - 5)
+        : Math.abs(d.shoulder - user.shoulder - 3) + Math.abs(d.chest - user.chest - 6);
+      if (score < minScore) { minScore = score; best = size; }
+    });
+    return best;
+  }
+
+  // ── 캔버스 드로잉 함수 ──
+  function drawFitLabel(ctx, x, y, text, color, align = 'left') {
+    ctx.save();
+    ctx.font = 'bold 10px -apple-system, sans-serif';
+    ctx.textAlign = align;
+    ctx.textBaseline = 'middle';
+    const pad = 4, tw = ctx.measureText(text).width;
+    const bx = align === 'center' ? x - tw/2 - pad : x - pad;
+    ctx.fillStyle = 'rgba(10,10,10,0.75)';
+    ctx.beginPath(); ctx.roundRect(bx, y-7, tw + pad*2, 14, 3); ctx.fill();
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+
+  function drawLegend(ctx, W, H) {
+    const items = [{color:'#ff5252',label:'끼임'},{color:'#ff9800',label:'슬림'},{color:'#00c853',label:'적정'},{color:'#00b0ff',label:'여유'}];
+    let x = 8;
+    ctx.save(); ctx.font = '9px sans-serif'; ctx.textBaseline = 'middle';
+    items.forEach(({color,label}) => {
+      ctx.fillStyle = color; ctx.fillRect(x, H-12, 7, 7);
+      ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fillText(label, x+10, H-8);
+      x += ctx.measureText(label).width + 22;
+    });
+    ctx.restore();
+  }
+
+  function drawBodySilhouette(ctx, user, scale, cx, topY, W, H) {
+    const h   = user.height;
+    const bmi = user.weight / ((h/100)**2);
+    const fat = Math.max(1, 1+(bmi-22)*0.018);
+    const headH=h*0.130, neckH=h*0.040, torsoH=h*0.300, hipH=h*0.080, thighH=h*0.230, shinH=h*0.220;
+    const shoulderW=user.shoulder*scale*fat, chestW=(user.chest/Math.PI)*scale*fat;
+    const waistW=(user.waist/Math.PI)*scale*fat*0.92, hipW=(user.hip/Math.PI)*scale*fat;
+    const thighW=hipW*0.52, shinW=thighW*0.65, ankleW=shinW*0.70;
+    const headR=headH*scale*0.42, neckW=shoulderW*0.22;
+
+    let y = topY;
+    const headCY = y + headR;
+    ctx.beginPath(); ctx.ellipse(cx, headCY, headR*0.78, headR, 0, 0, Math.PI*2);
+    ctx.fillStyle='rgba(190,155,120,0.30)'; ctx.fill();
+    ctx.strokeStyle='rgba(190,155,120,0.55)'; ctx.lineWidth=1.5; ctx.stroke();
+
+    y += headH*scale + neckH*scale*0.3;
+    const shoulderY=y, torsoEndY=y+torsoH*scale, hipEndY=torsoEndY+hipH*scale;
+
+    ctx.beginPath();
+    ctx.moveTo(cx-neckW*0.5, shoulderY);
+    ctx.bezierCurveTo(cx-shoulderW*0.5,shoulderY+2, cx-waistW*0.5,torsoEndY-10, cx-hipW*0.5,hipEndY);
+    ctx.lineTo(cx, hipEndY+4);
+    ctx.lineTo(cx+hipW*0.5, hipEndY);
+    ctx.bezierCurveTo(cx+waistW*0.5,torsoEndY-10, cx+shoulderW*0.5,shoulderY+2, cx+neckW*0.5,shoulderY);
+    ctx.closePath();
+    ctx.fillStyle='rgba(190,155,120,0.22)'; ctx.fill();
+    ctx.strokeStyle='rgba(190,155,120,0.50)'; ctx.lineWidth=1.5; ctx.stroke();
+
+    const armTopY=shoulderY+4, armBotY=shoulderY+(torsoH*0.78)*scale, armW=shoulderW*0.16;
+    ['left','right'].forEach(side => {
+      const sign=side==='left'?-1:1, ax=cx+sign*(shoulderW*0.5+armW*0.3);
+      ctx.beginPath();
+      ctx.moveTo(ax-armW*sign*0.1, armTopY);
+      ctx.quadraticCurveTo(ax+sign*armW*0.6,(armTopY+armBotY)/2, ax+sign*armW*0.2,armBotY);
+      ctx.lineWidth=armW*1.1; ctx.lineCap='round';
+      ctx.strokeStyle='rgba(190,155,120,0.30)'; ctx.stroke(); ctx.lineCap='butt';
+    });
+
+    const legTopY=hipEndY, legMidY=legTopY+thighH*scale, legBotY=legMidY+shinH*scale;
+    [[-1,thighW,shinW,ankleW],[1,thighW,shinW,ankleW]].forEach(([sign,tw,sw,aw]) => {
+      const legCX=cx+sign*hipW*0.25;
+      ctx.beginPath();
+      ctx.moveTo(legCX-sign*tw*0.4, legTopY);
+      ctx.bezierCurveTo(legCX-sign*tw*0.5,legTopY+thighH*scale*0.4, legCX-sign*sw*0.4,legTopY+thighH*scale*0.7, legCX-sign*sw*0.3,legMidY);
+      ctx.lineTo(legCX-sign*aw*0.3,legBotY); ctx.lineTo(legCX+sign*aw*0.3,legBotY); ctx.lineTo(legCX+sign*sw*0.3,legMidY);
+      ctx.bezierCurveTo(legCX+sign*sw*0.4,legTopY+thighH*scale*0.7, legCX+sign*tw*0.5,legTopY+thighH*scale*0.4, legCX+sign*tw*0.4,legTopY);
+      ctx.closePath();
+      ctx.fillStyle='rgba(190,155,120,0.20)'; ctx.fill();
+      ctx.strokeStyle='rgba(190,155,120,0.40)'; ctx.lineWidth=1.2; ctx.stroke();
+    });
+  }
+
+  function drawTopSilhouette(ctx, user, chart, fit, type, scale, cx, topY, W, H) {
+    const h=user.height, headH=h*0.130, neckH=h*0.040;
+    const topStartY=topY+(headH+neckH)*scale;
+    const cShoulderW=chart.shoulder*scale, cChestW=(chart.chest/Math.PI)*scale;
+    const cLength=chart.length*scale, cSleeve=chart.sleeve*scale;
+    const shoulderGrade=fit.shoulder?fitGrade(fit.shoulder.diff):'neutral';
+    const chestGrade=fit.chest?fitGrade(fit.chest.diff):'neutral';
+    const clothEndY=topStartY+cLength, shWidth=cShoulderW*0.5, chWidth=cChestW*0.5;
+
+    ctx.beginPath();
+    ctx.moveTo(cx-shWidth*0.18, topStartY);
+    ctx.lineTo(cx-shWidth, topStartY+cLength*0.06);
+    if (type!=='tshirt') {
+      ctx.lineTo(cx-shWidth-cSleeve, topStartY+cLength*0.06+cSleeve*0.22);
+      ctx.lineTo(cx-shWidth-cSleeve, topStartY+cLength*0.06+cSleeve*0.22+8);
+      ctx.lineTo(cx-shWidth, topStartY+cLength*0.13);
+    } else {
+      ctx.lineTo(cx-shWidth-cSleeve*0.28, topStartY+cLength*0.08);
+      ctx.lineTo(cx-shWidth, topStartY+cLength*0.14);
+    }
+    ctx.bezierCurveTo(cx-chWidth*0.92,topStartY+cLength*0.5, cx-chWidth*0.98,topStartY+cLength*0.75, cx-chWidth*0.95,clothEndY);
+    ctx.lineTo(cx+chWidth*0.95, clothEndY);
+    ctx.bezierCurveTo(cx+chWidth*0.98,topStartY+cLength*0.75, cx+chWidth*0.92,topStartY+cLength*0.5, cx+shWidth,topStartY+cLength*0.13);
+    if (type!=='tshirt') {
+      ctx.lineTo(cx+shWidth+cSleeve, topStartY+cLength*0.06+cSleeve*0.22+8);
+      ctx.lineTo(cx+shWidth+cSleeve, topStartY+cLength*0.06+cSleeve*0.22);
+      ctx.lineTo(cx+shWidth, topStartY+cLength*0.06);
+    } else {
+      ctx.lineTo(cx+shWidth+cSleeve*0.28, topStartY+cLength*0.08);
+      ctx.lineTo(cx+shWidth, topStartY+cLength*0.06);
+    }
+    ctx.lineTo(cx+shWidth*0.18, topStartY);
+    ctx.closePath();
+
+    if (f2ShowFitColor) {
+      const avg=shoulderGrade==='tight'||chestGrade==='tight'?'tight':shoulderGrade==='good'&&chestGrade==='good'?'good':'warn';
+      ctx.fillStyle=hexToRgba(gradeColor(avg),0.18);
+    } else { ctx.fillStyle='rgba(100,100,200,0.15)'; }
+    ctx.fill();
+    ctx.lineWidth=2;
+    ctx.strokeStyle=f2ShowFitColor?gradeColor(shoulderGrade):'rgba(150,150,255,0.7)';
+    ctx.stroke();
+
+    if (f2ShowFitColor && fit.shoulder?.diff!==null) {
+      drawFitLabel(ctx, cx-shWidth*0.7, topStartY+cLength*0.08, `어깨 ${gradeLabel(fitGrade(fit.shoulder.diff),fit.shoulder.diff)}`, gradeColor(fitGrade(fit.shoulder.diff)));
+    }
+    if (f2ShowFitColor && fit.chest?.diff!==null) {
+      drawFitLabel(ctx, cx-chWidth*0.6, topStartY+cLength*0.35, `가슴 ${gradeLabel(fitGrade(fit.chest.diff),fit.chest.diff)}`, gradeColor(fitGrade(fit.chest.diff)));
+    }
+  }
+
+  function drawPantsSilhouette(ctx, user, chart, fit, scale, cx, topY, W, H) {
+    const h=user.height, headH=h*0.130, neckH=h*0.040, torsoH=h*0.300, hipH=h*0.080;
+    const pantsTopY=topY+(headH+neckH+torsoH+hipH)*scale;
+    const cLength=chart.length*scale, cHipW=(chart.hip/Math.PI)*scale;
+    const cWaistW=(chart.waist/Math.PI)*scale, cThighW=chart.thigh*scale*0.32;
+    const pantsEndY=pantsTopY+cLength;
+    const waistGrade=fit.waist?fitGrade(fit.waist.diff):'neutral';
+    const hipGrade=fit.hip?fitGrade(fit.hip.diff):'neutral';
+
+    ctx.beginPath();
+    ctx.moveTo(cx-cWaistW*0.45, pantsTopY);
+    ctx.bezierCurveTo(cx-cHipW*0.5,pantsTopY+cLength*0.15, cx-cThighW*0.9,pantsTopY+cLength*0.5, cx-cThighW*0.55,pantsEndY);
+    ctx.lineTo(cx-cThighW*0.1,pantsEndY); ctx.lineTo(cx,pantsTopY+cLength*0.62); ctx.lineTo(cx,pantsTopY+cLength*0.15);
+    ctx.lineTo(cx-cWaistW*0.45,pantsTopY); ctx.closePath();
+    ctx.fillStyle=f2ShowFitColor?hexToRgba(gradeColor(waistGrade),0.18):'rgba(100,180,100,0.15)'; ctx.fill();
+    ctx.strokeStyle=f2ShowFitColor?gradeColor(waistGrade):'rgba(100,200,100,0.6)'; ctx.lineWidth=2; ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(cx+cWaistW*0.45, pantsTopY);
+    ctx.bezierCurveTo(cx+cHipW*0.5,pantsTopY+cLength*0.15, cx+cThighW*0.9,pantsTopY+cLength*0.5, cx+cThighW*0.55,pantsEndY);
+    ctx.lineTo(cx+cThighW*0.1,pantsEndY); ctx.lineTo(cx,pantsTopY+cLength*0.62); ctx.lineTo(cx,pantsTopY+cLength*0.15);
+    ctx.lineTo(cx+cWaistW*0.45,pantsTopY); ctx.closePath();
+    ctx.fillStyle=f2ShowFitColor?hexToRgba(gradeColor(hipGrade),0.18):'rgba(100,180,100,0.15)'; ctx.fill();
+    ctx.strokeStyle=f2ShowFitColor?gradeColor(hipGrade):'rgba(100,200,100,0.6)'; ctx.lineWidth=2; ctx.stroke();
+
+    if (f2ShowFitColor && fit.waist?.diff!==null) {
+      drawFitLabel(ctx, cx-cWaistW*0.5, pantsTopY+cLength*0.05, `허리 ${gradeLabel(waistGrade,fit.waist.diff)}`, gradeColor(waistGrade));
+    }
+  }
+
+  function drawFitting(result) {
+    const { user, chart, fit, type } = result;
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width || canvas.offsetWidth || 260;
+    const H = rect.height || canvas.offsetHeight || 320;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle='#0a0a0a'; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=1;
+    for (let x2=0; x2<W; x2+=40) { ctx.beginPath(); ctx.moveTo(x2,0); ctx.lineTo(x2,H); ctx.stroke(); }
+    for (let y2=0; y2<H; y2+=40) { ctx.beginPath(); ctx.moveTo(0,y2); ctx.lineTo(W,y2); ctx.stroke(); }
+
+    const scale=(H*0.88)/user.height, cx=W*0.5, topY=H*0.06;
+
+    if (f2ShowBody) drawBodySilhouette(ctx, user, scale, cx, topY, W, H);
+    if (f2ShowCloth) {
+      if (type==='pants') drawPantsSilhouette(ctx, user, chart, fit, scale, cx, topY, W, H);
+      else drawTopSilhouette(ctx, user, chart, fit, type, scale, cx, topY, W, H);
+    }
+    drawLegend(ctx, W, H);
+  }
+
+  function renderFit2DCards(result) {
+    const { fit, chart, type } = result;
+    const container = document.getElementById('fit2d-cards');
+    container.textContent = '';
+
+    Object.values(fit).forEach(({ diff, label, chartVal }) => {
+      const grade = fitGrade(diff);
+      const card = document.createElement('div');
+      card.className = 'fit2d-card ' + (grade==='good'?'good':grade==='tight'?'tight':'warn');
+
+      const lEl = document.createElement('div'); lEl.className='fit2d-card-label'; lEl.textContent=label;
+      const vEl = document.createElement('div'); vEl.className='fit2d-card-value';
+      const dEl = document.createElement('div'); dEl.className='fit2d-card-detail';
+
+      if (diff !== null) {
+        vEl.textContent = gradeLabel(grade, diff);
+        vEl.style.color = gradeColor(grade);
+        dEl.textContent = `옷 ${chartVal}cm`;
+      } else {
+        vEl.textContent = (chartVal||0)+'cm';
+        vEl.style.color = '#888';
+        dEl.textContent = '차트 기준';
+      }
+      card.appendChild(lEl); card.appendChild(vEl); card.appendChild(dEl);
+      container.appendChild(card);
+    });
+
+    const best = recommendSize(result.user, result.brand, result.type);
+    document.getElementById('fit2d-rec-badge').textContent = best;
+
+    const recCard = document.createElement('div'); recCard.className='fit2d-card good'; recCard.style.borderLeftColor='#00e5ff';
+    const rl=document.createElement('div'); rl.className='fit2d-card-label'; rl.textContent='추천 사이즈';
+    const rv=document.createElement('div'); rv.className='fit2d-card-value'; rv.textContent=best; rv.style.color='#00e5ff';
+    const rd=document.createElement('div'); rd.className='fit2d-card-detail'; rd.textContent=`${result.brand.toUpperCase()} ${result.type} 기준`;
+    recCard.appendChild(rl); recCard.appendChild(rv); recCard.appendChild(rd);
+    container.appendChild(recCard);
+  }
+
+  function updateBodyInfo(user) {
+    const el = document.getElementById('fit2d-body-info');
+    if (!el) return;
+    el.innerHTML = `<span>키 ${user.height}cm · 몸무게 ${user.weight}kg</span><span>어깨 ${user.shoulder}cm · 가슴 ${user.chest}cm · 허리 ${user.waist}cm · 엉덩이 ${user.hip}cm</span>`;
+  }
+
+  function getUser() {
+    return {
+      height:   measurements.height   || 175,
+      weight:   measurements.weight   || 70,
+      shoulder: measurements.shoulder || 42,
+      chest:    measurements.chest    || 94,
+      waist:    measurements.waist    || 78,
+      hip:      measurements.hip      || 96,
+    };
+  }
+
+  function getSelectedSize() {
+    const active = document.querySelector('#fit2d-size-btns .fit2d-size-btn.active');
+    return active?.dataset.size || 'M';
+  }
+
+  function autoRun() {
+    resizeCanvas();
+    const user  = getUser();
+    const brand = selBrand.value;
+    const type  = selType.value;
+    const size  = getSelectedSize();
+    const chart = SIZE_CHARTS[brand]?.[type]?.[size];
+    if (!chart) return;
+
+    const fit = calcFit(user, chart, type);
+    f2Result  = { user, chart, fit, brand, type, size };
+    drawFitting(f2Result);
+    renderFit2DCards(f2Result);
+    updateBodyInfo(user);
+  }
+
+  // ── 이벤트 연결 ──
+  selType.addEventListener('change', autoRun);
+  selBrand.addEventListener('change', autoRun);
+
+  document.getElementById('fit2d-size-btns').addEventListener('click', e => {
+    const btn = e.target.closest('.fit2d-size-btn');
+    if (!btn) return;
+    document.querySelectorAll('#fit2d-size-btns .fit2d-size-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    autoRun();
+  });
+
+  function bindTog(id, setter) {
+    const btn = document.getElementById(id);
+    btn?.addEventListener('click', () => {
+      btn.classList.toggle('active');
+      setter(btn.classList.contains('active'));
+      if (f2Result) drawFitting(f2Result);
+    });
+  }
+  bindTog('fit2d-tog-body',     v => f2ShowBody = v);
+  bindTog('fit2d-tog-cloth',    v => f2ShowCloth = v);
+  bindTog('fit2d-tog-fitcolor', v => f2ShowFitColor = v);
 })();
 
 // ── 실행 ──

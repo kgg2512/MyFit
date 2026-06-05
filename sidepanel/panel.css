@@ -605,3 +605,73 @@ body {
   display: none;
 }
 .ai-pmf-thanks.visible { display: block; }
+
+/* ── 핏 분석 탭 (2D Canvas) ── */
+.fit2d-section { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+.fit2d-controls { display: flex; flex-direction: column; gap: 8px; }
+.fit2d-control-row { display: flex; gap: 8px; }
+.fit2d-field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.fit2d-field--full { flex: 1 1 100%; }
+.fit2d-label { font-size: 11px; color: var(--text2); }
+
+.fit2d-select {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-size: 13px; padding: 6px 8px;
+  outline: none; width: 100%;
+}
+.fit2d-select:focus { border-color: var(--accent); }
+
+.fit2d-size-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.fit2d-size-btn {
+  flex: 1; padding: 5px 2px; font-size: 11px; font-weight: 600;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text2); cursor: pointer; min-width: 30px; text-align: center;
+  transition: all 0.15s;
+}
+.fit2d-size-btn:hover { border-color: var(--accent); color: var(--text); }
+.fit2d-size-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+.fit2d-rec-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.fit2d-rec-label { color: var(--text2); }
+.fit2d-rec-badge {
+  background: var(--accent); color: #000; font-weight: 700; font-size: 12px;
+  padding: 2px 10px; border-radius: 20px;
+}
+
+.fit2d-canvas-wrap { position: relative; width: 100%; }
+.fit2d-canvas {
+  width: 100%; height: 280px; display: block;
+  background: #0a0a0a; border-radius: 8px; border: 1px solid var(--border);
+}
+
+.fit2d-toggles {
+  display: flex; gap: 4px; justify-content: center;
+  margin-top: 6px; flex-wrap: wrap;
+}
+.fit2d-tog {
+  padding: 4px 10px; font-size: 11px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--bg3); color: var(--text2);
+  cursor: pointer; transition: all 0.15s;
+}
+.fit2d-tog.active { border-color: var(--accent); color: var(--accent); }
+
+.fit2d-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.fit2d-empty { grid-column: 1/-1; text-align: center; color: var(--text2); font-size: 12px; padding: 16px 0; }
+
+.fit2d-card {
+  background: var(--bg2); border-radius: 8px; padding: 8px;
+  border-left: 3px solid var(--border); display: flex; flex-direction: column; gap: 2px;
+}
+.fit2d-card.good  { border-left-color: #00c853; }
+.fit2d-card.tight { border-left-color: #ff5252; }
+.fit2d-card.warn  { border-left-color: #ff9800; }
+.fit2d-card-label { font-size: 10px; color: var(--text2); }
+.fit2d-card-value { font-size: 14px; font-weight: 700; }
+.fit2d-card-detail { font-size: 10px; color: var(--text2); }
+
+.fit2d-body-info {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px; background: var(--bg2); border-radius: 8px;
+  font-size: 11px; color: var(--text2);
+}
