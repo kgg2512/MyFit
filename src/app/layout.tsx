@@ -7,7 +7,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // StatusBar 스타일 (Capacitor 네이티브)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const cap = (window as Record<string, unknown>)['Capacitor'];
+    const cap = (window as unknown as Record<string, unknown>)['Capacitor'];
     if (!cap) return;
 
     (async () => {

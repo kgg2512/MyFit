@@ -23,9 +23,10 @@ export async function captureImage(source: CameraSourceType): Promise<CameraImag
   }
 
   // Capacitor 런타임 체크 — 네이티브 빌드에서만 작동
+  const w = window as unknown as Record<string, unknown>;
   const isCapacitorNative =
-    typeof (window as Record<string, unknown>)['Capacitor'] !== 'undefined' &&
-    (window as Record<string, unknown>)['Capacitor'] !== null;
+    typeof w['Capacitor'] !== 'undefined' &&
+    w['Capacitor'] !== null;
 
   if (isCapacitorNative) {
     return captureWithCapacitor(source);

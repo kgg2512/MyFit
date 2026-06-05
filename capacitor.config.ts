@@ -6,12 +6,8 @@ const config: CapacitorConfig = {
   webDir: 'out',
 
   // CISO 보안 요건 (필수)
-  server: {
-    allowMixedContent: false,
-    cleartext: false,
-    // FASHN AI API 호출은 반드시 CF Worker 프록시를 통해서만
-    // 직접 외부 API 호출 금지 — API Key 노출 방지
-  },
+  // allowMixedContent: false — Capacitor server 타입에 없음, Android config에서 처리
+  // 직접 외부 API 호출 금지 — API Key 노출 방지 (CF Worker 프록시 필수)
 
   ios: {
     limitsNavigationsToAppBoundDomains: true,
