@@ -240,8 +240,9 @@
 
     <!-- 탭 네비게이션 -->
     <div class="fitting-tabs" role="tablist">
-      <button class="fitting-tab active" id="tab-3d" role="tab" aria-selected="true" aria-controls="panel-3d" type="button">3D 사이즈 가이드</button>
+      <button class="fitting-tab active" id="tab-3d" role="tab" aria-selected="true" aria-controls="panel-3d" type="button">3D 가이드</button>
       <button class="fitting-tab" id="tab-ai" role="tab" aria-selected="false" aria-controls="panel-ai" type="button">AI 피팅</button>
+      <button class="fitting-tab" id="tab-fit" role="tab" aria-selected="false" aria-controls="panel-fit" type="button">핏 분석</button>
     </div>
 
     <!-- 탭 1: 3D 사이즈 가이드 (기존 Three.js 아바타) -->
@@ -372,6 +373,77 @@
       <div class="commission-notice">
         <span class="commission-icon">ⓘ</span>
         <span class="commission-text">쿠팡파트너스 제휴 링크 — 구매 시 수수료가 발생할 수 있습니다. 사용자 추가 비용 없음.</span>
+      </div>
+    </div>
+
+    <!-- 탭 3: 핏 분석 (2D Canvas 피팅 시각화) -->
+    <div id="panel-fit" class="fitting-tab-panel scroll-area hidden" role="tabpanel" aria-labelledby="tab-fit">
+      <div class="fit2d-section">
+
+        <!-- 의류 선택 -->
+        <div class="fit2d-controls">
+          <div class="fit2d-control-row">
+            <div class="fit2d-field">
+              <label class="fit2d-label">의류 종류</label>
+              <select class="fit2d-select" id="fit2d-type">
+                <option value="tshirt">티셔츠</option>
+                <option value="shirt">셔츠 (긴소매)</option>
+                <option value="hoodie">후디</option>
+                <option value="pants">팬츠</option>
+              </select>
+            </div>
+            <div class="fit2d-field">
+              <label class="fit2d-label">브랜드</label>
+              <select class="fit2d-select" id="fit2d-brand">
+                <option value="nike">Nike</option>
+                <option value="uniqlo">Uniqlo</option>
+                <option value="zara">Zara</option>
+                <option value="generic">일반 표준</option>
+              </select>
+            </div>
+          </div>
+          <div class="fit2d-control-row">
+            <div class="fit2d-field fit2d-field--full">
+              <label class="fit2d-label">사이즈</label>
+              <div class="fit2d-size-btns" id="fit2d-size-btns">
+                <button class="fit2d-size-btn" data-size="XS" type="button">XS</button>
+                <button class="fit2d-size-btn" data-size="S" type="button">S</button>
+                <button class="fit2d-size-btn active" data-size="M" type="button">M</button>
+                <button class="fit2d-size-btn" data-size="L" type="button">L</button>
+                <button class="fit2d-size-btn" data-size="XL" type="button">XL</button>
+                <button class="fit2d-size-btn" data-size="2XL" type="button">2XL</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 추천 사이즈 뱃지 -->
+        <div class="fit2d-rec-row">
+          <span class="fit2d-rec-label">내 체형 기반 추천:</span>
+          <span class="fit2d-rec-badge" id="fit2d-rec-badge">—</span>
+        </div>
+
+        <!-- Canvas 피팅 시각화 -->
+        <div class="fit2d-canvas-wrap">
+          <canvas id="fit2d-canvas" class="fit2d-canvas"></canvas>
+          <!-- 표시 토글 -->
+          <div class="fit2d-toggles">
+            <button class="fit2d-tog active" id="fit2d-tog-body" type="button">체형</button>
+            <button class="fit2d-tog active" id="fit2d-tog-cloth" type="button">의류</button>
+            <button class="fit2d-tog active" id="fit2d-tog-fitcolor" type="button">핏 색상</button>
+          </div>
+        </div>
+
+        <!-- 핏 분석 카드 -->
+        <div class="fit2d-cards" id="fit2d-cards">
+          <div class="fit2d-empty">의류 선택 후 자동 분석됩니다</div>
+        </div>
+
+        <!-- 체형 정보 표시 (현재 저장된 값) -->
+        <div class="fit2d-body-info" id="fit2d-body-info">
+          <!-- JS로 채워짐 -->
+        </div>
+
       </div>
     </div>
 
