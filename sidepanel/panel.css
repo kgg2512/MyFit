@@ -675,3 +675,16 @@ body {
   padding: 8px; background: var(--bg2); border-radius: 8px;
   font-size: 11px; color: var(--text2);
 }
+
+/* CLO: 개인정보처리방침 / 이용약관 footer */
+.legal-footer {
+  font-size: 10px;
+  text-align: center;
+  color: #888;
+  margin: 12px 0 8px;
+  padding: 0 16px;
+}
+.legal-footer a {
+  color: #888;
+  text-decoration: underline;
+}
