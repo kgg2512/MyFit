@@ -1,0 +1,35 @@
+<!--
+  MyFit — Android 권한 선언 패치
+  배포 경로: android/app/src/main/AndroidManifest.xml 에 병합
+-->
+
+<!-- ===== 권한 선언 ===== -->
+
+<!-- 인터넷 (CF Worker 프록시 통신) -->
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+<!-- 카메라 (신체 피팅 사진) -->
+<uses-permission android:name="android.permission.CAMERA" />
+
+<!-- 사진 라이브러리 (Android 13+) -->
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+<!-- 사진 라이브러리 (Android 12 이하) -->
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+    android:maxSdkVersion="32" />
+
+<!-- 알림 -->
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+<!-- 진동 -->
+<uses-permission android:name="android.permission.VIBRATE" />
+
+<!-- ===== uses-feature ===== -->
+<uses-feature android:name="android.hardware.camera" android:required="false" />
+
+<!-- ===== application 태그에 추가 ===== -->
+<!--
+  android:usesCleartextTraffic="false"
+  android:networkSecurityConfig="@xml/network_security_config"
+-->

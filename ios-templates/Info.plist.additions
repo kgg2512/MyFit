@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MyFit — Info.plist Usage Description 추가 항목
+-->
+<plist version="1.0">
+<dict>
+
+  <!-- 카메라 (신체 피팅 사진 촬영) -->
+  <key>NSCameraUsageDescription</key>
+  <string>AI 피팅을 위해 카메라로 사진을 촬영합니다. 촬영된 사진은 AI 처리 후 즉시 삭제됩니다.</string>
+
+  <!-- 사진 라이브러리 읽기 -->
+  <key>NSPhotoLibraryUsageDescription</key>
+  <string>앨범에서 사진을 선택하여 AI 피팅을 진행합니다. 사진은 AI 처리 후 즉시 삭제됩니다.</string>
+
+  <!-- 앱 내 도메인 (CF Worker 프록시 도메인 추가) -->
+  <key>WKAppBoundDomains</key>
+  <array>
+    <!-- CF Worker 프록시 배포 후 실제 도메인으로 교체 -->
+    <string>myfit-fashn.workers.dev</string>
+    <string>kgg2512.github.io</string>
+  </array>
+
+  <!-- 화면 방향 고정 -->
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+  </array>
+
+</dict>
+</plist>
