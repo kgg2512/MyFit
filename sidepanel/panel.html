@@ -322,20 +322,49 @@
         <!-- 개인정보 고지 -->
         <div class="ai-privacy-note">사진은 AI 피팅 처리 후 즉시 삭제됩니다. 서버에 저장되지 않습니다.</div>
 
-        <!-- 로딩 상태 -->
+        <!-- 로딩 상태 — 단계별 진행 표시 (15-30초 이탈 방지) -->
         <div class="ai-loading hidden" id="ai-loading" aria-live="polite">
           <div class="ai-loading-spinner"></div>
-          <span id="ai-loading-text">AI 분석 중... (15–30초)</span>
+          <span id="ai-loading-text">AI가 옷을 입히는 중...</span>
+          <div class="ai-loading-steps">
+            <div class="ai-step" id="ai-step-1">
+              <div class="ai-step-dot ai-step-dot--active"></div>
+              <span id="ai-step-1-label">사진 분석 중</span>
+            </div>
+            <div class="ai-step" id="ai-step-2">
+              <div class="ai-step-dot"></div>
+              <span id="ai-step-2-label">옷 패턴 매핑</span>
+            </div>
+            <div class="ai-step" id="ai-step-3">
+              <div class="ai-step-dot"></div>
+              <span id="ai-step-3-label">피팅 이미지 생성</span>
+            </div>
+          </div>
+          <div class="ai-loading-bar-wrap">
+            <div class="ai-loading-bar" id="ai-loading-bar"></div>
+          </div>
+          <span class="ai-loading-tip" id="ai-loading-tip">정면 사진일수록 결과가 정확합니다</span>
         </div>
 
         <!-- 에러 메시지 -->
         <div class="ai-error hidden" id="ai-error" role="alert"></div>
 
-        <!-- 결과 이미지 -->
+        <!-- 결과 이미지 + PMF 피드백 -->
         <div class="ai-result-wrap hidden" id="ai-result-wrap">
-          <div class="ai-result-label">AI 피팅 결과</div>
+          <div class="ai-result-header">
+            <div class="ai-result-label">AI 피팅 결과</div>
+            <button class="ai-result-save" id="btn-save-result" type="button" title="이미지 저장">저장</button>
+          </div>
           <img id="fashn-result" class="ai-result-img" alt="AI 피팅 결과 이미지">
           <div class="ai-result-disclaimer">AI 생성 이미지입니다. 실제 착용과 차이가 있을 수 있습니다.</div>
+          <!-- PMF 테스트: "이 결과 보고 샀겠냐?" -->
+          <div class="ai-pmf-block">
+            <div class="ai-pmf-question">이 피팅 결과, 구매에 도움이 됐나요?</div>
+            <div class="ai-pmf-btns">
+              <button class="ai-pmf-btn ai-pmf-btn--yes" id="btn-pmf-yes" type="button">도움 됐어요</button>
+              <button class="ai-pmf-btn ai-pmf-btn--no" id="btn-pmf-no" type="button">별로예요</button>
+            </div>
+          </div>
         </div>
       </div>
 

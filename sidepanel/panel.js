@@ -655,13 +655,82 @@ async function requestFashnFit(userPhotoFile, garmentImageUrl, category) {
   return data;
 }
 
+// ── 단계별 로딩 진행 타이머 ──
+let _loadingTimers = [];
+
+const LOADING_STEPS = [
+  { id: 'ai-step-1', label: '사진 분석 중', tip: '정면 사진일수록 결과가 정확합니다', bar: 10 },
+  { id: 'ai-step-2', label: '옷 패턴 매핑', tip: 'AI가 의류의 질감과 형태를 분석합니다', bar: 45 },
+  { id: 'ai-step-3', label: '피팅 이미지 생성', tip: '거의 다 됐어요! 잠시만 기다려주세요', bar: 85 },
+];
+
+function startLoadingSteps() {
+  _loadingTimers.forEach(clearTimeout);
+  _loadingTimers = [];
+
+  const bar     = document.getElementById('ai-loading-bar');
+  const tipEl   = document.getElementById('ai-loading-tip');
+  const stepEls = LOADING_STEPS.map(s => document.getElementById(s.id));
+
+  // 초기화
+  stepEls.forEach(el => {
+    if (!el) return;
+    el.classList.remove('active', 'done');
+    const dot = el.querySelector('.ai-step-dot');
+    if (dot) { dot.classList.remove('ai-step-dot--active'); }
+  });
+  if (bar) bar.style.width = '5%';
+
+  // Step 1 즉시 활성
+  activateStep(0, bar, tipEl, stepEls);
+
+  // Step 2: 7초 후
+  _loadingTimers.push(setTimeout(() => activateStep(1, bar, tipEl, stepEls), 7000));
+  // Step 3: 18초 후
+  _loadingTimers.push(setTimeout(() => activateStep(2, bar, tipEl, stepEls), 18000));
+}
+
+function activateStep(idx, bar, tipEl, stepEls) {
+  // 이전 단계 done 처리
+  for (let i = 0; i < idx; i++) {
+    if (!stepEls[i]) continue;
+    stepEls[i].classList.remove('active');
+    stepEls[i].classList.add('done');
+    const dot = stepEls[i].querySelector('.ai-step-dot');
+    if (dot) dot.classList.remove('ai-step-dot--active');
+  }
+  // 현재 단계 active
+  if (stepEls[idx]) {
+    stepEls[idx].classList.add('active');
+    const dot = stepEls[idx].querySelector('.ai-step-dot');
+    if (dot) dot.classList.add('ai-step-dot--active');
+  }
+  if (bar) bar.style.width = LOADING_STEPS[idx].bar + '%';
+  if (tipEl) tipEl.textContent = LOADING_STEPS[idx].tip;
+}
+
+function finishLoadingSteps() {
+  _loadingTimers.forEach(clearTimeout);
+  _loadingTimers = [];
+  const bar = document.getElementById('ai-loading-bar');
+  if (bar) bar.style.width = '100%';
+}
+
 // ── 피팅 탭 UI 상태 헬퍼 ──
 function setAiFittingLoading(isLoading, message) {
   const loadingEl  = document.getElementById('ai-loading');
   const loadingTxt = document.getElementById('ai-loading-text');
   const btnFit     = document.getElementById('btn-fashn-fit');
 
-  loadingEl.classList.toggle('hidden', !isLoading);
+  if (isLoading) {
+    loadingEl.classList.remove('hidden');
+    loadingEl.classList.add('visible');
+    startLoadingSteps();
+  } else {
+    finishLoadingSteps();
+    loadingEl.classList.remove('visible');
+    loadingEl.classList.add('hidden');
+  }
   btnFit.disabled = isLoading;
   if (message && loadingTxt) loadingTxt.textContent = message;
 }
@@ -681,9 +750,17 @@ function clearAiFittingError() {
 function showAiFittingResult(imageUrl) {
   const resultWrap = document.getElementById('ai-result-wrap');
   const resultImg  = document.getElementById('fashn-result');
+  // hidden/visible 이중 클래스 처리 (CSS에서 visible로 display:flex)
   resultWrap.classList.remove('hidden');
+  resultWrap.classList.add('visible');
   resultImg.src = imageUrl;
   resultImg.alt = 'AI 피팅 결과 — ' + (currentProduct?.name || '상품');
+
+  // PMF 버튼 초기화 (재시도 시 리셋)
+  document.getElementById('btn-pmf-yes')?.classList.remove('selected');
+  document.getElementById('btn-pmf-no')?.classList.remove('selected');
+  const thanks = document.querySelector('.ai-pmf-thanks');
+  if (thanks) thanks.classList.remove('visible');
 }
 
 // ── FASHN 피팅 탭 이벤트 바인딩 ──
@@ -830,6 +907,55 @@ document.getElementById('btn-buy').addEventListener('click', () => {
     chrome.storage.local.set({ myfit_consented: '1' });
     overlay.classList.add('hidden');
     showScreen('manual');
+  });
+})();
+
+// ── PMF 피드백 + 결과 저장 버튼 ──
+(function initResultActions() {
+  // PMF Yes/No
+  function handlePmf(selected) {
+    document.getElementById('btn-pmf-yes')?.classList.remove('selected');
+    document.getElementById('btn-pmf-no')?.classList.remove('selected');
+    selected.classList.add('selected');
+
+    // PMF 데이터 저장 (로컬 카운터 — 서버 전송 없음)
+    const key = selected.id === 'btn-pmf-yes' ? 'myfit_pmf_yes' : 'myfit_pmf_no';
+    chrome.storage.local.get(['myfit_pmf_yes', 'myfit_pmf_no']).then(data => {
+      const updated = { [key]: (data[key] || 0) + 1 };
+      chrome.storage.local.set(updated);
+    });
+
+    // 감사 메시지 표시
+    let thanks = document.querySelector('.ai-pmf-thanks');
+    if (!thanks) {
+      thanks = document.createElement('div');
+      thanks.className = 'ai-pmf-thanks';
+      thanks.textContent = '피드백 감사합니다!';
+      document.querySelector('.ai-pmf-block')?.appendChild(thanks);
+    }
+    thanks.classList.add('visible');
+  }
+
+  document.getElementById('btn-pmf-yes')?.addEventListener('click', function() { handlePmf(this); });
+  document.getElementById('btn-pmf-no')?.addEventListener('click', function() { handlePmf(this); });
+
+  // 결과 이미지 저장 (blob → a[download])
+  document.getElementById('btn-save-result')?.addEventListener('click', async () => {
+    const img = document.getElementById('fashn-result');
+    if (!img?.src) return;
+    try {
+      const resp = await fetch(img.src);
+      const blob = await resp.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'myfit-result.jpg';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // 크로스오리진 제한 시 새 탭 열기 폴백
+      window.open(img.src, '_blank', 'noopener,noreferrer');
+    }
   });
 })();
 
