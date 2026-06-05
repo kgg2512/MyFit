@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=440">
+  <title>MyFit — Promo Tile 440×280</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 440px;
+      height: 280px;
+      overflow: hidden;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+
+    .canvas {
+      width: 440px;
+      height: 280px;
+      background: #0a0a0a;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* 배경 그라데이션 오브 */
+    .bg-orb-1 {
+      position: absolute;
+      top: -60px;
+      right: -40px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .bg-orb-2 {
+      position: absolute;
+      bottom: -80px;
+      left: -60px;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,77,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* 상단 태그 */
+    .tag {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #00e5ff;
+      opacity: 0.8;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* 메인 로고 */
+    .logo {
+      font-size: 64px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      position: relative;
+      z-index: 2;
+      background: linear-gradient(135deg, #00e5ff 0%, #7c4dff 60%, #00e5ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    /* 구분선 */
+    .divider {
+      width: 32px;
+      height: 1px;
+      background: linear-gradient(90deg, #00e5ff, #7c4dff);
+      margin: 14px 0 12px;
+      opacity: 0.6;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* 서브 텍스트 */
+    .subtitle {
+      font-size: 13px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.75);
+      letter-spacing: 0.03em;
+      position: relative;
+      z-index: 2;
+      text-align: center;
+    }
+
+    /* 하단 뱃지 */
+    .badge {
+      position: absolute;
+      bottom: 18px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 2;
+    }
+
+    .badge-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #00e5ff;
+      opacity: 0.8;
+    }
+
+    .badge-text {
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.15em;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+    }
+
+    /* 좌하단 AI 레이블 */
+    .ai-label {
+      position: absolute;
+      bottom: 18px;
+      left: 20px;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: rgba(124,77,255,0.6);
+      text-transform: uppercase;
+      z-index: 2;
+    }
+
+    /* 테두리 효과 */
+    .border-glow {
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(0,229,255,0.08);
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="bg-orb-1"></div>
+    <div class="bg-orb-2"></div>
+    <div class="border-glow"></div>
+
+    <div class="tag">AI Virtual Fitting</div>
+    <div class="logo">MyFit</div>
+    <div class="divider"></div>
+    <div class="subtitle">쇼핑몰에서 바로 입어보세요</div>
+
+    <div class="ai-label">Powered by FASHN AI</div>
+    <div class="badge">
+      <div class="badge-dot"></div>
+      <div class="badge-text">Chrome Extension</div>
+    </div>
+  </div>
+</body>
+</html>
