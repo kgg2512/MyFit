@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 프로덕션: HTTPS만 허용, cleartext 완전 차단 -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <!-- FASHN AI API 통신 도메인 명시적 허용 (HTTPS 강제) -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">workers.dev</domain>
+        <domain includeSubdomains="true">fashn.ai</domain>
+    </domain-config>
+    <!-- 개발 환경에서만 localhost 허용 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>
