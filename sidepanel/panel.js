@@ -58,10 +58,12 @@ const QUICK_SIZE_MAP = {
 };
 
 // ── 이벤트 바인딩 ──
-document.getElementById('btn-start-onboard').addEventListener('click', () => {
+document.getElementById('btn-start-onboard').addEventListener('click', async () => {
   const overlay = document.getElementById('consent-overlay');
   // 최초 실행 시 동의 모달 표시, 이미 동의했으면 바로 manual로
-  const hasConsented = localStorage.getItem('myfit_consented');
+  // SEC-006 수정: localStorage → chrome.storage.local (Extension 전용 격리 스토리지)
+  const stored = await chrome.storage.local.get('myfit_consented');
+  const hasConsented = stored.myfit_consented;
   if (hasConsented) {
     showScreen('manual');
   } else {
@@ -778,14 +780,11 @@ function showAiFittingResult(imageUrl) {
 })();
 
 // ── 구매 버튼 ──
+// SEC-002 수정: chrome.tabs.update → window.open (tabs 권한 불필요, MV3 권고 방식)
 document.getElementById('btn-buy').addEventListener('click', () => {
   if (!currentProduct?.url) return;
-  // 상품 원본 URL로 이동 (탭에서)
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs[0]) {
-      chrome.tabs.update(tabs[0].id, { url: currentProduct.url });
-    }
-  });
+  // 상품 원본 URL을 새 탭에서 열기 (tabs 권한 없이 동작)
+  window.open(currentProduct.url, '_blank', 'noopener,noreferrer');
 });
 
 // ── 동의 모달 로직 (CLO: 3항목 모두 필수) ──
@@ -827,7 +826,8 @@ document.getElementById('btn-buy').addEventListener('click', () => {
   });
 
   btnConfirm.addEventListener('click', () => {
-    localStorage.setItem('myfit_consented', '1');
+    // SEC-006 수정: localStorage → chrome.storage.local
+    chrome.storage.local.set({ myfit_consented: '1' });
     overlay.classList.add('hidden');
     showScreen('manual');
   });
