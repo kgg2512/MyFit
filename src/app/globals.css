@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+/* ── MyFit 브랜드 변수 ── */
+:root {
+  --myfit-bg: #0a0a0a;
+  --myfit-surface: #141414;
+  --myfit-surface2: #1e1e1e;
+  --myfit-border: #2a2a2a;
+  --myfit-accent: #00e5ff;
+  --myfit-accent2: #7c4dff;
+  --myfit-text: #f0f0f0;
+  --myfit-text-sub: #999999;
+  --myfit-success: #00c853;
+  --myfit-warn: #ffab40;
+  --myfit-error: #ff5252;
+  --myfit-radius: 12px;
+  --myfit-radius-sm: 8px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--myfit-bg);
+  color: var(--myfit-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 터치 타겟 최소 44px 보장 */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  color: inherit;
+}
+
+button:active {
+  opacity: 0.75;
+  transform: scale(0.98);
+  transition: transform 0.1s;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  color: var(--myfit-text);
+  background: var(--myfit-surface2);
+  border: 1px solid var(--myfit-border);
+  border-radius: var(--myfit-radius-sm);
+  padding: 12px 16px;
+  font-size: 16px; /* iOS zoom 방지 */
+  width: 100%;
+  appearance: none;
+}
+
+input:focus, select:focus {
+  outline: 2px solid var(--myfit-accent);
+  border-color: var(--myfit-accent);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* ── 버튼 공통 ── */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: var(--myfit-radius);
+  background: linear-gradient(135deg, var(--myfit-accent), var(--myfit-accent2));
+  color: #000;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  min-height: 52px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 24px;
+  border-radius: var(--myfit-radius);
+  background: var(--myfit-surface2);
+  border: 1px solid var(--myfit-border);
+  color: var(--myfit-text);
+  font-size: 15px;
+  min-height: 48px;
+}
+
+/* ── 스피너 ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--myfit-border);
+  border-top-color: var(--myfit-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── 로딩 바 ── */
+.loading-bar-track {
+  width: 100%;
+  height: 4px;
+  background: var(--myfit-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.loading-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--myfit-accent), var(--myfit-accent2));
+  border-radius: 2px;
+  transition: width 0.8s ease;
+}
+
+/* ── 스크롤 ── */
+.scroll-area {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* ── 카드 ── */
+.card {
+  background: var(--myfit-surface);
+  border: 1px solid var(--myfit-border);
+  border-radius: var(--myfit-radius);
+  padding: 16px;
+}
