@@ -61,23 +61,25 @@ export function fileToBase64(file: File): Promise<string> {
 
 /**
  * FASHN AI 가상 피팅 요청
- * @param humanImageBase64 - 사용자 사진 base64 (prefix 없음)
- * @param garmentImageUrl  - 쇼핑몰 상품 이미지 https:// URL
- * @param category         - tops | bottoms
+ * @param humanImageBase64      - 사용자 사진 base64 (prefix 없음)
+ * @param garmentImageUrlOrB64  - 쇼핑몰 URL (https://) 또는 base64 문자열
+ * @param category              - tops | bottoms
+ * @param isGarmentBase64       - true이면 garmentImageUrlOrB64를 base64로 전송
  */
 export async function requestFashnFit(
   humanImageBase64: string,
-  garmentImageUrl: string,
-  category: FitCategory
+  garmentImageUrlOrB64: string,
+  category: FitCategory,
+  isGarmentBase64 = false
 ): Promise<FashnResult> {
+  const bodyPayload = isGarmentBase64
+    ? { human_image: humanImageBase64, garment_image_base64: garmentImageUrlOrB64, category }
+    : { human_image: humanImageBase64, garment_image_url: garmentImageUrlOrB64, category };
+
   const response = await fetch(`${CF_WORKER_URL}/try-on`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      human_image: humanImageBase64,
-      garment_image_url: garmentImageUrl,
-      category,
-    }),
+    body: JSON.stringify(bodyPayload),
   });
 
   let data: Record<string, unknown> = {};
