@@ -613,6 +613,20 @@ function fileToBase64(file) {
 }
 
 /**
+ * FASHN 베타 1인1회 쿼터 체크
+ * chrome.storage.local의 fashnUsed 플래그로 사용 여부 확인
+ * @returns {Promise<boolean>} true = 사용 가능, false = 이미 사용함
+ */
+async function checkFashnQuota() {
+  const { fashnUsed } = await chrome.storage.local.get('fashnUsed');
+  if (fashnUsed) {
+    showAiFittingError('베타 기간 중 1인 1회 피팅이 제공됩니다. 정식 출시 후 무제한 이용 가능합니다.');
+    return false;
+  }
+  return true;
+}
+
+/**
  * FASHN AI 가상 피팅 요청
  * @param {File} userPhotoFile - 사용자 업로드 사진
  * @param {string} garmentImageUrl - 쇼핑몰 상품 이미지 https:// URL
@@ -807,6 +821,10 @@ function showAiFittingResult(imageUrl) {
   btnFit.addEventListener('click', async () => {
     if (!selectedPhotoFile) return;
 
+    // 1인1회 쿼터 체크 (베타 제한)
+    const quotaOk = await checkFashnQuota();
+    if (!quotaOk) return;
+
     // 현재 상품의 garment_image_url 가져오기
     const garmentUrl = currentProduct?.imageUrl || currentProduct?.image || null;
     if (!garmentUrl || !garmentUrl.startsWith('https://')) {
@@ -824,6 +842,8 @@ function showAiFittingResult(imageUrl) {
 
     try {
       const result = await requestFashnFit(selectedPhotoFile, garmentUrl, category);
+      // 피팅 성공 후 1인1회 플래그 저장
+      await chrome.storage.local.set({ fashnUsed: true });
       showAiFittingResult(result.output_image_url);
     } catch (err) {
       showAiFittingError(err.message || 'AI 피팅 중 오류가 발생했습니다.');
