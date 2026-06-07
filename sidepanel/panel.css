@@ -99,7 +99,8 @@ body {
 .logo-icon {
   width: 60px; height: 60px;
   background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border-radius: 18px; font-size: 28px;
+  border-radius: 18px;
+  font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.02em;
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 10px;
   box-shadow: 0 0 28px rgba(0,229,255,.25);
