@@ -68,10 +68,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "lib/three.module.min.js",
-        "sidepanel/panel.html",
-        "sidepanel/panel.js",
-        "sidepanel/panel.css"
+        "lib/three.module.min.js"
       ],
       "matches": [
         "https://www.musinsa.com/*",

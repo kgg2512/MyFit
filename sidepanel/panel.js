@@ -1337,7 +1337,14 @@ document.getElementById('btn-buy').addEventListener('click', () => {
   function updateBodyInfo(user) {
     const el = document.getElementById('fit2d-body-info');
     if (!el) return;
-    el.innerHTML = `<span>키 ${user.height}cm · 몸무게 ${user.weight}kg</span><span>어깨 ${user.shoulder}cm · 가슴 ${user.chest}cm · 허리 ${user.waist}cm · 엉덩이 ${user.hip}cm</span>`;
+    // SEC-CISO: innerHTML 금지 → DOM API 직접 생성
+    el.textContent = '';
+    const s1 = document.createElement('span');
+    s1.textContent = `키 ${user.height}cm · 몸무게 ${user.weight}kg`;
+    const s2 = document.createElement('span');
+    s2.textContent = `어깨 ${user.shoulder}cm · 가슴 ${user.chest}cm · 허리 ${user.waist}cm · 엉덩이 ${user.hip}cm`;
+    el.appendChild(s1);
+    el.appendChild(s2);
   }
 
   function getUser() {
