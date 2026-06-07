@@ -1,31 +1,49 @@
-# My Fit
+# MyFit
 
-## 프로젝트 개요
-AI 기반 가상 피팅 앱 투자자 데모
+**G2 Company Ltd 공식 프로젝트**
 
-## 회사
-G2 Company Ltd.
+> 사이즈 고민 없이 쇼핑하세요.  
+> *Shop with confidence, not guesswork.*
 
-## 조직 및 협업
-- CEO 에이전트 Alpha가 전체 지휘를 맡습니다.
-- CTO/CFO/COO/CMO C-Level 코디네이터가 각 도메인별로 업무를 분배합니다.
-- 현재 `RuFlo V3` 멀티에이전트 체계가 통합되어 있으며, `hierarchical-mesh` 토폴로지를 사용합니다.
-- 복잡한 AI·기술 업무는 하위 Ruflo 에이전트가 자율적으로 협업하며, Alpha가 최종 결과를 조율합니다.
+AI 피팅 확신 도구. 온라인 쇼핑에서 "이 옷 나한테 맞을까?" 를 해결합니다.
+
+---
+
+## 라이브 데모
+
+**[https://kgg2512.github.io/MyFit/](https://kgg2512.github.io/MyFit/)**
+
+---
+
+## 제품 구조
+
+| 제품 | 설명 | 상태 |
+|------|------|------|
+| **Chrome Extension** | 쇼핑몰 페이지에서 사이즈 추천 + AI 피팅 | 🔄 Phase 1.5 개발 중 |
+| **웹앱** | 투자자 데모 (링크 위) | ✅ 배포 완료 |
+
+## 핵심 기능
+
+- 쇼핑몰 자동 감지 (무신사·Nike·Zara·Uniqlo·H&M)
+- AI 사이즈 추천 + 핏 점수
+- FASHN AI 실제 착용 이미지 생성
+- 3D 아바타 가상 피팅
 
 ## 기술 스택
-- AI/ML: FASHN AI API
-- DB: Nike 제품 데이터베이스
-- 플랫폼: 웹 및 모바일
 
-## 모델/토큰 전략
-- 전략, 설계, 고난도 AI 작업: `claude-opus-4-7`
-- 문서화, 코드 리뷰, 일반 구현: `claude-sonnet-4-6`
-- Ruflo 내부 분산으로 토큰 효율을 높이고, 작업 성숙도에 따라 최적 모델을 선택합니다.
+- **Extension**: Chrome MV3, JavaScript
+- **AI**: FASHN AI API
+- **인프라**: Cloudflare Workers
+- **3D**: Three.js
 
-## 다음 단계 (Roadmap)
-1. FASHN AI API 연동 ($0.075/장, 무료 15크레딧)
-2. Nike 제품 DB 구축
-3. MVP 배포
+## 개발 현황
 
-## 라이선스
-Proprietary - G2 Company Ltd.
+| Phase | 내용 | 상태 |
+|-------|------|------|
+| Phase 1 | Three.js 아바타 + 사이즈 추천 | ✅ 완료 |
+| Phase 1.5 | FASHN AI 실제 포토리얼 피팅 | 🔄 진행 중 |
+| Phase 2 | MediaPipe 신체 자동 측정 | ⏳ 예정 |
+
+---
+
+© 2026 G2 Company Ltd. All rights reserved.
