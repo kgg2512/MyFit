@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { loadMeasurements, loadFitHistory, type FitHistoryItem } from '@/lib/storage';
 
 export default function HomePage() {
+  const router = useRouter();
   const [hasMeasurements, setHasMeasurements] = useState(false);
   const [history, setHistory] = useState<FitHistoryItem[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -16,11 +18,11 @@ export default function HomePage() {
   }, []);
 
   const goToFit = () => {
-    window.location.href = '/fit/';
+    router.push('/fit');
   };
 
   const goToProfile = () => {
-    window.location.href = '/profile/';
+    router.push('/profile');
   };
 
   if (!mounted) {

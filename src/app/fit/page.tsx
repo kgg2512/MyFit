@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   requestFashnFit,
   validateImageFile,
@@ -32,6 +33,7 @@ const CATEGORY_OPTIONS: { value: FitCategory; label: string }[] = [
 ];
 
 export default function FitPage() {
+  const router = useRouter();
   const [step, setStep] = useState<FitStep>('person');
   const [measurements, setMeasurements] = useState<Measurements | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -256,7 +258,7 @@ export default function FitPage() {
           onClick={() => {
             if (step === 'result') { setStep('garment'); return; }
             if (step === 'garment') { setStep('person'); return; }
-            window.location.href = '/';
+            router.push('/');
           }}
           style={{
             width: 40, height: 40, borderRadius: '50%',

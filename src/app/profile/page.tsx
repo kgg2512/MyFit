@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   saveMeasurements,
   loadMeasurements,
@@ -18,6 +19,7 @@ const QUICK_SIZE_MAP: Record<string, Measurements> = {
 };
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [form, setForm] = useState<Measurements>({
     height: 175, weight: 70, shoulder: 43, chest: 94, waist: 78, hip: 90,
   });
@@ -55,7 +57,7 @@ export default function ProfilePage() {
     saveMeasurements(form);
     setSaved(true);
     setTimeout(() => {
-      window.location.href = '/fit/';
+      router.push('/fit');
     }, 800);
   };
 
@@ -66,7 +68,7 @@ export default function ProfilePage() {
     saveMeasurements(form);
     setSaved(true);
     setTimeout(() => {
-      window.location.href = '/fit/';
+      router.push('/fit');
     }, 800);
   };
 

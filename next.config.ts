@@ -1,9 +1,14 @@
 import type { NextConfig } from "next";
 
+// GitHub Pages: NEXT_PUBLIC_BASE_PATH=/MyFit
+// Capacitor(모바일): basePath 없음 (file:// 로드)
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
 const nextConfig: NextConfig = {
-  // Capacitor 빌드 전용 — 항상 정적 익스포트
   output: "export",
   trailingSlash: true,
+  basePath,
+  assetPrefix: basePath,
   images: {
     unoptimized: true,
   },
