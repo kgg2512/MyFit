@@ -626,12 +626,19 @@ async function checkFashnQuota() {
   return true;
 }
 
+// ── Demo 모드: FASHN API Key 미등록 시 사용할 샘플 이미지 URL ──
+// 실제 FASHN 결과처럼 보이는 공개 도메인 의류 합성 샘플 이미지
+const DEMO_RESULT_IMAGES = {
+  tops:    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&q=80',
+  bottoms: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&q=80',
+};
+
 /**
  * FASHN AI 가상 피팅 요청
  * @param {File} userPhotoFile - 사용자 업로드 사진
  * @param {string} garmentImageUrl - 쇼핑몰 상품 이미지 https:// URL
  * @param {'tops'|'bottoms'} category
- * @returns {Promise<{output_image_url: string}>}
+ * @returns {Promise<{output_image_url: string, demo?: boolean}>}
  */
 async function requestFashnFit(userPhotoFile, garmentImageUrl, category) {
   // Step 1: File → base64 (메모리 내 처리, 서버 전송 후 JS GC에 의해 해제)
@@ -651,6 +658,14 @@ async function requestFashnFit(userPhotoFile, garmentImageUrl, category) {
   const data = await response.json();
 
   if (!response.ok) {
+    // FASHN API Key 미등록 → Demo 모드 폴백
+    // (Worker가 500 + "Server configuration error" 반환 시)
+    if (response.status === 500 && data.error === 'Server configuration error') {
+      return {
+        output_image_url: DEMO_RESULT_IMAGES[category] || DEMO_RESULT_IMAGES.tops,
+        demo: true,
+      };
+    }
     // 크레딧 소진 특별 처리
     if (response.status === 402 || data.code === 'CREDITS_EXHAUSTED') {
       throw new Error('AI 피팅 크레딧이 소진되었습니다. 잠시 후 다시 시도해 주세요.');
@@ -761,7 +776,7 @@ function clearAiFittingError() {
   errEl.textContent = '';
 }
 
-function showAiFittingResult(imageUrl) {
+function showAiFittingResult(imageUrl, isDemo) {
   const resultWrap = document.getElementById('ai-result-wrap');
   const resultImg  = document.getElementById('fashn-result');
   // hidden/visible 이중 클래스 처리 (CSS에서 visible로 display:flex)
@@ -769,6 +784,33 @@ function showAiFittingResult(imageUrl) {
   resultWrap.classList.add('visible');
   resultImg.src = imageUrl;
   resultImg.alt = 'AI 피팅 결과 — ' + (currentProduct?.name || '상품');
+
+  // Demo 모드 배지 표시/숨김
+  let demoBadge = document.getElementById('ai-demo-badge');
+  if (isDemo) {
+    if (!demoBadge) {
+      demoBadge = document.createElement('div');
+      demoBadge.id = 'ai-demo-badge';
+      demoBadge.style.cssText = [
+        'position:absolute', 'top:8px', 'left:8px',
+        'background:rgba(255,160,0,0.92)', 'color:#000',
+        'font-size:10px', 'font-weight:700', 'padding:2px 7px',
+        'border-radius:4px', 'letter-spacing:.05em', 'pointer-events:none',
+        'z-index:10',
+      ].join(';');
+      demoBadge.textContent = 'DEMO';
+      // resultWrap이 position:relative여야 함 — 인라인으로 보장
+      resultWrap.style.position = 'relative';
+      resultWrap.appendChild(demoBadge);
+    }
+    demoBadge.style.display = 'block';
+
+    // Demo 안내 메시지 (에러 영역 재활용)
+    showAiFittingError('데모 모드: FASHN API Key 등록 후 실제 AI 피팅을 체험하실 수 있습니다.');
+  } else {
+    if (demoBadge) demoBadge.style.display = 'none';
+    clearAiFittingError();
+  }
 
   // PMF 버튼 초기화 (재시도 시 리셋)
   document.getElementById('btn-pmf-yes')?.classList.remove('selected');
@@ -843,9 +885,11 @@ function showAiFittingResult(imageUrl) {
 
     try {
       const result = await requestFashnFit(selectedPhotoFile, garmentUrl, category);
-      // 피팅 성공 후 1인1회 플래그 저장
-      await chrome.storage.local.set({ fashnUsed: true });
-      showAiFittingResult(result.output_image_url);
+      // 피팅 성공 후 1인1회 플래그 저장 (demo 모드는 플래그 저장 안 함)
+      if (!result.demo) {
+        await chrome.storage.local.set({ fashnUsed: true });
+      }
+      showAiFittingResult(result.output_image_url, result.demo);
     } catch (err) {
       showAiFittingError(err.message || 'AI 피팅 중 오류가 발생했습니다.');
     } finally {
