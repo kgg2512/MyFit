@@ -812,6 +812,7 @@ function showAiFittingResult(imageUrl) {
     const objectUrl = URL.createObjectURL(file);
     previewImg.src = objectUrl;
     previewImg.onload = () => URL.revokeObjectURL(objectUrl); // 즉시 해제
+    previewImg.onerror = () => URL.revokeObjectURL(objectUrl); // SEC-PANEL-001: 로드 실패 시에도 해제
     previewWrap.classList.remove('hidden');
 
     btnFit.disabled = false;
