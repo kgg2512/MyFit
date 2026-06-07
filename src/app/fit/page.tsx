@@ -19,6 +19,9 @@ import {
   loadLastPersonImage,
   saveLastPersonImage,
   saveFitHistory,
+  isConsented,
+  setConsented,
+  calcRecommendedSize,
   type Measurements,
 } from '@/lib/storage';
 import LoadingSteps from '@/components/LoadingSteps';
@@ -55,6 +58,9 @@ export default function FitPage() {
   const [error, setError] = useState<string>('');
   const [resultImageUrl, setResultImageUrl] = useState<string>('');
   const [pmfFeedback, setPmfFeedback] = useState<'yes' | 'no' | null>(null);
+  const [showConsent, setShowConsent] = useState(false);
+  const [consented, setConsentedState] = useState(false);
+  const [sizeRecommendation, setSizeRecommendation] = useState<string>('');
 
   const resultImgRef = useRef<HTMLImageElement>(null);
 
@@ -63,9 +69,8 @@ export default function FitPage() {
     const m = loadMeasurements();
     setMeasurements(m);
     const last = loadLastPersonImage();
-    if (last) {
-      setHasLastPerson(true);
-    }
+    if (last) setHasLastPerson(true);
+    setConsentedState(isConsented());
   }, []);
 
   // ── 신체 사진 촬영/선택 ──
@@ -174,32 +179,40 @@ export default function FitPage() {
     return !!garmentBase64;
   };
 
-  const handleStartFit = async () => {
+  const handleStartFit = () => {
+    if (!canStartFit()) return;
+    if (!consented) { setShowConsent(true); return; }
+    doFit();
+  };
+
+  const handleConsentAndFit = () => {
+    setConsented();
+    setConsentedState(true);
+    setShowConsent(false);
+    doFit();
+  };
+
+  const doFit = async () => {
     if (!canStartFit()) return;
     setError('');
     setResultImageUrl('');
     setIsLoading(true);
     setPmfFeedback(null);
+    setSizeRecommendation('');
 
     try {
-      // 신체 사진 재사용을 위해 저장 (CISO: 로컬 기기에만)
       saveLastPersonImage(personBase64);
 
-      let finalGarmentUrl = garmentUrl;
+      const isGarmentBase64 = garmentMode === 'photo' && !!garmentBase64;
+      const garmentParam = isGarmentBase64 ? garmentBase64 : garmentUrl;
 
-      // 옷 사진 모드: base64를 CF Worker가 처리할 수 있는 URL로 변환
-      // 현재 구현: garment_image_url 대신 garment_image_base64 파라미터로 전달
-      // CF Worker가 두 파라미터 중 하나를 처리하도록 해야 함
-      // 임시: 옷 사진은 data URL로 직접 전달
-      if (garmentMode === 'photo' && garmentBase64) {
-        // CF Worker /try-on 엔드포인트에 garment_image_base64 파라미터 추가 필요
-        // 현재는 garment_image_url 에 data URI를 넣어 처리 시도
-        // 실제 운영에서는 CF Worker 수정 필요
-        finalGarmentUrl = `data:image/jpeg;base64,${garmentBase64}`;
+      const result = await requestFashnFit(personBase64, garmentParam, category, isGarmentBase64);
+      setResultImageUrl(result.output_image_url);
+
+      if (measurements) {
+        setSizeRecommendation(calcRecommendedSize(measurements, category));
       }
 
-      const result = await requestFashnFit(personBase64, finalGarmentUrl, category);
-      setResultImageUrl(result.output_image_url);
       setStep('result');
 
       // 히스토리 저장
@@ -207,7 +220,7 @@ export default function FitPage() {
         id: Date.now().toString(),
         timestamp: Date.now(),
         resultImageUrl: result.output_image_url,
-        garmentImageUrl: finalGarmentUrl,
+        garmentImageUrl: garmentParam,
         category,
       });
     } catch (e) {
@@ -252,6 +265,45 @@ export default function FitPage() {
 
   return (
     <main style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0a0a0a', minHeight: '100dvh' }}>
+
+      {/* 동의 모달 (FASHN AI 국외 이전 동의 — CLO/CISO 필수) */}
+      {showConsent && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: '#141414', borderRadius: '20px 20px 0 0', padding: '28px 24px 40px', width: '100%', maxWidth: 480, border: '1px solid #2a2a2a' }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#f0f0f0', marginBottom: 8 }}>AI 피팅 시작 전 동의</div>
+            <div style={{ fontSize: 13, color: '#888', marginBottom: 20, lineHeight: 1.6 }}>
+              서비스 이용을 위해 아래 항목에 동의해 주세요.
+            </div>
+            {[
+              { label: '[필수] 개인정보 처리방침 동의', desc: '신체 치수는 이 기기에만 저장됩니다.' },
+              { label: '[필수] AI 피팅 서비스 이용 동의', desc: 'AI 피팅 시 사진이 미국 소재 FASHN Inc. 서버로 전송되며, 피팅 완료 후 즉시 삭제됩니다. (개인정보보호법 제28조의8)' },
+              { label: '[필수] 제휴 마케팅 링크 고지 동의', desc: '이 서비스는 쿠팡파트너스 활동의 일환으로 수수료를 받을 수 있습니다.' },
+            ].map((item) => (
+              <div key={item.label} style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+                <span style={{ color: '#00e5ff', marginTop: 2 }}>✓</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#f0f0f0' }}>{item.label}</div>
+                  <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{item.desc}</div>
+                </div>
+              </div>
+            ))}
+            <button
+              className="btn-primary"
+              style={{ marginTop: 8 }}
+              onClick={handleConsentAndFit}
+            >
+              전체 동의하고 AI 피팅 시작
+            </button>
+            <button
+              style={{ width: '100%', marginTop: 10, background: 'none', border: 'none', color: '#666', fontSize: 13, padding: '8px 0' }}
+              onClick={() => setShowConsent(false)}
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 헤더 */}
       <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px 8px' }}>
         <button
@@ -657,6 +709,17 @@ export default function FitPage() {
                 다시 하기 🔄
               </button>
             </div>
+
+            {/* 사이즈 추천 */}
+            {sizeRecommendation && (
+              <div style={{ background: '#001a0a', border: '1px solid #00c85340', borderRadius: 12, padding: '14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 22 }}>📏</span>
+                <div>
+                  <div style={{ fontSize: 11, color: '#888' }}>체형 기반 추천 사이즈</div>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: '#00c853', letterSpacing: '-0.5px' }}>{sizeRecommendation}</div>
+                </div>
+              </div>
+            )}
 
             {/* 치수 정보 (있을 때) */}
             {measurements && (
