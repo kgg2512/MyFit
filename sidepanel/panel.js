@@ -620,7 +620,7 @@ function fileToBase64(file) {
 async function checkFashnQuota() {
   const { fashnUsed } = await chrome.storage.local.get('fashnUsed');
   if (fashnUsed) {
-    showAiFittingError('베타 기간 중 1인 1회 피팅이 제공됩니다. 정식 출시 후 무제한 이용 가능합니다.');
+    showAiFittingError('이미 AI 피팅을 체험하셨어요! 정식 출시 후 무제한으로 이용하실 수 있습니다.');
     return false;
   }
   return true;
