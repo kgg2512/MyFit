@@ -17,19 +17,11 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 // 암호화 키 초기화 (최초 설치 시)
 // ──────────────────────────────────────────────
 chrome.runtime.onInstalled.addListener(async () => {
-  const existing = await chrome.storage.local.get('__mf_enc_key_ref');
-  if (!existing.__mf_enc_key_ref) {
-    // AES-256-GCM 키 생성 후 extractable=false 로 저장
-    const key = await crypto.subtle.generateKey(
-      { name: 'AES-GCM', length: 256 },
-      false,   // extractable: false — 키 원문 외부 노출 불가
-      ['encrypt', 'decrypt']
-    );
-    // 키 자체는 메모리에만, storage에는 "초기화 완료" 플래그만
-    _sessionKey = key;
-    await chrome.storage.local.set({ __mf_enc_key_ref: true });
-    console.log('[MyFit] Encryption key initialized.');
-  }
+  // getSessionKey()를 통해 키 초기화 — session storage에 JWK로 영속화됨
+  // extractable: true 필수 (getSessionKey에서 JWK export 필요)
+  await getSessionKey();
+  await chrome.storage.local.set({ __mf_enc_key_ref: true });
+  console.log('[MyFit] Encryption key initialized.');
 });
 
 // 세션 키 — chrome.storage.session으로 SW 재시작 후에도 복원
@@ -63,6 +55,14 @@ async function getSessionKey() {
 // 메시지 허브 (content ↔ sidepanel)
 // ──────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // SEC-CISO: 동일 Extension ID에서 온 메시지만 처리
+  // content script는 sender.tab이 있음, side panel은 sender.tab이 없음
+  const selfId = chrome.runtime.id;
+  if (sender.id && sender.id !== selfId) {
+    sendResponse({ ok: false, error: 'Unauthorized sender' });
+    return;
+  }
+
   switch (message.type) {
 
     // content script가 상품 정보 감지 → side panel에 전달

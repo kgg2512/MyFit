@@ -71,13 +71,15 @@
     // URL에 /products/ 있으면 파싱 실패해도 최소 데이터로 반환
     const isProductPage = location.pathname.includes('/products/');
     if (!name && !isProductPage) return null;
+    // SEC-CISO: url은 https:// 전용 — javascript: URI 등 이상 URL 차단
+    const safeUrl = location.href.startsWith('https://') ? location.href : '';
     return {
       store: 'musinsa',
       name: name || '무신사 상품',
       price: price || '',
       brand: brand || 'MUSINSA',
-      img: img || '',
-      url: location.href,
+      imageUrl: img && img.startsWith('https://') ? img : '',
+      url: safeUrl,
     };
   }
 
@@ -86,7 +88,8 @@
     const price = document.querySelector('[data-test="product-price"], .product-price')?.textContent?.trim();
     const brand = 'Nike';
     const img = document.querySelector('.pdp-hero-image img, .product-image-container img')?.src;
-    return name ? { store: 'nike', name, price, brand, img } : null;
+    const imageUrl = img && img.startsWith('https://') ? img : '';
+    return name ? { store: 'nike', name, price, brand, imageUrl, url: location.href } : null;
   }
 
   function parseZara() {
@@ -94,7 +97,8 @@
     const price = document.querySelector('.money-amount__main, .price-current')?.textContent?.trim();
     const brand = 'Zara';
     const img = document.querySelector('.media-image__image, picture img')?.src;
-    return name ? { store: 'zara', name, price, brand, img } : null;
+    const imageUrl = img && img.startsWith('https://') ? img : '';
+    return name ? { store: 'zara', name, price, brand, imageUrl, url: location.href } : null;
   }
 
   function parseUniqlo() {
@@ -102,7 +106,8 @@
     const price = document.querySelector('[data-test="product-price"], .fr-product__price')?.textContent?.trim();
     const brand = 'Uniqlo';
     const img = document.querySelector('.fr-product__image img')?.src;
-    return name ? { store: 'uniqlo', name, price, brand, img } : null;
+    const imageUrl = img && img.startsWith('https://') ? img : '';
+    return name ? { store: 'uniqlo', name, price, brand, imageUrl, url: location.href } : null;
   }
 
   function parseHM() {
@@ -110,7 +115,8 @@
     const price = document.querySelector('.product-item-price .price, .price-value')?.textContent?.trim();
     const brand = 'H&M';
     const img = document.querySelector('.product-detail-main-image img')?.src;
-    return name ? { store: 'hm', name, price, brand, img } : null;
+    const imageUrl = img && img.startsWith('https://') ? img : '';
+    return name ? { store: 'hm', name, price, brand, imageUrl, url: location.href } : null;
   }
 
   // ── 버튼 주입 ──
