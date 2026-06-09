@@ -777,17 +777,22 @@ function clearAiFittingError() {
 }
 
 function showAiFittingResult(imageUrl, isDemo) {
-  const resultWrap = document.getElementById('ai-result-wrap');
-  const resultImg  = document.getElementById('fashn-result');
-  // hidden/visible 이중 클래스 처리 (CSS에서 visible로 display:flex)
+  const resultWrap  = document.getElementById('ai-result-wrap');
+  const resultImg   = document.getElementById('fashn-result');
+  const demoNotice  = document.getElementById('ai-demo-notice');
+
   resultWrap.classList.remove('hidden');
-  resultWrap.classList.add('visible');
   resultImg.src = imageUrl;
   resultImg.alt = 'AI 피팅 결과 — ' + (currentProduct?.name || '상품');
 
-  // Demo 모드 배지 표시/숨김
-  let demoBadge = document.getElementById('ai-demo-badge');
+  // Demo 모드: 전용 안내 div 사용 (에러 박스 재활용 금지)
   if (isDemo) {
+    if (demoNotice) {
+      demoNotice.textContent = '미리보기 모드입니다. FASHN API Key 등록 후 실제 AI 피팅을 이용하실 수 있습니다.';
+      demoNotice.classList.add('visible');
+    }
+    // DEMO 배지 (이미지 위 오버레이)
+    let demoBadge = document.getElementById('ai-demo-badge');
     if (!demoBadge) {
       demoBadge = document.createElement('div');
       demoBadge.id = 'ai-demo-badge';
@@ -798,16 +803,15 @@ function showAiFittingResult(imageUrl, isDemo) {
         'border-radius:4px', 'letter-spacing:.05em', 'pointer-events:none',
         'z-index:10',
       ].join(';');
-      demoBadge.textContent = 'DEMO';
-      // resultWrap이 position:relative여야 함 — 인라인으로 보장
+      demoBadge.textContent = '미리보기';
       resultWrap.style.position = 'relative';
       resultWrap.appendChild(demoBadge);
     }
     demoBadge.style.display = 'block';
-
-    // Demo 안내 메시지 (에러 영역 재활용)
-    showAiFittingError('데모 모드: FASHN API Key 등록 후 실제 AI 피팅을 체험하실 수 있습니다.');
+    clearAiFittingError();
   } else {
+    if (demoNotice) { demoNotice.textContent = ''; demoNotice.classList.remove('visible'); }
+    const demoBadge = document.getElementById('ai-demo-badge');
     if (demoBadge) demoBadge.style.display = 'none';
     clearAiFittingError();
   }

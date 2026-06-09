@@ -689,3 +689,45 @@ body {
   color: #888;
   text-decoration: underline;
 }
+
+/* ─────────────────────────────────────
+   UTILITY — hidden/visible 토글 (JS와 일치)
+   ───────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ─────────────────────────────────────
+   DEMO 모드 안내 (에러 박스와 구별)
+   ───────────────────────────────────── */
+.ai-demo-notice {
+  display: none; padding: 10px 12px; border-radius: var(--r);
+  background: rgba(255,160,0,.08); border: 1px solid rgba(255,160,0,.35);
+  font-size: 12px; color: #ffab40; line-height: 1.5;
+}
+.ai-demo-notice.visible { display: block; }
+
+/* ─────────────────────────────────────
+   로딩 중 버튼 상태 (텍스트 + 스피너 인라인)
+   ───────────────────────────────────── */
+.btn-loading {
+  opacity: .7; cursor: not-allowed; pointer-events: none;
+}
+
+/* ─────────────────────────────────────
+   피팅 결과 이미지 — 로드 전 스켈레톤
+   ───────────────────────────────────── */
+.ai-result-img {
+  background: var(--bg3);
+  min-height: 200px;
+}
+.ai-result-img[src=""] {
+  visibility: hidden;
+}
+
+/* ─────────────────────────────────────
+   ai-privacy-note — 개인정보 안내
+   ───────────────────────────────────── */
+.ai-privacy-note {
+  font-size: 11px; color: var(--text2);
+  text-align: center; line-height: 1.5;
+  padding: 0 4px;
+}

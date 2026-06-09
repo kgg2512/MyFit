@@ -347,8 +347,11 @@
           <span class="ai-loading-tip" id="ai-loading-tip">정면 사진일수록 결과가 정확합니다</span>
         </div>
 
-        <!-- 에러 메시지 -->
+        <!-- 에러 메시지 (실제 오류 — 빨간색) -->
         <div class="ai-error hidden" id="ai-error" role="alert"></div>
+
+        <!-- DEMO 모드 안내 (API Key 미등록 시 — 주황색, 에러 아님) -->
+        <div class="ai-demo-notice" id="ai-demo-notice" role="status" aria-live="polite"></div>
 
         <!-- 결과 이미지 + PMF 피드백 -->
         <div class="ai-result-wrap hidden" id="ai-result-wrap">
