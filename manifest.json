@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "MyFit — AI 가상 피팅",
   "version": "0.1.0",
-  "description": "쇼핑몰에서 바로 내 몸에 옷을 가상 피팅해보세요.",
+  "description": "무신사·Nike·Zara에서 AI가 내 체형에 사이즈를 확인해줍니다. 반품 걱정 없이, 자신 있게 구매하세요.",
 
   "permissions": [
     "activeTab",

@@ -21,13 +21,15 @@ MyFit — AI 가상 피팅
 
 ### 한국어
 ```
-쇼핑몰에서 바로 내 몸에 옷을 가상 피팅해보세요. 사이즈 실수 없이, AI가 내 체형에 맞는지 확인해줍니다.
+무신사·Nike·Zara에서 AI가 내 체형에 사이즈를 확인해줍니다. 반품 걱정 없이, 자신 있게 구매하세요.
 ```
-(52자)
+(49자)
+
+> 변경 이유: "가상 피팅" 표현은 Phase 1.5 FASHN AI 연동 후 사용 가능. 현재는 "사이즈 확인 + 체형 시각화"가 정확한 표현.
 
 ### 영어
 ```
-Try clothes on your body before buying. AI-powered virtual fitting right inside your favorite shopping sites.
+AI checks sizing on your body shape — right inside Musinsa, Nike, and Zara. Buy with confidence. Return less.
 ```
 
 ---
