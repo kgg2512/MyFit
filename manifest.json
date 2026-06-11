@@ -18,7 +18,7 @@
     "https://www.uniqlo.com/*",
     "https://www.hm.com/*",
     "https://www2.hm.com/*",
-    "https://*.workers.dev/*"
+    "https://myfit-fashn-proxy.kgg2512.workers.dev/*"
   ],
 
   "background": {
@@ -62,7 +62,7 @@
   },
 
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://*.workers.dev"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://myfit-fashn-proxy.kgg2512.workers.dev"
   },
 
   "web_accessible_resources": [
