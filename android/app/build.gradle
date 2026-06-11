@@ -1,14 +1,22 @@
 apply plugin: 'com.android.application'
 
+// 서명 자격증명은 git 추적 제외 파일(android/keystore.properties)에서 로드.
+// 양식: android/keystore.properties.example 참고. CISO 지시 — 평문 하드코딩 금지.
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
 android {
     namespace "com.g2company.myfit"
     compileSdk rootProject.ext.compileSdkVersion
     signingConfigs {
         release {
-            storeFile file('../release.keystore')
-            storePassword 'G2company2024!'
-            keyAlias 'myfit-release'
-            keyPassword 'G2company2024!'
+            storeFile file(keystoreProperties.getProperty('storeFile', '../release.keystore'))
+            storePassword keystoreProperties.getProperty('storePassword', System.getenv('MYFIT_STORE_PASSWORD'))
+            keyAlias keystoreProperties.getProperty('keyAlias', 'myfit-release')
+            keyPassword keystoreProperties.getProperty('keyPassword', System.getenv('MYFIT_KEY_PASSWORD'))
         }
     }
     defaultConfig {

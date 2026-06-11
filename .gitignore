@@ -10,6 +10,9 @@ out/
 .env.local
 .env.*.local
 
+# Signing credentials (CISO — 평문 커밋 금지)
+android/keystore.properties
+
 # OS
 .DS_Store
 Thumbs.db
