@@ -1,4 +1,4 @@
-# MyFit Chrome Extension — 빌드 스크립트 (PowerShell)
+﻿# MyFit Chrome Extension — 빌드 스크립트 (PowerShell)
 # Three.js 로컬 번들링 + 아이콘 생성
 # 실행: .\build.ps1
 
