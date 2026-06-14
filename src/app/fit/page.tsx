@@ -8,6 +8,7 @@ import {
   validateImageUrl,
   fileToBase64,
   blobUrlToBase64,
+  DEMO_MODE,
   type FitCategory,
 } from '@/lib/fashn';
 import {
@@ -301,6 +302,14 @@ export default function FitPage() {
               취소
             </button>
           </div>
+        </div>
+      )}
+
+      {/* 데모 모드 배너 */}
+      {DEMO_MODE && (
+        <div style={{ background: '#1a0a00', borderBottom: '1px solid #ff6d0040', padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 14 }}>🎭</span>
+          <span style={{ fontSize: 12, color: '#ff9800', fontWeight: 600 }}>데모 버전 — AI 피팅 결과는 샘플입니다</span>
         </div>
       )}
 

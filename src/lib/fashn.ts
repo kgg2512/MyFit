@@ -10,6 +10,9 @@ export const CF_WORKER_URL =
   process.env.NEXT_PUBLIC_CF_WORKER_URL ||
   'https://myfit-fashn-proxy.kgg2512.workers.dev';
 
+// NEXT_PUBLIC_DEMO_MODE=true 이면 데모 버전 (CF Worker 호출 없음)
+export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
 export type FitCategory = 'tops' | 'bottoms';
 
 export interface FashnResult {
@@ -72,6 +75,15 @@ export async function requestFashnFit(
   category: FitCategory,
   isGarmentBase64 = false
 ): Promise<FashnResult> {
+  // 데모 모드: 3.5초 로딩 시뮬레이션 후 옷 이미지를 결과로 반환
+  if (DEMO_MODE) {
+    await new Promise(r => setTimeout(r, 3500));
+    const demoUrl = isGarmentBase64
+      ? `data:image/jpeg;base64,${garmentImageUrlOrB64}`
+      : garmentImageUrlOrB64;
+    return { output_image_url: demoUrl };
+  }
+
   const bodyPayload = isGarmentBase64
     ? { human_image: humanImageBase64, garment_image_base64: garmentImageUrlOrB64, category }
     : { human_image: humanImageBase64, garment_image_url: garmentImageUrlOrB64, category };
