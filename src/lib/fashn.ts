@@ -75,12 +75,16 @@ export async function requestFashnFit(
   category: FitCategory,
   isGarmentBase64 = false
 ): Promise<FashnResult> {
-  // 데모 모드: 3.5초 로딩 시뮬레이션 후 옷 이미지를 결과로 반환
+  // 데모 모드: 3.5초 로딩 시뮬레이션 후 미리 생성된 AI 피팅 샘플 이미지 반환
   if (DEMO_MODE) {
     await new Promise(r => setTimeout(r, 3500));
-    const demoUrl = isGarmentBase64
-      ? `data:image/jpeg;base64,${garmentImageUrlOrB64}`
-      : garmentImageUrlOrB64;
+    const base = process.env.NEXT_PUBLIC_BASE_PATH || '';
+    const demoPool: Record<FitCategory, string[]> = {
+      tops:    [`${base}/demo/tops_female.png`, `${base}/demo/tops_male.png`],
+      bottoms: [`${base}/demo/bottoms_female.png`, `${base}/demo/bottoms_male.png`],
+    };
+    const pool = demoPool[category];
+    const demoUrl = pool[Math.floor(Math.random() * pool.length)];
     return { output_image_url: demoUrl };
   }
 
