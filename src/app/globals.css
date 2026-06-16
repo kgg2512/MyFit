@@ -9,7 +9,7 @@
   --myfit-accent: #00e5ff;
   --myfit-accent2: #7c4dff;
   --myfit-text: #f0f0f0;
-  --myfit-text-sub: #999999;
+  --myfit-text-sub: #b3b3b3;
   --myfit-success: #00c853;
   --myfit-warn: #ffab40;
   --myfit-error: #ff5252;
@@ -70,6 +70,33 @@ input, select, textarea {
 input:focus, select:focus {
   outline: 2px solid var(--myfit-accent);
   border-color: var(--myfit-accent);
+}
+
+/* ── focus-visible: 키보드·보조기기 포커스 표시 ── */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--myfit-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── prefers-reduced-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── 텍스트 렌더링 최적화 ── */
+body {
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 img {

@@ -269,9 +269,14 @@ export default function FitPage() {
 
       {/* 동의 모달 (FASHN AI 국외 이전 동의 — CLO/CISO 필수) */}
       {showConsent && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="consent-modal-title"
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+        >
           <div style={{ background: '#141414', borderRadius: '20px 20px 0 0', padding: '28px 24px 40px', width: '100%', maxWidth: 480, border: '1px solid #2a2a2a' }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#f0f0f0', marginBottom: 8 }}>AI 피팅 시작 전 동의</div>
+            <div id="consent-modal-title" style={{ fontSize: 18, fontWeight: 800, color: '#f0f0f0', marginBottom: 8 }}>AI 피팅 시작 전 동의</div>
             <div style={{ fontSize: 13, color: '#888', marginBottom: 20, lineHeight: 1.6 }}>
               서비스 이용을 위해 아래 항목에 동의해 주세요.
             </div>
@@ -296,7 +301,7 @@ export default function FitPage() {
               전체 동의하고 AI 피팅 시작
             </button>
             <button
-              style={{ width: '100%', marginTop: 10, background: 'none', border: 'none', color: '#666', fontSize: 13, padding: '8px 0' }}
+              style={{ width: '100%', marginTop: 10, background: 'none', border: 'none', color: '#666', fontSize: 13, padding: '8px 0', minHeight: 44 }}
               onClick={() => setShowConsent(false)}
             >
               취소
@@ -308,7 +313,7 @@ export default function FitPage() {
       {/* 데모 모드 배너 */}
       {DEMO_MODE && (
         <div style={{ background: '#1a0a00', borderBottom: '1px solid #ff6d0040', padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 14 }}>🎭</span>
+          <span style={{ fontSize: 14 }} aria-hidden="true">🎭</span>
           <span style={{ fontSize: 12, color: '#ff9800', fontWeight: 600 }}>데모 버전 — AI 피팅 결과는 샘플입니다</span>
         </div>
       )}
@@ -389,16 +394,17 @@ export default function FitPage() {
                 <img
                   src={personPreviewUrl}
                   alt="내 사진 미리보기"
+                  loading="lazy"
                   style={{ width: '100%', maxHeight: 320, objectFit: 'cover' }}
                 />
                 <button
                   onClick={() => { setPersonBase64(''); setPersonPreviewUrl(''); }}
                   style={{
-                    position: 'absolute', top: 10, right: 10,
-                    width: 32, height: 32, borderRadius: '50%',
+                    position: 'absolute', top: 8, right: 8,
+                    width: 44, height: 44, borderRadius: '50%',
                     background: 'rgba(0,0,0,0.7)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 16, color: '#fff',
+                    fontSize: 18, color: '#fff',
                   }}
                   aria-label="사진 제거"
                 >
@@ -419,7 +425,7 @@ export default function FitPage() {
                   background: '#141414',
                 }}
               >
-                <span style={{ fontSize: 40 }}>👤</span>
+                <span style={{ fontSize: 40 }} aria-hidden="true">👤</span>
                 <span style={{ fontSize: 13, color: '#666' }}>사진을 선택해 주세요</span>
               </div>
             )}
@@ -427,10 +433,10 @@ export default function FitPage() {
             {/* 촬영/선택 버튼들 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button className="btn-secondary" onClick={handleCaptureCamera} style={{ gap: 10 }}>
-                <span>📷</span> 카메라로 촬영
+                <span aria-hidden="true">📷</span> 카메라로 촬영
               </button>
               <button className="btn-secondary" onClick={handleCaptureGallery} style={{ gap: 10 }}>
-                <span>🖼</span> 갤러리에서 선택
+                <span aria-hidden="true">🖼</span> 갤러리에서 선택
               </button>
 
               {/* 파일 입력 (웹 폴백 — 위 버튼이 이미 처리하므로 숨겨진 형태) */}
@@ -442,7 +448,7 @@ export default function FitPage() {
                   fontSize: 15, color: '#f0f0f0', cursor: 'pointer',
                 }}
               >
-                <span>📁</span> 파일로 선택
+                <span aria-hidden="true">📁</span> 파일로 선택
                 <input
                   type="file"
                   accept="image/*"
@@ -459,7 +465,7 @@ export default function FitPage() {
                   onClick={handleUseLastPerson}
                   style={{ gap: 10, borderColor: '#00e5ff30', color: '#00e5ff' }}
                 >
-                  <span>♻️</span> 지난번 사진 재사용
+                  <span aria-hidden="true">♻️</span> 지난번 사진 재사용
                 </button>
               )}
             </div>
@@ -503,7 +509,7 @@ export default function FitPage() {
                     transition: 'all 0.2s',
                   }}
                 >
-                  {mode === 'url' ? '🔗 URL 입력' : '📸 직접 촬영'}
+                  {mode === 'url' ? <><span aria-hidden="true">🔗</span> URL 입력</> : <><span aria-hidden="true">📸</span> 직접 촬영</>}
                 </button>
               ))}
             </div>
@@ -527,6 +533,7 @@ export default function FitPage() {
                     <img
                       src={garmentUrl}
                       alt="옷 이미지 미리보기"
+                      loading="lazy"
                       style={{ width: '100%', maxHeight: 200, objectFit: 'contain', background: '#141414' }}
                       onError={() => setError('이미지를 불러올 수 없습니다. URL을 확인해 주세요.')}
                     />
@@ -543,16 +550,17 @@ export default function FitPage() {
                     <img
                       src={garmentPreviewUrl}
                       alt="옷 사진 미리보기"
+                      loading="lazy"
                       style={{ width: '100%', maxHeight: 280, objectFit: 'contain', background: '#141414' }}
                     />
                     <button
                       onClick={() => { setGarmentBase64(''); setGarmentPreviewUrl(''); }}
                       style={{
-                        position: 'absolute', top: 10, right: 10,
-                        width: 32, height: 32, borderRadius: '50%',
+                        position: 'absolute', top: 8, right: 8,
+                        width: 44, height: 44, borderRadius: '50%',
                         background: 'rgba(0,0,0,0.7)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 16, color: '#fff',
+                        fontSize: 18, color: '#fff',
                       }}
                       aria-label="사진 제거"
                     >
@@ -573,17 +581,17 @@ export default function FitPage() {
                       background: '#141414',
                     }}
                   >
-                    <span style={{ fontSize: 40 }}>👗</span>
+                    <span style={{ fontSize: 40 }} aria-hidden="true">👗</span>
                     <span style={{ fontSize: 13, color: '#666' }}>옷 사진을 선택해 주세요</span>
                   </div>
                 )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <button className="btn-secondary" onClick={handleGarmentCamera} style={{ gap: 10 }}>
-                    <span>📷</span> 카메라로 촬영
+                    <span aria-hidden="true">📷</span> 카메라로 촬영
                   </button>
                   <button className="btn-secondary" onClick={handleGarmentGallery} style={{ gap: 10 }}>
-                    <span>🖼</span> 갤러리에서 선택
+                    <span aria-hidden="true">🖼</span> 갤러리에서 선택
                   </button>
                   <label
                     style={{
@@ -593,7 +601,7 @@ export default function FitPage() {
                       fontSize: 15, color: '#f0f0f0', cursor: 'pointer',
                     }}
                   >
-                    <span>📁</span> 파일로 선택
+                    <span aria-hidden="true">📁</span> 파일로 선택
                     <input
                       type="file"
                       accept="image/*"
@@ -649,7 +657,7 @@ export default function FitPage() {
                 onClick={handleStartFit}
                 disabled={!canStartFit()}
               >
-                AI 피팅 시작 🚀
+                AI 피팅 시작 <span aria-hidden="true">🚀</span>
               </button>
             )}
           </>
@@ -664,6 +672,7 @@ export default function FitPage() {
                 ref={resultImgRef}
                 src={resultImageUrl}
                 alt="AI 피팅 결과 이미지"
+                loading="lazy"
                 style={{ width: '100%', objectFit: 'contain', background: '#141414' }}
               />
             </div>
@@ -712,17 +721,17 @@ export default function FitPage() {
             {/* 액션 버튼 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button className="btn-primary" onClick={handleSaveResult}>
-                결과 저장 💾
+                결과 저장 <span aria-hidden="true">💾</span>
               </button>
               <button className="btn-secondary" onClick={handleRetry}>
-                다시 하기 🔄
+                다시 하기 <span aria-hidden="true">🔄</span>
               </button>
             </div>
 
             {/* 사이즈 추천 */}
             {sizeRecommendation && (
               <div style={{ background: '#001a0a', border: '1px solid #00c85340', borderRadius: 12, padding: '14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: 22 }}>📏</span>
+                <span style={{ fontSize: 22 }} aria-hidden="true">📏</span>
                 <div>
                   <div style={{ fontSize: 11, color: '#888' }}>체형 기반 추천 사이즈</div>
                   <div style={{ fontSize: 24, fontWeight: 800, color: '#00c853', letterSpacing: '-0.5px' }}>{sizeRecommendation}</div>

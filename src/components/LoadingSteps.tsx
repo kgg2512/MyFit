@@ -5,9 +5,10 @@ import { LOADING_STEPS } from '@/lib/fashn';
 
 interface Props {
   isActive: boolean;
+  onCancel?: () => void;
 }
 
-export default function LoadingSteps({ isActive }: Props) {
+export default function LoadingSteps({ isActive, onCancel }: Props) {
   const [currentStep, setCurrentStep] = useState(-1);
   const [barPercent, setBarPercent] = useState(5);
 
@@ -39,7 +40,30 @@ export default function LoadingSteps({ isActive }: Props) {
   if (!isActive) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: '16px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: '16px 0', position: 'relative' }}>
+      {/* 취소 버튼 */}
+      {onCancel && (
+        <button
+          type="button"
+          onClick={onCancel}
+          aria-label="작업 취소"
+          style={{
+            position: 'absolute', top: 0, right: 0,
+            width: 44, height: 44, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.10)',
+            color: '#f0f0f0',
+            border: '1px solid rgba(255,255,255,0.15)',
+            cursor: 'pointer',
+            fontSize: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          ×
+        </button>
+      )}
+
       {/* 스피너 */}
       <div className="spinner" />
 

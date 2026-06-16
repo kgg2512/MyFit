@@ -241,7 +241,8 @@ export default function HomePage() {
                 >
                   <img
                     src={item.resultImageUrl}
-                    alt="피팅 결과"
+                    alt={`${new Date(item.timestamp).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} 피팅 결과`}
+                    loading="lazy"
                     style={{ width: '100%', height: 160, objectFit: 'cover' }}
                   />
                   <div style={{ padding: '8px', fontSize: 11, color: '#888', textAlign: 'center' }}>

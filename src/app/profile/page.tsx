@@ -85,6 +85,9 @@ export default function ProfilePage() {
       {/* 동의 모달 */}
       {showConsent && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="profile-consent-title"
           style={{
             position: 'fixed', inset: 0, zIndex: 100,
             background: 'rgba(0,0,0,0.85)',
@@ -102,7 +105,7 @@ export default function ProfilePage() {
             }}
             onClick={e => e.stopPropagation()}
           >
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#f0f0f0', marginBottom: 8 }}>
+            <div id="profile-consent-title" style={{ fontSize: 18, fontWeight: 800, color: '#f0f0f0', marginBottom: 8 }}>
               MyFit 시작 전 동의
             </div>
             <div style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>
@@ -253,23 +256,33 @@ function FieldInput({
   max: number;
   onChange: (v: string) => void;
 }) {
+  const isOutOfRange = value < min || value > max;
+  const inputId = `field-${label.replace(/\s+/g, '-')}`;
+  const errorId = `${inputId}-error`;
+
   return (
     <div style={{ flex: 1 }}>
-      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 6, fontWeight: 600 }}>
+      <label
+        htmlFor={inputId}
+        style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 6, fontWeight: 600 }}
+      >
         {label}
       </label>
       <input
+        id={inputId}
         type="number"
         value={value}
         min={min}
         max={max}
         inputMode="decimal"
         onChange={e => onChange(e.target.value)}
+        aria-describedby={isOutOfRange ? errorId : undefined}
+        aria-invalid={isOutOfRange || undefined}
         style={{
           width: '100%',
           height: 48,
           background: '#1e1e1e',
-          border: '1px solid #2a2a2a',
+          border: `1px solid ${isOutOfRange ? '#ff5252' : '#2a2a2a'}`,
           borderRadius: 10,
           padding: '0 14px',
           fontSize: 16,
@@ -277,6 +290,15 @@ function FieldInput({
           textAlign: 'center',
         }}
       />
+      {isOutOfRange && (
+        <div
+          id={errorId}
+          role="alert"
+          style={{ color: '#ff5252', fontSize: 11, marginTop: 4 }}
+        >
+          {min}~{max} 범위로 입력해 주세요
+        </div>
+      )}
     </div>
   );
 }
