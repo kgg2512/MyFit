@@ -282,7 +282,7 @@ export default function FitPage() {
             </div>
             {[
               { label: '[필수] 개인정보 처리방침 동의', desc: '신체 치수는 이 기기에만 저장됩니다.' },
-              { label: '[필수] AI 피팅 서비스 이용 동의', desc: 'AI 피팅 시 사진이 미국 소재 FASHN Inc. 서버로 전송되며, 피팅 완료 후 즉시 삭제됩니다. (개인정보보호법 제28조의8)' },
+              { label: '[필수] AI 피팅 서비스 이용 동의', desc: 'AI 피팅 시 사진이 미국 소재 TryOnCloud 서버로 전송되며, 피팅 완료 후 즉시 삭제됩니다. (개인정보보호법 제28조의8)' },
               { label: '[필수] 제휴 마케팅 링크 고지 동의', desc: '이 서비스는 쿠팡파트너스 활동의 일환으로 수수료를 받을 수 있습니다.' },
             ].map((item) => (
               <div key={item.label} style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
