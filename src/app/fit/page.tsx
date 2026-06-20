@@ -472,7 +472,7 @@ export default function FitPage() {
 
             {/* 개인정보 안내 */}
             <div style={{ fontSize: 11, color: '#555', textAlign: 'center' }}>
-              🔒 사진은 FASHN AI 서버 처리 후 즉시 삭제됩니다. 이 기기에만 임시 보관됩니다.
+              🔒 사진은 TryOnCloud 서버 처리 후 즉시 삭제됩니다. 이 기기에만 임시 보관됩니다.
             </div>
 
             {/* 다음 단계 버튼 */}
