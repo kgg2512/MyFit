@@ -11,10 +11,7 @@ import {
   DEMO_MODE,
   type FitCategory,
 } from '@/lib/tryon';
-import {
-  captureImage,
-  dataUrlToBlob,
-} from '@/lib/camera';
+import { captureImage } from '@/lib/camera';
 import {
   loadMeasurements,
   loadLastPersonImage,
@@ -115,6 +112,8 @@ export default function FitPage() {
 
     fileToBase64(file).then(b64 => {
       setPersonBase64(b64);
+      // 안정적인 data URL로 교체 후 objectURL 해제 (단계 이동 후 복귀 시 미리보기 깨짐 방지)
+      setPersonPreviewUrl(`data:${file.type};base64,${b64}`);
       URL.revokeObjectURL(objectUrl);
     });
   };
@@ -139,6 +138,8 @@ export default function FitPage() {
 
     fileToBase64(file).then(b64 => {
       setGarmentBase64(b64);
+      // 안정적인 data URL로 교체 후 objectURL 해제 (단계 이동 후 복귀 시 미리보기 깨짐 방지)
+      setGarmentPreviewUrl(`data:${file.type};base64,${b64}`);
       URL.revokeObjectURL(objectUrl);
     });
   };
@@ -236,15 +237,20 @@ export default function FitPage() {
   const handleSaveResult = async () => {
     if (!resultImageUrl) return;
     try {
+      // cross-origin 이미지는 <a download>가 무시되므로 blob으로 받아 저장
+      const res = await fetch(resultImageUrl);
+      if (!res.ok) throw new Error('이미지를 불러올 수 없습니다.');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = resultImageUrl;
+      link.href = blobUrl;
       link.download = `myfit_result_${Date.now()}.jpg`;
-      link.target = '_blank';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
     } catch {
-      // 다운로드 실패 시 새 탭에서 열기
+      // 다운로드 실패(CORS 등) 시 새 탭에서 열기
       window.open(resultImageUrl, '_blank');
     }
   };
@@ -267,7 +273,7 @@ export default function FitPage() {
   return (
     <main style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0a0a0a', minHeight: '100dvh' }}>
 
-      {/* 동의 모달 (FASHN AI 국외 이전 동의 — CLO/CISO 필수) */}
+      {/* 동의 모달 (TryOnCloud 국외 이전 동의 — CLO/CISO 필수) */}
       {showConsent && (
         <div
           role="dialog"
@@ -282,7 +288,7 @@ export default function FitPage() {
             </div>
             {[
               { label: '[필수] 개인정보 처리방침 동의', desc: '신체 치수는 이 기기에만 저장됩니다.' },
-              { label: '[필수] AI 피팅 서비스 이용 동의', desc: 'AI 피팅 시 사진이 미국 소재 TryOnCloud 서버로 전송되며, 피팅 완료 후 즉시 삭제됩니다. (개인정보보호법 제28조의8)' },
+              { label: '[필수] AI 피팅 서비스 이용 동의', desc: 'AI 피팅 시 사진이 인도 소재 TryOnCloud 서버로 전송되며, 원본 사진은 처리 후 즉시, 피팅 결과 이미지는 최대 7일 후 삭제됩니다. (개인정보보호법 제28조의8)' },
               { label: '[필수] 제휴 마케팅 링크 고지 동의', desc: '이 서비스는 쿠팡파트너스 활동의 일환으로 수수료를 받을 수 있습니다.' },
             ].map((item) => (
               <div key={item.label} style={{ display: 'flex', gap: 10, marginBottom: 14 }}>

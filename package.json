@@ -1,7 +1,7 @@
 {
   "name": "myfit-mobile",
   "version": "1.0.0",
-  "description": "MyFit — AI 피팅 모바일 앱. FASHN AI 기반 가상 피팅 룸.",
+  "description": "MyFit — AI 피팅 모바일 앱. TryOnCloud 기반 가상 피팅 룸.",
   "private": true,
   "scripts": {
     "dev": "next dev",

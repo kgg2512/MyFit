@@ -6,10 +6,10 @@
             <certificates src="system" />
         </trust-anchors>
     </base-config>
-    <!-- FASHN AI API 통신 도메인 명시적 허용 (HTTPS 강제) -->
+    <!-- CF Worker 프록시(TryOnCloud) 통신 도메인 명시적 허용 (HTTPS 강제) -->
+    <!-- 앱은 CF Worker(workers.dev)만 직접 호출하며, TryOnCloud API는 Worker가 서버 측에서 호출 -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">workers.dev</domain>
-        <domain includeSubdomains="true">fashn.ai</domain>
     </domain-config>
     <!-- 개발 환경에서만 localhost 허용 -->
     <domain-config cleartextTrafficPermitted="true">

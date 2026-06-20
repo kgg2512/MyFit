@@ -10,7 +10,7 @@
 <dict>
   <key>NSPrivacyCollectedDataTypes</key>
   <array>
-    <!-- 사진 (신체 피팅 이미지 — FASHN AI로 전송 후 즉시 삭제) -->
+    <!-- 사진 (신체 피팅 이미지 — TryOnCloud로 전송 후 즉시 삭제) -->
     <dict>
       <key>NSPrivacyCollectedDataType</key>
       <string>NSPrivacyCollectedDataTypePhotosOrVideos</string>

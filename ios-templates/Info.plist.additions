@@ -16,8 +16,8 @@
   <!-- 앱 내 도메인 (CF Worker 프록시 도메인 추가) -->
   <key>WKAppBoundDomains</key>
   <array>
-    <!-- CF Worker 프록시 배포 후 실제 도메인으로 교체 -->
-    <string>myfit-fashn.workers.dev</string>
+    <!-- CF Worker 프록시 실제 배포 도메인 (tryon.ts CF_WORKER_URL과 일치) -->
+    <string>myfit-fashn-proxy.kgg2512.workers.dev</string>
     <string>kgg2512.github.io</string>
   </array>
 

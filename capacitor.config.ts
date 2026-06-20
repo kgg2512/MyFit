@@ -20,7 +20,7 @@ const config: CapacitorConfig = {
   },
 
   plugins: {
-    // 카메라 (신체 사진 촬영 — FASHN AI 피팅용)
+    // 카메라 (신체 사진 촬영 — TryOnCloud 피팅용)
     Camera: {
       // saveToGallery: false (신체 사진 자동 저장 금지 — CISO 지시)
     },
