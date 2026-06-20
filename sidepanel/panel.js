@@ -1,4 +1,4 @@
-/**
+﻿/**
  * MyFit Extension — Side Panel JS
  *
  * CSP: script-src 'self' — 외부 CDN 금지
@@ -579,7 +579,7 @@ function updateClothingScale(size) {
 }
 
 // ──────────────────────────────────────────────
-// FASHN AI 피팅 — Cloudflare Worker 프록시 경유
+// TryOnCloud 피팅 — Cloudflare Worker 프록시 경유
 // ──────────────────────────────────────────────
 
 /**
@@ -613,38 +613,38 @@ function fileToBase64(file) {
 }
 
 /**
- * FASHN 베타 1인1회 쿼터 체크
- * chrome.storage.local의 fashnUsed 플래그로 사용 여부 확인
+ * TryOnCloud 1인1회 쿼터 체크
+ * chrome.storage.local의 tryonUsed 플래그로 사용 여부 확인
  * @returns {Promise<boolean>} true = 사용 가능, false = 이미 사용함
  */
-async function checkFashnQuota() {
-  const { fashnUsed } = await chrome.storage.local.get('fashnUsed');
-  if (fashnUsed) {
+async function checkTryOnQuota() {
+  const { tryonUsed } = await chrome.storage.local.get('tryonUsed');
+  if (tryonUsed) {
     showAiFittingError('이미 AI 피팅을 체험하셨어요! 정식 출시 후 무제한으로 이용하실 수 있습니다.');
     return false;
   }
   return true;
 }
 
-// ── Demo 모드: FASHN API Key 미등록 시 사용할 샘플 이미지 URL ──
-// 실제 FASHN 결과처럼 보이는 공개 도메인 의류 합성 샘플 이미지
+// ── Demo 모드: TryOnCloud API Key 미등록 시 사용할 샘플 이미지 URL ──
+// TryOnCloud 결과처럼 보이는 공개 도메인 의류 합성 샘플 이미지
 const DEMO_RESULT_IMAGES = {
   tops:    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&q=80',
   bottoms: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&q=80',
 };
 
 /**
- * FASHN AI 가상 피팅 요청
+ * TryOnCloud 가상 피팅 요청
  * @param {File} userPhotoFile - 사용자 업로드 사진
  * @param {string} garmentImageUrl - 쇼핑몰 상품 이미지 https:// URL
  * @param {'tops'|'bottoms'} category
  * @returns {Promise<{output_image_url: string, demo?: boolean}>}
  */
-async function requestFashnFit(userPhotoFile, garmentImageUrl, category) {
+async function requestTryOnFit(userPhotoFile, garmentImageUrl, category) {
   // Step 1: File → base64 (메모리 내 처리, 서버 전송 후 JS GC에 의해 해제)
   const base64Image = await fileToBase64(userPhotoFile);
 
-  // Step 2: CF Worker 호출 (Worker → FASHN API)
+  // Step 2: CF Worker 호출 (Worker → TryOnCloud API)
   const response = await fetch(`${CF_WORKER_URL}/try-on`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -658,7 +658,7 @@ async function requestFashnFit(userPhotoFile, garmentImageUrl, category) {
   const data = await response.json();
 
   if (!response.ok) {
-    // FASHN API Key 미등록 → Demo 모드 폴백
+    // TryOnCloud API Key 미등록 → Demo 모드 폴백
     // (Worker가 500 + "Server configuration error" 반환 시)
     if (response.status === 500 && data.error === 'Server configuration error') {
       return {
@@ -749,7 +749,7 @@ function finishLoadingSteps() {
 function setAiFittingLoading(isLoading, message) {
   const loadingEl  = document.getElementById('ai-loading');
   const loadingTxt = document.getElementById('ai-loading-text');
-  const btnFit     = document.getElementById('btn-fashn-fit');
+  const btnFit     = document.getElementById('btn-tryon-fit');
 
   if (isLoading) {
     loadingEl.classList.remove('hidden');
@@ -778,7 +778,7 @@ function clearAiFittingError() {
 
 function showAiFittingResult(imageUrl, isDemo) {
   const resultWrap  = document.getElementById('ai-result-wrap');
-  const resultImg   = document.getElementById('fashn-result');
+  const resultImg   = document.getElementById('tryon-result');
   const demoNotice  = document.getElementById('ai-demo-notice');
 
   resultWrap.classList.remove('hidden');
@@ -788,7 +788,7 @@ function showAiFittingResult(imageUrl, isDemo) {
   // Demo 모드: 전용 안내 div 사용 (에러 박스 재활용 금지)
   if (isDemo) {
     if (demoNotice) {
-      demoNotice.textContent = '미리보기 모드입니다. FASHN API Key 등록 후 실제 AI 피팅을 이용하실 수 있습니다.';
+      demoNotice.textContent = '미리보기 모드입니다. TryOnCloud API Key 등록 후 실제 AI 피팅을 이용하실 수 있습니다.';
       demoNotice.classList.add('visible');
     }
     // DEMO 배지 (이미지 위 오버레이)
@@ -823,14 +823,14 @@ function showAiFittingResult(imageUrl, isDemo) {
   if (thanks) thanks.classList.remove('visible');
 }
 
-// ── FASHN 피팅 탭 이벤트 바인딩 ──
-(function initFashnTab() {
+// ── TryOnCloud 피팅 탭 이벤트 바인딩 ──
+(function initTryOnTab() {
   const photoInput   = document.getElementById('ai-photo-input');
   const uploadLabel  = document.getElementById('ai-upload-label');
   const uploadText   = document.getElementById('ai-upload-text');
   const previewWrap  = document.getElementById('ai-preview-wrap');
   const previewImg   = document.getElementById('ai-preview-img');
-  const btnFit       = document.getElementById('btn-fashn-fit');
+  const btnFit       = document.getElementById('btn-tryon-fit');
 
   let selectedPhotoFile = null;
 
@@ -869,7 +869,7 @@ function showAiFittingResult(imageUrl, isDemo) {
     if (!selectedPhotoFile) return;
 
     // 1인1회 쿼터 체크 (베타 제한)
-    const quotaOk = await checkFashnQuota();
+    const quotaOk = await checkTryOnQuota();
     if (!quotaOk) return;
 
     // 현재 상품의 garment_image_url 가져오기
@@ -888,10 +888,10 @@ function showAiFittingResult(imageUrl, isDemo) {
     setAiFittingLoading(true, 'AI가 옷을 입히는 중... (15–30초)');
 
     try {
-      const result = await requestFashnFit(selectedPhotoFile, garmentUrl, category);
+      const result = await requestTryOnFit(selectedPhotoFile, garmentUrl, category);
       // 피팅 성공 후 1인1회 플래그 저장 (demo 모드는 플래그 저장 안 함)
       if (!result.demo) {
-        await chrome.storage.local.set({ fashnUsed: true });
+        await chrome.storage.local.set({ tryonUsed: true });
       }
       showAiFittingResult(result.output_image_url, result.demo);
     } catch (err) {
@@ -1016,7 +1016,7 @@ document.getElementById('btn-buy').addEventListener('click', () => {
 
   // 결과 이미지 저장 (blob → a[download])
   document.getElementById('btn-save-result')?.addEventListener('click', async () => {
-    const img = document.getElementById('fashn-result');
+    const img = document.getElementById('tryon-result');
     if (!img?.src) return;
     try {
       const resp = await fetch(img.src);
@@ -1455,3 +1455,4 @@ document.getElementById('btn-buy').addEventListener('click', () => {
 
 // ── 실행 ──
 init();
+
