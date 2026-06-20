@@ -1,7 +1,7 @@
 /**
- * FASHN AI API 유틸리티
+ * TryOnCloud API 유틸리티
  * CF Worker 프록시를 통해 호출 — API Key 직접 노출 금지 (CISO 보안 요건)
- * panel.js requestFashnFit() 로직을 TypeScript로 포팅
+ * panel.js requestTryOnFit() 로직을 TypeScript로 포팅
  */
 
 'use client';
@@ -15,11 +15,11 @@ export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 export type FitCategory = 'tops' | 'bottoms';
 
-export interface FashnResult {
+export interface TryOnResult {
   output_image_url: string;
 }
 
-export interface FashnError {
+export interface TryOnError {
   message: string;
   code?: string;
   retryAfter?: number;
@@ -60,21 +60,21 @@ export function fileToBase64(file: File): Promise<string> {
   return blobToBase64(file);
 }
 
-// ── FASHN AI 피팅 요청 ──
+// ── TryOnCloud 피팅 요청 ──
 
 /**
- * FASHN AI 가상 피팅 요청
+ * TryOnCloud 가상 피팅 요청
  * @param humanImageBase64      - 사용자 사진 base64 (prefix 없음)
  * @param garmentImageUrlOrB64  - 쇼핑몰 URL (https://) 또는 base64 문자열
  * @param category              - tops | bottoms
  * @param isGarmentBase64       - true이면 garmentImageUrlOrB64를 base64로 전송
  */
-export async function requestFashnFit(
+export async function requestTryOnFit(
   humanImageBase64: string,
   garmentImageUrlOrB64: string,
   category: FitCategory,
   isGarmentBase64 = false
-): Promise<FashnResult> {
+): Promise<TryOnResult> {
   // 데모 모드: 3.5초 로딩 시뮬레이션 후 미리 생성된 AI 피팅 샘플 이미지 반환
   if (DEMO_MODE) {
     await new Promise(r => setTimeout(r, 3500));

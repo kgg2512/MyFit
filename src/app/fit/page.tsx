@@ -3,14 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  requestFashnFit,
+  requestTryOnFit,
   validateImageFile,
   validateImageUrl,
   fileToBase64,
   blobUrlToBase64,
   DEMO_MODE,
   type FitCategory,
-} from '@/lib/fashn';
+} from '@/lib/tryon';
 import {
   captureImage,
   dataUrlToBlob,
@@ -207,7 +207,7 @@ export default function FitPage() {
       const isGarmentBase64 = garmentMode === 'photo' && !!garmentBase64;
       const garmentParam = isGarmentBase64 ? garmentBase64 : garmentUrl;
 
-      const result = await requestFashnFit(personBase64, garmentParam, category, isGarmentBase64);
+      const result = await requestTryOnFit(personBase64, garmentParam, category, isGarmentBase64);
       setResultImageUrl(result.output_image_url);
 
       if (measurements) {

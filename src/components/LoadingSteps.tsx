@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LOADING_STEPS } from '@/lib/fashn';
+import { LOADING_STEPS } from '@/lib/tryon';
 
 interface Props {
   isActive: boolean;
