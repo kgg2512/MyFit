@@ -25,7 +25,7 @@ MyFit — AI 가상 피팅
 ```
 (49자)
 
-> 변경 이유: "가상 피팅" 표현은 Phase 1.5 FASHN AI 연동 후 사용 가능. 현재는 "사이즈 확인 + 체형 시각화"가 정확한 표현.
+> 변경 이유: "가상 피팅" 표현은 Phase 1.5 TryOnCloud 연동 후 사용 가능. 현재는 "사이즈 확인 + 체형 시각화"가 정확한 표현.
 
 ### 영어
 ```
@@ -53,14 +53,14 @@ MyFit은 그 순간을 해결합니다.
 1. 무신사, Nike, Zara, Uniqlo, H&M 등 지원 쇼핑몰 방문
 2. 상품 페이지에서 MyFit 아이콘 클릭 → 사이드 패널 열림
 3. 내 신체 치수 입력 (키, 몸무게, 가슴·허리·엉덩이)
-4. "AI 피팅" 버튼 클릭 → FASHN AI가 내 체형에 옷을 입혀줌
+4. "AI 피팅" 버튼 클릭 → TryOnCloud가 내 체형에 옷을 입혀줌
 5. 결과 확인 후 구매 결정
 
 ────────────────────────
 
 주요 기능
 
-• AI 가상 피팅 — FASHN AI 기술로 실제 착용 시뮬레이션
+• AI 가상 피팅 — TryOnCloud 기술로 실제 착용 시뮬레이션
 • 3D 체형 모델 — 내 치수로 생성되는 개인화 3D 모델
 • 멀티 쇼핑몰 지원 — 무신사, Nike, Zara, Uniqlo, H&M
 • 사이드 패널 — 쇼핑 페이지를 떠나지 않고 피팅 가능
@@ -71,7 +71,7 @@ MyFit은 그 순간을 해결합니다.
 개인정보 보호
 
 • 신체 측정치는 본인 기기에만 저장됩니다
-• 피팅 이미지는 FASHN AI 서버로 전송되며, 처리 후 삭제됩니다
+• 피팅 이미지는 TryOnCloud 서버로 전송되며, 처리 후 삭제됩니다
 • 어떠한 개인정보도 판매하지 않습니다
 
 개인정보처리방침: https://kgg2512.github.io/MyFit/privacy-policy.html
@@ -104,14 +104,14 @@ How It Works
 1. Visit a supported shopping site (Musinsa, Nike, Zara, Uniqlo, H&M)
 2. Click the MyFit icon on a product page → side panel opens
 3. Enter your measurements (height, weight, chest, waist, hips)
-4. Click "AI Fitting" → FASHN AI renders the garment on your body shape
+4. Click "AI Fitting" → TryOnCloud renders the garment on your body shape
 5. See the result and shop with confidence
 
 ────────────────────────
 
 Key Features
 
-• AI Virtual Fitting — Powered by FASHN AI for realistic wear simulation
+• AI Virtual Fitting — Powered by TryOnCloud for realistic wear simulation
 • 3D Body Model — Personalized 3D model built from your measurements
 • Multi-Store Support — Musinsa, Nike, Zara, Uniqlo, H&M
 • Side Panel — Fits without leaving the shopping page
@@ -122,7 +122,7 @@ Key Features
 Privacy
 
 • Body measurements are stored only on your device
-• Fitting images are sent to FASHN AI for processing and immediately deleted
+• Fitting images are sent to TryOnCloud for processing and immediately deleted
 • We never sell your personal information
 
 Privacy Policy: https://kgg2512.github.io/MyFit/privacy-policy.html
@@ -157,7 +157,7 @@ Buy with confidence. Return less.
 | virtual fitting | 영어 설명 | 글로벌 검색 |
 | AI fashion | 영어 설명 | 패션테크 키워드 |
 | online shopping | 영어 설명 | 범용 트래픽 |
-| FASHN AI | 설명 내 | 기술 신뢰도 |
+| TryOnCloud | 설명 내 | 기술 신뢰도 |
 
 ---
 
@@ -199,7 +199,7 @@ Buy with confidence. Return less.
 |------|----------|------|
 | 1 | 무신사 상품 페이지 + 사이드 패널 열린 상태 | "쇼핑 페이지에서 바로 — 탭 전환 없이" |
 | 2 | 치수 입력 화면 (3D 모델 생성) | "내 치수로 만드는 개인화 3D 모델" |
-| 3 | AI 피팅 결과 화면 | "FASHN AI가 내 체형에 옷을 입힌다" |
+| 3 | AI 피팅 결과 화면 | "TryOnCloud가 내 체형에 옷을 입힌다" |
 | 4 | 온보딩 화면 | "30초 설정, 평생 피팅" |
 
 ---

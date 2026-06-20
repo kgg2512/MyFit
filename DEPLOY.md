@@ -38,11 +38,11 @@ id      = "여기에_붙여넣기"
 
 ---
 
-## STEP 3 — FASHN API Key 등록
+## STEP 3 — TryOnCloud API Key 등록
 
 ```powershell
-npx wrangler secret put FASHN_API_KEY
-# 프롬프트에서 FASHN API Key 입력 (https://fashn.ai 에서 발급)
+npx wrangler secret put TRYONCLOUD_API_KEY
+# 프롬프트에서 TryOnCloud API Key 입력 (https://www.tryoncloud.com 에서 발급)
 ```
 
 ---
@@ -68,7 +68,7 @@ Published myfit-fashn-proxy (X.XX sec)
 
 ```powershell
 # .dev.vars 파일 생성 (프로젝트 루트에)
-echo "FASHN_API_KEY=your_actual_key" > .dev.vars
+echo "TRYONCLOUD_API_KEY=your_actual_key" > .dev.vars
 echo "ENVIRONMENT=development" >> .dev.vars
 
 npx wrangler dev
@@ -107,7 +107,7 @@ Compress-Archive -Path manifest.json,src,sidepanel,lib,icons,privacy-policy.html
 |------|------|
 | CF Worker 코드 | 완성 (`workers/fashn-proxy/worker.js`) |
 | KV Namespace ID | **미설정** — STEP 2 실행 필요 |
-| FASHN API Key | **미등록** — STEP 3 실행 필요 |
+| TryOnCloud API Key | **미등록** — STEP 3 실행 필요 |
 | Worker 배포 | **미배포** — STEP 4 실행 필요 |
 | Extension 코드 | 완성 (MV3, 버그 수정 완료) |
 | CWS 제출 | 미완 — Worker 배포 후 진행 |
