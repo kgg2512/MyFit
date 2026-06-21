@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadMeasurements, loadFitHistory, type FitHistoryItem } from '@/lib/storage';
+import { loadMeasurements, loadFitHistory, seedDemoData, type FitHistoryItem } from '@/lib/storage';
+import { DEMO_MODE } from '@/lib/tryon';
 
 export default function HomePage() {
   const router = useRouter();
@@ -12,6 +13,10 @@ export default function HomePage() {
 
   useEffect(() => {
     setMounted(true);
+    // 데모 빌드: 첫 진입을 풍성하게 (실사용 데이터 있으면 덮어쓰지 않음)
+    if (DEMO_MODE) {
+      seedDemoData(process.env.NEXT_PUBLIC_BASE_PATH || '');
+    }
     const m = loadMeasurements();
     setHasMeasurements(!!m);
     setHistory(loadFitHistory().slice(0, 3));
@@ -221,11 +226,11 @@ export default function HomePage() {
         </div>
 
         {/* 최근 피팅 히스토리 */}
-        {history.length > 0 && (
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 12, letterSpacing: '0.05em' }}>
-              최근 피팅
-            </div>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 12, letterSpacing: '0.05em' }}>
+            최근 피팅
+          </div>
+          {history.length > 0 ? (
             <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
               {history.map((item) => (
                 <div
@@ -246,13 +251,34 @@ export default function HomePage() {
                     style={{ width: '100%', height: 160, objectFit: 'cover' }}
                   />
                   <div style={{ padding: '8px', fontSize: 11, color: '#888', textAlign: 'center' }}>
-                    {new Date(item.timestamp).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                    {item.garmentName || new Date(item.timestamp).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <button
+              type="button"
+              onClick={goToFit}
+              style={{
+                width: '100%',
+                padding: '24px 16px',
+                background: '#141414',
+                border: '1px dashed #2a2a2a',
+                borderRadius: 12,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: 28 }} aria-hidden="true">🪄</span>
+              <span style={{ fontSize: 13, color: '#888', fontWeight: 600 }}>아직 피팅 기록이 없어요</span>
+              <span style={{ fontSize: 12, color: '#00e5ff' }}>첫 AI 피팅을 시작해 보세요 →</span>
+            </button>
+          )}
+        </div>
 
         {/* 쿠팡파트너스 고지 */}
         <div

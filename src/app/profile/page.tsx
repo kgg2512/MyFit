@@ -7,8 +7,10 @@ import {
   loadMeasurements,
   setConsented,
   isConsented,
+  seedDemoData,
   type Measurements,
 } from '@/lib/storage';
+import { DEMO_MODE } from '@/lib/tryon';
 
 const QUICK_SIZE_MAP: Record<string, Measurements> = {
   XS: { height: 163, weight: 50, shoulder: 37, chest: 82, waist: 62, hip: 86 },
@@ -30,6 +32,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     setMounted(true);
+    // 데모 빌드: seed 치수·동의 주입 (실사용 데이터 있으면 덮어쓰지 않음)
+    if (DEMO_MODE) {
+      seedDemoData(process.env.NEXT_PUBLIC_BASE_PATH || '');
+    }
     const existing = loadMeasurements();
     if (existing) setForm(existing);
     const c = isConsented();

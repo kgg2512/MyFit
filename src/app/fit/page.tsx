@@ -20,6 +20,7 @@ import {
   isConsented,
   setConsented,
   calcRecommendedSize,
+  seedDemoData,
   type Measurements,
 } from '@/lib/storage';
 import LoadingSteps from '@/components/LoadingSteps';
@@ -64,6 +65,10 @@ export default function FitPage() {
 
   useEffect(() => {
     setMounted(true);
+    // 데모 빌드: seed 치수·동의 주입 (실사용 데이터 있으면 덮어쓰지 않음)
+    if (DEMO_MODE) {
+      seedDemoData(process.env.NEXT_PUBLIC_BASE_PATH || '');
+    }
     const m = loadMeasurements();
     setMeasurements(m);
     const last = loadLastPersonImage();
@@ -107,15 +112,11 @@ export default function FitPage() {
     if (validationError) { setError(validationError); return; }
     setError('');
 
-    const objectUrl = URL.createObjectURL(file);
-    setPersonPreviewUrl(objectUrl);
-
+    // 안정적인 data URL만 사용 (objectURL revoke 레이스로 인한 ERR_FILE_NOT_FOUND 방지)
     fileToBase64(file).then(b64 => {
       setPersonBase64(b64);
-      // 안정적인 data URL로 교체 후 objectURL 해제 (단계 이동 후 복귀 시 미리보기 깨짐 방지)
       setPersonPreviewUrl(`data:${file.type};base64,${b64}`);
-      URL.revokeObjectURL(objectUrl);
-    });
+    }).catch(() => setError('이미지를 읽는 중 오류가 발생했습니다.'));
   };
 
   const handleUseLastPerson = () => {
@@ -133,15 +134,11 @@ export default function FitPage() {
     if (validationError) { setError(validationError); return; }
     setError('');
 
-    const objectUrl = URL.createObjectURL(file);
-    setGarmentPreviewUrl(objectUrl);
-
+    // 안정적인 data URL만 사용 (objectURL revoke 레이스로 인한 ERR_FILE_NOT_FOUND 방지)
     fileToBase64(file).then(b64 => {
       setGarmentBase64(b64);
-      // 안정적인 data URL로 교체 후 objectURL 해제 (단계 이동 후 복귀 시 미리보기 깨짐 방지)
       setGarmentPreviewUrl(`data:${file.type};base64,${b64}`);
-      URL.revokeObjectURL(objectUrl);
-    });
+    }).catch(() => setError('이미지를 읽는 중 오류가 발생했습니다.'));
   };
 
   const handleGarmentCamera = async () => {
@@ -287,7 +284,7 @@ export default function FitPage() {
               서비스 이용을 위해 아래 항목에 동의해 주세요.
             </div>
             {[
-              { label: '[필수] 개인정보 처리방침 동의', desc: '신체 치수는 이 기기에만 저장됩니다. 전체 방침: myfit.g2.com/privacy' },
+              { label: '[필수] 개인정보 처리방침 동의', desc: '신체 치수는 이 기기에만 저장됩니다. 전체 방침: kgg2512.github.io/MyFit/privacy.html' },
               { label: '[필수] AI 피팅 국외이전 동의 (신체 사진 — PIPA 제28조의8)', desc: '신체 사진은 AI 피팅 처리를 위해 인도 소재 TryOnCloud 서버로 전송됩니다. 원본 사진은 처리 후 즉시 삭제, 피팅 결과 이미지는 최대 7일 후 삭제됩니다. 동의를 철회하려면 AI 피팅 기능을 이용하지 않으시면 됩니다.' },
               { label: '[필수] 제휴 마케팅 링크 고지 동의', desc: '이 서비스는 쿠팡파트너스 활동의 일환으로 수수료를 받을 수 있습니다.' },
             ].map((item) => (
