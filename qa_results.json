@@ -1,0 +1,81 @@
+{
+  "results": [
+    {
+      "item": "A5-landing",
+      "status": "PASS",
+      "detail": "랜딩 루트 200 OK"
+    },
+    {
+      "item": "A5-landing-cta",
+      "status": "PASS",
+      "detail": "CTA → https://kgg2512.github.io/MyFit/app-demo/ (app-demo 정상)"
+    },
+    {
+      "item": "A5-app-demo",
+      "status": "PASS",
+      "detail": "app-demo 200 OK"
+    },
+    {
+      "item": "A2-seed",
+      "status": "PASS",
+      "detail": "seed 데이터 노출 확인 (오버핏/와이드/니트 중 하나 이상)"
+    },
+    {
+      "item": "A1-demo-banner",
+      "status": "INFO",
+      "detail": "데모 배너 텍스트 미확인 (다른 형태일 수 있음)"
+    },
+    {
+      "item": "A5-privacy",
+      "status": "PASS",
+      "detail": "privacy.html HTTP 200"
+    },
+    {
+      "item": "A5-terms",
+      "status": "PASS",
+      "detail": "terms.html HTTP 200"
+    },
+    {
+      "item": "B8-AES256-absent",
+      "status": "FAIL",
+      "detail": "AES-256 과약 표현 여전히 존재 — 블로커"
+    },
+    {
+      "item": "B8-Supabase-absent",
+      "status": "FAIL",
+      "detail": "Supabase 기재 여전히 존재 — 블로커"
+    },
+    {
+      "item": "B8-localStorage-disclosed",
+      "status": "PASS",
+      "detail": "localStorage 저장 사실 고지 확인"
+    },
+    {
+      "item": "B8-plaintext-disclosed",
+      "status": "PASS",
+      "detail": "평문/미암호화 고지 확인"
+    },
+    {
+      "item": "B8-version",
+      "status": "PASS",
+      "detail": "v1.2 최신 버전 확인"
+    },
+    {
+      "item": "C2-consent-modal",
+      "status": "FAIL",
+      "detail": "동의 모달 미표시 — 게이트 없음"
+    },
+    {
+      "item": "C2-age-checkbox-exists",
+      "status": "FAIL",
+      "detail": "#age-confirm-fit 체크박스 미발견"
+    },
+    {
+      "item": "A4-console-errors",
+      "status": "PASS",
+      "detail": "콘솔 에러 0"
+    }
+  ],
+  "consoleErrors": [],
+  "timestamp": "2026-06-21T05:18:14.374Z"
+}
