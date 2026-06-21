@@ -19,6 +19,8 @@ import {
   saveFitHistory,
   isConsented,
   setConsented,
+  isAgeConfirmed,
+  setAgeConfirmed,
   calcRecommendedSize,
   seedDemoData,
   type Measurements,
@@ -59,6 +61,7 @@ export default function FitPage() {
   const [pmfFeedback, setPmfFeedback] = useState<'yes' | 'no' | null>(null);
   const [showConsent, setShowConsent] = useState(false);
   const [consented, setConsentedState] = useState(false);
+  const [ageConfirmed, setAgeConfirmedState] = useState(false); // 만 14세 이상 확인 (PIPA §22)
   const [sizeRecommendation, setSizeRecommendation] = useState<string>('');
 
   const resultImgRef = useRef<HTMLImageElement>(null);
@@ -74,6 +77,7 @@ export default function FitPage() {
     const last = loadLastPersonImage();
     if (last) setHasLastPerson(true);
     setConsentedState(isConsented());
+    setAgeConfirmedState(isAgeConfirmed());
   }, []);
 
   // ── 신체 사진 촬영/선택 ──
@@ -185,8 +189,11 @@ export default function FitPage() {
   };
 
   const handleConsentAndFit = () => {
+    // 만 14세 이상 확인 미체크 시 진행 불가 (PIPA §22)
+    if (!ageConfirmed) return;
     setConsented();
     setConsentedState(true);
+    setAgeConfirmed();
     setShowConsent(false);
     doFit();
   };
@@ -296,10 +303,33 @@ export default function FitPage() {
                 </div>
               </div>
             ))}
+
+            {/* [필수] 만 14세 이상 확인 — 사용자가 직접 체크해야 진행 가능 (PIPA §22) */}
+            <label
+              htmlFor="age-confirm-fit"
+              style={{
+                display: 'flex', alignItems: 'flex-start', gap: 10, width: '100%',
+                marginBottom: 6, cursor: 'pointer', minHeight: 44,
+              }}
+            >
+              <input
+                id="age-confirm-fit"
+                type="checkbox"
+                checked={ageConfirmed}
+                onChange={e => setAgeConfirmedState(e.target.checked)}
+                style={{ width: 22, height: 22, flexShrink: 0, marginTop: 1, accentColor: '#00e5ff' }}
+              />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#f0f0f0' }}>[필수] 본인은 만 14세 이상입니다</div>
+                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>만 14세 미만은 본 서비스를 이용할 수 없습니다.</div>
+              </div>
+            </label>
+
             <button
               className="btn-primary"
-              style={{ marginTop: 8 }}
+              style={{ marginTop: 8, opacity: ageConfirmed ? 1 : 0.45 }}
               onClick={handleConsentAndFit}
+              disabled={!ageConfirmed}
             >
               전체 동의하고 AI 피팅 시작
             </button>

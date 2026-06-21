@@ -7,6 +7,8 @@ import {
   loadMeasurements,
   setConsented,
   isConsented,
+  isAgeConfirmed,
+  setAgeConfirmed,
   seedDemoData,
   type Measurements,
 } from '@/lib/storage';
@@ -27,6 +29,7 @@ export default function ProfilePage() {
   });
   const [saved, setSaved] = useState(false);
   const [consented, setConsentedState] = useState(false);
+  const [ageConfirmed, setAgeConfirmedState] = useState(false); // 만 14세 이상 확인 (PIPA §22)
   const [showConsent, setShowConsent] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -40,6 +43,7 @@ export default function ProfilePage() {
     if (existing) setForm(existing);
     const c = isConsented();
     setConsentedState(c);
+    setAgeConfirmedState(isAgeConfirmed());
     if (!c) setShowConsent(true);
   }, []);
 
@@ -68,8 +72,11 @@ export default function ProfilePage() {
   };
 
   const handleConsent = () => {
+    // 만 14세 이상 확인 미체크 시 진행 불가 (PIPA §22)
+    if (!ageConfirmed) return;
     setConsented();
     setConsentedState(true);
+    setAgeConfirmed();
     setShowConsent(false);
     saveMeasurements(form);
     setSaved(true);
@@ -151,7 +158,36 @@ export default function ProfilePage() {
               </div>
             ))}
 
-            <button className="btn-primary" style={{ marginTop: 20 }} onClick={handleConsent}>
+            {/* [필수] 만 14세 이상 확인 — 사용자가 직접 체크해야 진행 가능 (PIPA §22) */}
+            <label
+              htmlFor="age-confirm-profile"
+              style={{
+                padding: '14px 0',
+                display: 'flex',
+                gap: 12,
+                cursor: 'pointer',
+                alignItems: 'flex-start',
+              }}
+            >
+              <input
+                id="age-confirm-profile"
+                type="checkbox"
+                checked={ageConfirmed}
+                onChange={e => setAgeConfirmedState(e.target.checked)}
+                style={{ width: 20, height: 20, flexShrink: 0, marginTop: 2, accentColor: '#00e5ff' }}
+              />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#f0f0f0', marginBottom: 4 }}>[필수] 본인은 만 14세 이상입니다</div>
+                <div style={{ fontSize: 12, color: '#888', lineHeight: 1.5 }}>만 14세 미만은 본 서비스를 이용할 수 없습니다.</div>
+              </div>
+            </label>
+
+            <button
+              className="btn-primary"
+              style={{ marginTop: 20, opacity: ageConfirmed ? 1 : 0.45 }}
+              onClick={handleConsent}
+              disabled={!ageConfirmed}
+            >
               전체 동의하고 시작하기
             </button>
           </div>

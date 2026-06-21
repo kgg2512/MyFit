@@ -27,6 +27,7 @@ const KEYS = {
   MEASUREMENTS: 'myfit_measurements',
   HISTORY: 'myfit_fit_history',
   CONSENTED: 'myfit_consented',
+  AGE_CONFIRMED: 'myfit_age_confirmed',        // 만 14세 이상 확인 (PIPA §22)
   LAST_PERSON_IMAGE: 'myfit_last_person_b64', // 마지막 신체 사진 base64 (재사용용)
   DEMO_SEEDED: 'myfit_demo_seeded',           // 데모 seed 1회 주입 마커
 };
@@ -63,6 +64,18 @@ export function setConsented(): void {
 export function isConsented(): boolean {
   if (!isBrowser()) return false;
   return localStorage.getItem(KEYS.CONSENTED) === '1';
+}
+
+// ── 만 14세 이상 확인 (PIPA §22 + Google Play 정책) ──
+
+export function setAgeConfirmed(): void {
+  if (!isBrowser()) return;
+  localStorage.setItem(KEYS.AGE_CONFIRMED, '1');
+}
+
+export function isAgeConfirmed(): boolean {
+  if (!isBrowser()) return false;
+  return localStorage.getItem(KEYS.AGE_CONFIRMED) === '1';
 }
 
 // ── 마지막 신체 사진 재사용 ──
@@ -183,8 +196,9 @@ export function seedDemoData(basePath = ''): boolean {
   };
   saveMeasurements(seedMeasurements);
 
-  // seed 동의 (데모는 동의 모달 없이 바로 풍성하게 — 시연 흐름 보호)
+  // seed 동의 + 연령 확인 (데모는 동의 모달 없이 바로 풍성하게 — 시연 흐름 보호)
   localStorage.setItem(KEYS.CONSENTED, '1');
+  localStorage.setItem(KEYS.AGE_CONFIRMED, '1');
 
   // seed 피팅 히스토리 (데모 이미지 사용, 최근→과거 순)
   const now = Date.now();
