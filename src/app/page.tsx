@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadMeasurements, loadFitHistory, seedDemoData, type FitHistoryItem } from '@/lib/storage';
+import { loadMeasurements, loadFitHistory, seedDemoData, clearAllData, type FitHistoryItem } from '@/lib/storage';
 import { DEMO_MODE } from '@/lib/tryon';
 import { isOnboarded } from '@/lib/onboarding';
 
@@ -26,6 +26,22 @@ const IconCheck = (
 const IconUser = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+const IconShield = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+);
+const IconChevronRight = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="m9 18 6-6-6-6"/>
+  </svg>
+);
+const IconRefresh = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>
   </svg>
 );
 
@@ -61,6 +77,13 @@ export default function HomePage() {
   const goToFit = () => router.push('/fit');
   const goToProfile = () => router.push('/profile');
   const goToOnboarding = () => router.push('/onboarding');
+  const goToPrivacy = () => router.push('/privacy');
+
+  // 데모 리셋: 모든 데이터 삭제 후 온보딩 처음부터 (투자/사용자 시연용)
+  const handleDemoReset = () => {
+    clearAllData();
+    router.push('/onboarding');
+  };
 
   if (!mounted) {
     return (
@@ -178,6 +201,36 @@ export default function HomePage() {
             </button>
           )}
         </section>
+
+        {/* 내 데이터 · 프라이버시 진입 */}
+        <button
+          onClick={goToPrivacy}
+          aria-label="내 데이터 · 프라이버시 — 저장된 데이터 확인 및 삭제"
+          style={{ width: '100%', textAlign: 'left', background: 'var(--myfit-surface2)', border: '1px solid var(--myfit-border)', borderRadius: 'var(--myfit-radius)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, minHeight: 0 }}
+        >
+          <span style={{ flexShrink: 0, display: 'flex', color: 'var(--myfit-primary)' }}>{IconShield}</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--myfit-text)' }}>내 데이터 · 프라이버시</div>
+            <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', marginTop: 2 }}>이 기기에 저장된 데이터 확인 · 삭제 · 사진 만료</div>
+          </div>
+          <span style={{ flexShrink: 0, display: 'flex', color: 'var(--myfit-text-muted)' }}>{IconChevronRight}</span>
+        </button>
+
+        {/* 데모 리셋 (투자/사용자 시연용 — 데모 빌드에서만) */}
+        {DEMO_MODE && (
+          <button
+            onClick={handleDemoReset}
+            aria-label="데모 리셋 — 모든 데이터를 지우고 온보딩부터 다시 시작"
+            style={{ width: '100%', textAlign: 'left', background: '#fff', border: '1px dashed var(--myfit-border-strong)', borderRadius: 'var(--myfit-radius)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, minHeight: 0 }}
+          >
+            <span style={{ flexShrink: 0, display: 'flex', color: 'var(--myfit-text-sub)' }}>{IconRefresh}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--myfit-text)' }}>데모 리셋 · 온보딩 다시 보기</div>
+              <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', marginTop: 2 }}>저장 데이터를 초기화하고 첫 사용자 흐름을 처음부터 시연</div>
+            </div>
+            <span style={{ flexShrink: 0, display: 'flex', color: 'var(--myfit-text-muted)' }}>{IconChevronRight}</span>
+          </button>
+        )}
 
         {/* 쿠팡파트너스 고지 */}
         <div style={{ fontSize: 11, color: 'var(--myfit-text-muted)', textAlign: 'center', padding: '8px 0', borderTop: '1px solid var(--myfit-border)' }}>
