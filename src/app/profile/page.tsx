@@ -22,6 +22,29 @@ const QUICK_SIZE_MAP: Record<string, Measurements> = {
   XL: { height: 177, weight: 80, shoulder: 45, chest: 106, waist: 87, hip: 108 },
 };
 
+/* ── 아이콘 (SVG, Lucide 스타일) ── */
+const IconArrowLeft = (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M19 12H5M12 19l-7-7 7-7"/>
+  </svg>
+);
+const IconCheck = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+const IconShield = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+);
+const IconRuler = (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21.3 8.7 8.7 21.3a2.4 2.4 0 0 1-3.4 0l-2.6-2.6a2.4 2.4 0 0 1 0-3.4L15.3 2.7a2.4 2.4 0 0 1 3.4 0l2.6 2.6a2.4 2.4 0 0 1 0 3.4Z"/>
+    <path d="m7.5 10.5 2 2M11 7l2 2M14.5 3.5l2 2"/>
+  </svg>
+);
+
 export default function ProfilePage() {
   const router = useRouter();
   const [form, setForm] = useState<Measurements>({
@@ -87,14 +110,14 @@ export default function ProfilePage() {
 
   if (!mounted) {
     return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--myfit-bg)', minHeight: '100dvh' }}>
         <div className="spinner" />
       </div>
     );
   }
 
   return (
-    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0a0a0a', minHeight: '100dvh' }}>
+    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--myfit-bg)', minHeight: '100dvh', color: 'var(--myfit-text)' }}>
       {/* 동의 모달 */}
       {showConsent && (
         <div
@@ -103,7 +126,7 @@ export default function ProfilePage() {
           aria-labelledby="profile-consent-title"
           style={{
             position: 'fixed', inset: 0, zIndex: 100,
-            background: 'rgba(0,0,0,0.85)',
+            background: 'rgba(0,0,0,0.55)',
             display: 'flex', alignItems: 'flex-end',
           }}
           onClick={() => setShowConsent(false)}
@@ -111,17 +134,18 @@ export default function ProfilePage() {
           <div
             style={{
               width: '100%',
-              background: '#141414',
+              background: 'var(--myfit-surface)',
               borderRadius: '20px 20px 0 0',
               padding: '24px 20px calc(24px + env(safe-area-inset-bottom, 0px))',
-              border: '1px solid #2a2a2a',
+              border: '1px solid var(--myfit-border)',
+              boxShadow: '0 -4px 24px rgba(0,0,0,0.10)',
             }}
             onClick={e => e.stopPropagation()}
           >
-            <div id="profile-consent-title" style={{ fontSize: 18, fontWeight: 800, color: '#f0f0f0', marginBottom: 8 }}>
+            <div id="profile-consent-title" style={{ fontSize: 18, fontWeight: 800, color: 'var(--myfit-text)', marginBottom: 8 }}>
               MyFit 시작 전 동의
             </div>
-            <div style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>
+            <div style={{ fontSize: 13, color: 'var(--myfit-text-sub)', marginBottom: 20 }}>
               서비스 이용을 위해 아래 항목에 동의해 주세요.
             </div>
 
@@ -143,17 +167,17 @@ export default function ProfilePage() {
                 key={item.label}
                 style={{
                   padding: '14px 0',
-                  borderBottom: '1px solid #2a2a2a',
+                  borderBottom: '1px solid var(--myfit-border)',
                   display: 'flex',
                   gap: 12,
                 }}
               >
-                <div style={{ width: 20, height: 20, borderRadius: 4, background: '#00e5ff20', border: '1px solid #00e5ff40', flexShrink: 0, marginTop: 2 }}>
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00e5ff', fontSize: 12 }}>✓</div>
+                <div style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--myfit-primary-soft)', border: '1px solid var(--myfit-primary)', flexShrink: 0, marginTop: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--myfit-primary)' }}>
+                  {IconCheck}
                 </div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#f0f0f0', marginBottom: 4 }}>{item.label}</div>
-                  <div style={{ fontSize: 12, color: '#888', lineHeight: 1.5 }}>{item.desc}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--myfit-text)', marginBottom: 4 }}>{item.label}</div>
+                  <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', lineHeight: 1.5 }}>{item.desc}</div>
                 </div>
               </div>
             ))}
@@ -174,11 +198,11 @@ export default function ProfilePage() {
                 type="checkbox"
                 checked={ageConfirmed}
                 onChange={e => setAgeConfirmedState(e.target.checked)}
-                style={{ width: 20, height: 20, flexShrink: 0, marginTop: 2, accentColor: '#00e5ff' }}
+                style={{ width: 20, height: 20, flexShrink: 0, marginTop: 2, accentColor: 'var(--myfit-primary)' }}
               />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#f0f0f0', marginBottom: 4 }}>[필수] 본인은 만 14세 이상입니다</div>
-                <div style={{ fontSize: 12, color: '#888', lineHeight: 1.5 }}>만 14세 미만은 본 서비스를 이용할 수 없습니다.</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--myfit-text)', marginBottom: 4 }}>[필수] 본인은 만 14세 이상입니다</div>
+                <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', lineHeight: 1.5 }}>만 14세 미만은 본 서비스를 이용할 수 없습니다.</div>
               </div>
             </label>
 
@@ -200,28 +224,31 @@ export default function ProfilePage() {
           onClick={() => window.history.back()}
           style={{
             width: 40, height: 40, borderRadius: '50%',
-            background: '#1e1e1e', border: '1px solid #2a2a2a',
+            background: 'var(--myfit-surface2)', border: '1px solid var(--myfit-border)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, color: '#f0f0f0',
+            color: 'var(--myfit-text-sub)',
           }}
           aria-label="뒤로가기"
         >
-          ←
+          {IconArrowLeft}
         </button>
-        <span style={{ fontSize: 17, fontWeight: 700, color: '#f0f0f0' }}>내 치수 입력</span>
+        <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--myfit-text)' }}>내 치수 입력</span>
       </header>
 
       <div className="scroll-area" style={{ flex: 1, padding: '8px 20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         {/* 안내 */}
-        <div style={{ background: '#0d1f0d', border: '1px solid #1a3a1a', borderRadius: 12, padding: '14px 16px' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#00c853' }}>한 번만 입력하면 저장됩니다</div>
-          <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>신체 치수는 이 기기에만 저장됩니다</div>
+        <div style={{ background: 'var(--myfit-primary-soft)', border: '1px solid #a5f0fc', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ color: 'var(--myfit-primary)', flexShrink: 0 }}>{IconRuler}</span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--myfit-primary)' }}>한 번만 입력하면 저장됩니다</div>
+            <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', marginTop: 4 }}>신체 치수는 이 기기에만 저장됩니다</div>
+          </div>
         </div>
 
         {/* 빠른 사이즈 입력 */}
         <div>
-          <div style={{ fontSize: 13, color: '#888', marginBottom: 10, fontWeight: 600 }}>쇼핑몰 사이즈 기준 자동 입력</div>
+          <div style={{ fontSize: 13, color: 'var(--myfit-text-sub)', marginBottom: 10, fontWeight: 600 }}>쇼핑몰 사이즈 기준 자동 입력</div>
           <div style={{ display: 'flex', gap: 8 }}>
             {(['XS', 'S', 'M', 'L', 'XL'] as const).map(size => (
               <button
@@ -231,11 +258,11 @@ export default function ProfilePage() {
                   flex: 1,
                   height: 44,
                   borderRadius: 8,
-                  background: '#1e1e1e',
-                  border: '1px solid #2a2a2a',
+                  background: 'var(--myfit-surface2)',
+                  border: '1px solid var(--myfit-border)',
                   fontSize: 13,
                   fontWeight: 600,
-                  color: '#f0f0f0',
+                  color: 'var(--myfit-text)',
                 }}
               >
                 {size}
@@ -246,7 +273,7 @@ export default function ProfilePage() {
 
         {/* 기본 정보 */}
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 12, letterSpacing: '0.05em' }}>기본 정보</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--myfit-text-sub)', marginBottom: 12, letterSpacing: '0.05em' }}>기본 정보</div>
           <div style={{ display: 'flex', gap: 12 }}>
             <FieldInput label="키 (cm)" value={form.height} min={140} max={220} onChange={v => handleChange('height', v)} />
             <FieldInput label="몸무게 (kg)" value={form.weight} min={30} max={200} onChange={v => handleChange('weight', v)} />
@@ -255,7 +282,7 @@ export default function ProfilePage() {
 
         {/* 신체 둘레 */}
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 12, letterSpacing: '0.05em' }}>신체 둘레</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--myfit-text-sub)', marginBottom: 12, letterSpacing: '0.05em' }}>신체 둘레</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', gap: 12 }}>
               <FieldInput label="어깨 너비 (cm)" value={form.shoulder} min={30} max={70} onChange={v => handleChange('shoulder', v)} />
@@ -274,10 +301,11 @@ export default function ProfilePage() {
           onClick={handleSave}
           style={{ marginTop: 8 }}
         >
-          {saved ? '저장됨 ✓' : '저장하고 피팅 시작 →'}
+          {saved ? '저장됨 ✓' : '저장하고 핏 예측 시작 →'}
         </button>
 
-        <div style={{ fontSize: 11, color: '#555', textAlign: 'center' }}>
+        <div style={{ fontSize: 11, color: 'var(--myfit-text-muted)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+          <span style={{ color: 'var(--myfit-text-muted)' }}>{IconShield}</span>
           이 기기에만 저장 · 서버 전송 없음
         </div>
       </div>
@@ -306,7 +334,7 @@ function FieldInput({
     <div style={{ flex: 1 }}>
       <label
         htmlFor={inputId}
-        style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 6, fontWeight: 600 }}
+        style={{ fontSize: 11, color: 'var(--myfit-text-sub)', display: 'block', marginBottom: 6, fontWeight: 600 }}
       >
         {label}
       </label>
@@ -323,12 +351,12 @@ function FieldInput({
         style={{
           width: '100%',
           height: 48,
-          background: '#1e1e1e',
-          border: `1px solid ${isOutOfRange ? '#ff5252' : '#2a2a2a'}`,
+          background: 'var(--myfit-surface2)',
+          border: `1px solid ${isOutOfRange ? '#ef4444' : 'var(--myfit-border)'}`,
           borderRadius: 10,
           padding: '0 14px',
           fontSize: 16,
-          color: '#f0f0f0',
+          color: 'var(--myfit-text)',
           textAlign: 'center',
         }}
       />
@@ -336,7 +364,7 @@ function FieldInput({
         <div
           id={errorId}
           role="alert"
-          style={{ color: '#ff5252', fontSize: 11, marginTop: 4 }}
+          style={{ color: '#ef4444', fontSize: 11, marginTop: 4 }}
         >
           {min}~{max} 범위로 입력해 주세요
         </div>
