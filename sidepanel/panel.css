@@ -402,6 +402,26 @@ body {
 }
 .fit-val { font-size: 11px; font-weight: 700; width: 28px; text-align: right; }
 
+/* ── 실측 사이즈표 기반 핏 (FitEngine) ── */
+#fit-engine-card { margin: 0 16px 10px; }
+.fe-summary {
+  font-size: 11px; color: var(--text2); margin-bottom: 8px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.fe-summary b { color: var(--accent); font-weight: 700; }
+.fe-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
+.fe-lbl { width: 32px; color: var(--text2); flex-shrink: 0; }
+.fe-chip {
+  padding: 2px 9px; border-radius: 100px; font-weight: 700; font-size: 11px;
+  white-space: nowrap;
+}
+.fe-chip--standard { background: rgba(0, 230, 118, 0.15); color: var(--success); }
+.fe-chip--tight    { background: rgba(255, 171, 64, 0.16); color: var(--warn); }
+.fe-chip--oversized{ background: rgba(124, 77, 255, 0.18); color: var(--accent2); }
+.fe-chip--bad      { background: rgba(255, 82, 82, 0.16);  color: var(--danger); }
+.fe-ease { font-weight: 700; color: var(--text); min-width: 44px; }
+.fe-gar  { margin-left: auto; color: var(--text2); font-size: 10px; flex-shrink: 0; }
+
 /* ─────────────────────────────────────
    PRODUCT ROW (피팅 결과 내 상품 정보)
    ───────────────────────────────────── */

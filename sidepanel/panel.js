@@ -28,6 +28,7 @@ const SIZE_CHART = {
 let measurements = null;  // { height, weight, shoulder, chest, waist, hip }
 let currentProduct = null;
 let selectedSize = null;
+let fitResult = null;     // FitEngine.predict() 결과 (실측 사이즈표 추출 성공 시). null이면 일반추정 fallback.
 let threeScene = null;
 let threeCamera = null;
 let threeRenderer = null;
