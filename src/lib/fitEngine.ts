@@ -223,18 +223,25 @@ export class LocalFitEngine implements FitEngine {
       parts.push(chestPart);
 
       // 어깨
+      // ⚠️ 민소매/나시/탱크는 어깨너비(끈 간격)가 신체 어깨너비(견봉간)와 측정 기준이
+      //    달라 직접 비교가 부적합하다(옷이 항상 훨씬 좁게 나와 전부 "불가"로 오판정).
+      //    → 어깨 노출형 카테고리는 판정을 정보성으로 처리(틀린 타이트/불가 띄우지 않음).
+      const shoulderComparable = !/sleeveless|나시|민소매|탱크|cami|sleeveless/i.test(chart.category || '');
       const shoulderG = findValue(row, SHOULDER_KEYS);
       const shoulderEaseRaw = shoulderG !== null ? shoulderG - body.shoulder : null;
-      const shoulderEase = shoulderEaseRaw !== null ? shoulderEaseRaw + stretchCm : null;
+      const shoulderEase = (shoulderComparable && shoulderEaseRaw !== null) ? shoulderEaseRaw + stretchCm : null;
       const shoulderBand = shoulderEase !== null ? bandForShoulder(shoulderEase) : FIT_LABELS.standard;
       parts.push({
         measureKey: '어깨너비',
         garment: shoulderG,
         body: body.shoulder,
-        ease: shoulderEaseRaw !== null ? round1(shoulderEaseRaw) : null,
+        // 비교 부적합(민소매)일 때는 여유분 숫자를 숨긴다(오해 방지).
+        ease: (shoulderComparable && shoulderEaseRaw !== null) ? round1(shoulderEaseRaw) : null,
         level: shoulderEase !== null ? shoulderBand.level : 'standard',
         tone: shoulderEase !== null ? shoulderBand.tone : 'standard',
-        label: shoulderEase !== null ? shoulderBand.label : '비교 불가',
+        label: shoulderEase !== null
+          ? shoulderBand.label
+          : (shoulderComparable ? '비교 불가' : '민소매 — 어깨 비교 제외'),
       });
 
       // 총장 (참고 — 키 대비 길이감. 판정은 정보성으로 약하게)
