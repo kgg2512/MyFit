@@ -193,11 +193,36 @@ function startFitting(product) {
   const titleEl = document.getElementById('fitting-product-name');
   titleEl.textContent = product.name || '가상 피팅';
 
-  // 사이즈 타입 결정
-  const sizes = detectSizeType(product);
-  const recommendedSize = calcRecommendedSize(measurements, sizes.type);
+  // ★ P3-2: 실측 사이즈표(content.js parseMusinsaSizeChart) 추출 성공 시 → FitEngine 경로.
+  //   사용자 입력 단위계 변환: '가슴 둘레' → 단면(/2), '어깨 너비'는 옷 어깨너비와 직접 비교.
+  fitResult = null;
+  const chart = product.sizeChart;
+  if (chart && Array.isArray(chart.sizes) && chart.sizes.length && window.MyFitEngine) {
+    const body = {
+      height: measurements.height,
+      chestHalf: (Number(measurements.chest) || 0) / 2,
+      shoulder: Number(measurements.shoulder) || 0,
+    };
+    // stretchFromChart:false — 검증된 회장 케이스 판정과 동일(신축 보정 미적용).
+    fitResult = window.MyFitEngine.predict(chart, body, { stretchFromChart: false });
+    if (!fitResult || !fitResult.sizes.length) fitResult = null;
+  }
 
-  renderSizeButtons(sizes.list, recommendedSize);
+  let sizeList, recommendedSize, sizeType;
+  if (fitResult) {
+    // 실측 사이즈표의 진짜 사이즈(M/L/XL/XXL) + 엔진 추천
+    sizeList = fitResult.sizes.map(s => s.size);
+    recommendedSize = fitResult.recommended || sizeList[0];
+    sizeType = fitResult.category || 'tops';
+  } else {
+    // fallback: 일반 브랜드 추정 (사이즈표 없는 Nike/Zara 등 또는 파싱 실패)
+    const sizes = detectSizeType(product);
+    sizeType = sizes.type;
+    sizeList = sizes.list;
+    recommendedSize = calcRecommendedSize(measurements, sizeType);
+  }
+
+  renderSizeButtons(sizeList, recommendedSize);
   selectedSize = recommendedSize;
 
   // 추천 배지 업데이트
@@ -205,7 +230,7 @@ function startFitting(product) {
 
   showScreen('fitting');
   initThreeJS(product, recommendedSize);
-  updateFitScores(recommendedSize, sizes.type);
+  updateFitScores(recommendedSize, sizeType);
 }
 
 // ── 사이즈 타입 감지 ──
@@ -281,11 +306,89 @@ function renderSizeButtons(sizes, recommended) {
 function updateFitScores(size, type) {
   if (!measurements) return;
 
-  const scores = calcFitScores(size, type);
+  // ★ P3-2: 실측 사이즈표 기반 FitEngine 결과가 있으면 정성 핏 카드로 렌더
+  if (fitResult) {
+    renderFitFromEngine(size);
+    return;
+  }
 
+  // fallback: 일반추정 % 바 카드
+  document.getElementById('fit-engine-card')?.classList.add('hidden');
+  document.getElementById('fit-score-card')?.classList.remove('hidden');
+
+  const scores = calcFitScores(size, type);
   updateFitRow('fit-shoulder', scores.shoulder);
   updateFitRow('fit-chest', scores.chest);
   updateFitRow('fit-waist', scores.waist);
+}
+
+// ── 실측 사이즈표 기반 핏 렌더 (FitEngine) ──
+// 선택된 사이즈의 부위별(가슴/어깨/총장) 판정을 정성 카드로 출력. innerHTML 금지 → DOM API.
+function renderFitFromEngine(size) {
+  const card = document.getElementById('fit-engine-card');
+  const legacy = document.getElementById('fit-score-card');
+  if (!card) return;
+  legacy?.classList.add('hidden');
+  card.classList.remove('hidden');
+  card.textContent = ''; // 초기화 (innerHTML 미사용)
+
+  const sf = fitResult.sizes.find(s => s.size === size);
+  if (!sf) return;
+
+  // 요약 라인: 엔진 추천 사이즈 + 신축성(있을 때)
+  const summary = document.createElement('div');
+  summary.className = 'fe-summary';
+  const recB = document.createElement('b');
+  recB.textContent = fitResult.recommended || size;
+  summary.appendChild(document.createTextNode('실측 기반 추천 '));
+  summary.appendChild(recB);
+  if (fitResult.stretchApplied) {
+    summary.appendChild(document.createTextNode(' · 신축 보정 적용'));
+  }
+  card.appendChild(summary);
+
+  // 부위 순서: 가슴(대표) → 어깨 → 총장
+  const ORDER = [
+    { key: '가슴단면', label: '가슴' },
+    { key: '어깨너비', label: '어깨' },
+    { key: '총장', label: '총장' },
+  ];
+  ORDER.forEach(({ key, label }) => {
+    const part = sf.parts.find(p => p.measureKey === key);
+    if (part) card.appendChild(buildFeRow(label, part));
+  });
+}
+
+// 핏 한 줄 [부위] [판정칩] [여유분] [옷 실측]
+function buildFeRow(label, part) {
+  const row = document.createElement('div');
+  row.className = 'fe-row';
+
+  const lbl = document.createElement('span');
+  lbl.className = 'fe-lbl';
+  lbl.textContent = label;
+  row.appendChild(lbl);
+
+  const chip = document.createElement('span');
+  const toneClass = part.level === 'impossible' ? 'bad' : (part.tone || 'standard');
+  chip.className = 'fe-chip fe-chip--' + toneClass;
+  chip.textContent = part.label;
+  row.appendChild(chip);
+
+  const ease = document.createElement('span');
+  ease.className = 'fe-ease';
+  // 여유분 = 옷 - 몸 (cm). null이면(민소매 어깨/총장 등) 빈칸.
+  ease.textContent = (part.ease !== null && part.ease !== undefined)
+    ? ((part.ease > 0 ? '+' : '') + part.ease + 'cm')
+    : '';
+  row.appendChild(ease);
+
+  const gar = document.createElement('span');
+  gar.className = 'fe-gar';
+  gar.textContent = (part.garment !== null && part.garment !== undefined) ? ('옷 ' + part.garment + 'cm') : '';
+  row.appendChild(gar);
+
+  return row;
 }
 
 function updateFitRow(baseId, score) {
