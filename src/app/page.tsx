@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadMeasurements, loadFitHistory, seedDemoData, type FitHistoryItem } from '@/lib/storage';
 import { DEMO_MODE } from '@/lib/tryon';
+import { isOnboarded } from '@/lib/onboarding';
 
 /* ── 아이콘 (SVG, Lucide 스타일 — 이모지 금지) ── */
 const IconRuler = (
@@ -37,6 +38,7 @@ const STEPS: { icon: ReactNode; title: string; desc: string }[] = [
 export default function HomePage() {
   const router = useRouter();
   const [hasMeasurements, setHasMeasurements] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const [history, setHistory] = useState<FitHistoryItem[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -49,10 +51,16 @@ export default function HomePage() {
     const m = loadMeasurements();
     setHasMeasurements(!!m);
     setHistory(loadFitHistory().slice(0, 3));
+    // 신규 유저 감지: 온보딩 미완료 + 측정값 없음
+    const onboarded = isOnboarded();
+    if (!onboarded && !m) {
+      setIsNewUser(true);
+    }
   }, []);
 
   const goToFit = () => router.push('/fit');
   const goToProfile = () => router.push('/profile');
+  const goToOnboarding = () => router.push('/onboarding');
 
   if (!mounted) {
     return (
@@ -92,8 +100,30 @@ export default function HomePage() {
           <button className="btn-primary" onClick={goToFit}>내 핏 예측하기</button>
         </section>
 
-        {/* 치수 미입력 배너 */}
-        {!hasMeasurements && (
+        {/* 신규 유저 온보딩 유도 배너 (온보딩 미완료 + 측정값 없을 때) */}
+        {isNewUser && (
+          <button
+            onClick={goToOnboarding}
+            aria-label="처음 시작하기 — 온보딩 안내로 이동"
+            style={{ width: '100%', textAlign: 'left', background: 'var(--myfit-ink)', borderRadius: 'var(--myfit-radius)', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, minHeight: 0 }}
+          >
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff' }}>
+              {IconRuler}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 3 }}>처음 시작하기</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', lineHeight: 1.4 }}>치수 입력부터 첫 핏 체험까지 — 3분이면 충분해요</div>
+            </div>
+            <span style={{ display: 'flex', color: 'rgba(255,255,255,0.72)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </span>
+          </button>
+        )}
+
+        {/* 치수 미입력 배너 (온보딩 완료 or 건너뛴 기존 유저) */}
+        {!hasMeasurements && !isNewUser && (
           <button onClick={goToProfile} style={{ width: '100%', textAlign: 'left', background: 'var(--myfit-primary-soft)', border: '1px solid #a5f0fc', borderRadius: 'var(--myfit-radius)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, minHeight: 0 }}>
             <span style={{ flexShrink: 0, display: 'flex', color: 'var(--myfit-primary)' }}>{IconRuler}</span>
             <div style={{ flex: 1 }}>
