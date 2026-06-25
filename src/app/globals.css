@@ -1,20 +1,48 @@
 @import "tailwindcss";
 
-/* ── MyFit 브랜드 변수 ── */
+/* ══════════════════════════════════════════════════════════════
+   MyFit Design System v2 — Bright Minimal Commerce
+   TrueToForm 참조 · 무신사식 미니멀 · Trust & Authority
+   (구 다크 #0a0a0a + 시안→보라 그라디언트 폐기)
+   ══════════════════════════════════════════════════════════════ */
 :root {
-  --myfit-bg: #0a0a0a;
-  --myfit-surface: #141414;
-  --myfit-surface2: #1e1e1e;
-  --myfit-border: #2a2a2a;
-  --myfit-accent: #00e5ff;
-  --myfit-accent2: #7c4dff;
-  --myfit-text: #f0f0f0;
-  --myfit-text-sub: #b3b3b3;
-  --myfit-success: #00c853;
-  --myfit-warn: #ffab40;
-  --myfit-error: #ff5252;
-  --myfit-radius: 12px;
+  /* ── Neutral base (순백 + 잉크) ── */
+  --myfit-bg: #ffffff;
+  --myfit-surface: #ffffff;
+  --myfit-surface2: #f7f8fa;        /* 오프화이트 섹션 */
+  --myfit-border: #e5e7eb;
+  --myfit-border-strong: #d1d5db;
+  --myfit-text: #111827;            /* 거의 검정 */
+  --myfit-text-sub: #6b7280;
+  --myfit-text-muted: #9ca3af;
+
+  /* ── Brand / accent — 차분한 틸(신뢰) ── */
+  --myfit-primary: #0891b2;
+  --myfit-primary-hover: #0e7490;
+  --myfit-primary-soft: #ecfeff;
+  --myfit-ink: #111827;             /* 무신사식 잉크 버튼 */
+
+  /* ── Semantic / 핏 색상 ── */
+  --myfit-cta: #16a34a;             /* 구매/맞음 */
+  --myfit-success: #16a34a;
+  --myfit-warn: #d97706;
+  --myfit-error: #dc2626;
+  --myfit-fit-tight: #dc2626;       /* 작음·타이트 */
+  --myfit-fit-standard: #16a34a;    /* 딱맞음 */
+  --myfit-fit-oversized: #d97706;   /* 여유·오버 */
+
+  /* ── Radius / shadow / space ── */
   --myfit-radius-sm: 8px;
+  --myfit-radius: 12px;
+  --myfit-radius-lg: 16px;
+  --myfit-shadow-sm: 0 1px 2px rgba(17,24,39,0.04);
+  --myfit-shadow: 0 1px 3px rgba(17,24,39,0.08), 0 1px 2px rgba(17,24,39,0.04);
+  --myfit-shadow-md: 0 6px 16px rgba(17,24,39,0.08);
+
+  /* 구 변수 별칭 (점진 마이그레이션용 — 인라인 잔재 안전망) */
+  --myfit-accent: var(--myfit-primary);
+  --myfit-accent2: var(--myfit-primary);
+
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -29,14 +57,14 @@ html, body {
   padding: 0;
   background: var(--myfit-bg);
   color: var(--myfit-text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
   font-size: 16px;
   line-height: 1.5;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
 }
 
-/* 터치 타겟 최소 44px 보장 */
+/* 터치 타겟 최소 44px */
 button, a, [role="button"] {
   min-height: 44px;
   min-width: 44px;
@@ -48,17 +76,12 @@ button, a, [role="button"] {
   font-family: inherit;
   color: inherit;
 }
-
-button:active {
-  opacity: 0.75;
-  transform: scale(0.98);
-  transition: transform 0.1s;
-}
+button:active { opacity: 0.85; transform: scale(0.99); transition: transform 0.1s; }
 
 input, select, textarea {
   font-family: inherit;
   color: var(--myfit-text);
-  background: var(--myfit-surface2);
+  background: #fff;
   border: 1px solid var(--myfit-border);
   border-radius: var(--myfit-radius-sm);
   padding: 12px 16px;
@@ -66,25 +89,21 @@ input, select, textarea {
   width: 100%;
   appearance: none;
 }
-
+input::placeholder { color: var(--myfit-text-muted); }
 input:focus, select:focus {
-  outline: 2px solid var(--myfit-accent);
-  border-color: var(--myfit-accent);
+  outline: none;
+  border-color: var(--myfit-primary);
+  box-shadow: 0 0 0 3px var(--myfit-primary-soft);
 }
 
-/* ── focus-visible: 키보드·보조기기 포커스 표시 ── */
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-[tabindex]:focus-visible {
-  outline: 2px solid var(--myfit-accent);
+/* focus-visible: 키보드·보조기기 */
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--myfit-primary);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* ── prefers-reduced-motion ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -93,85 +112,64 @@ textarea:focus-visible,
   }
 }
 
-/* ── 텍스트 렌더링 최적화 ── */
-body {
-  text-rendering: optimizeLegibility;
-  -moz-osx-font-smoothing: grayscale;
-}
+body { text-rendering: optimizeLegibility; -moz-osx-font-smoothing: grayscale; }
+img { display: block; max-width: 100%; }
 
-img {
-  display: block;
-  max-width: 100%;
-}
-
-/* ── 버튼 공통 ── */
+/* ── 버튼 ── */
 .btn-primary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 14px 24px;
   border-radius: var(--myfit-radius);
-  background: linear-gradient(135deg, var(--myfit-accent), var(--myfit-accent2));
-  color: #000;
-  font-weight: 700;
-  font-size: 16px;
-  letter-spacing: 0.02em;
+  background: var(--myfit-ink);
+  color: #fff;
+  font-weight: 600; font-size: 16px; letter-spacing: -0.01em;
   min-height: 52px;
+  transition: background 0.2s, opacity 0.2s;
 }
+.btn-primary:hover { background: #000; }
+.btn-primary:disabled { opacity: 0.4; pointer-events: none; }
 
-.btn-primary:disabled {
-  opacity: 0.4;
-  pointer-events: none;
+.btn-cta {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 14px 24px;
+  border-radius: var(--myfit-radius);
+  background: var(--myfit-cta);
+  color: #fff;
+  font-weight: 600; font-size: 16px;
+  min-height: 52px;
+  transition: background 0.2s;
 }
+.btn-cta:hover { background: #15803d; }
 
 .btn-secondary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 12px 24px;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 12px 24px;
   border-radius: var(--myfit-radius);
-  background: var(--myfit-surface2);
-  border: 1px solid var(--myfit-border);
+  background: #fff;
+  border: 1px solid var(--myfit-border-strong);
   color: var(--myfit-text);
-  font-size: 15px;
+  font-size: 15px; font-weight: 500;
   min-height: 48px;
+  transition: border-color 0.2s, background 0.2s;
 }
+.btn-secondary:hover { background: var(--myfit-surface2); border-color: var(--myfit-text-muted); }
 
 /* ── 스피너 ── */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 .spinner {
-  width: 28px;
-  height: 28px;
+  width: 28px; height: 28px;
   border: 3px solid var(--myfit-border);
-  border-top-color: var(--myfit-accent);
+  border-top-color: var(--myfit-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
 /* ── 로딩 바 ── */
-.loading-bar-track {
-  width: 100%;
-  height: 4px;
-  background: var(--myfit-border);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.loading-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--myfit-accent), var(--myfit-accent2));
-  border-radius: 2px;
-  transition: width 0.8s ease;
-}
+.loading-bar-track { width: 100%; height: 4px; background: var(--myfit-border); border-radius: 2px; overflow: hidden; }
+.loading-bar-fill { height: 100%; background: var(--myfit-primary); border-radius: 2px; transition: width 0.8s ease; }
 
 /* ── 스크롤 ── */
-.scroll-area {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
+.scroll-area { overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .scroll-area::-webkit-scrollbar { display: none; }
 
 /* ── 카드 ── */
@@ -180,4 +178,25 @@ img {
   border: 1px solid var(--myfit-border);
   border-radius: var(--myfit-radius);
   padding: 16px;
+  box-shadow: var(--myfit-shadow-sm);
+}
+
+/* ── 핏 게이지 (부위별 핏: 어깨/가슴/총장) ── */
+.fit-gauge { display: flex; flex-direction: column; gap: 6px; }
+.fit-gauge-track {
+  position: relative; height: 8px; border-radius: 4px;
+  background: var(--myfit-surface2); border: 1px solid var(--myfit-border); overflow: hidden;
+}
+.fit-gauge-fill { position: absolute; top: 0; left: 0; height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+.fit-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.fit-tag--tight { background: #fef2f2; color: var(--myfit-fit-tight); }
+.fit-tag--standard { background: #f0fdf4; color: var(--myfit-fit-standard); }
+.fit-tag--oversized { background: #fffbeb; color: var(--myfit-fit-oversized); }
+
+/* ── 배지 (Trust) ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+  background: var(--myfit-primary-soft); color: var(--myfit-primary);
 }
