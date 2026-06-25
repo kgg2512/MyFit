@@ -7,10 +7,13 @@
  *  - 감지한 상품 데이터를 background로 전달 (서버 전송 금지)
  *
  * 보안 제약 (CLO/CISO):
- *  - innerHTML 사용 금지 → DOM API 직접 사용
+ *  - innerHTML 사용 금지 → DOM API 직접 사용 (textContent만)
  *  - 상품 데이터 G2 서버 전송 금지
  *  - eval() 사용 금지
- *  - 쇼핑몰 사이즈 차트 DOM 스크래핑 금지
+ *  - 사이즈표(실측) 처리 원칙 (CLO 확정 2026-06-26):
+ *      · 쇼핑몰이 상품페이지에 "공개 표시"하는 실측 사이즈표는 읽기만 허용.
+ *      · 저장·재배포·서버 전송 금지. 사용자 기기 내 핏 계산에만 1회성 사용.
+ *      · 대량 크롤링·DB 적재 아님 — 사용자가 보고 있는 그 페이지의 표시정보만 파싱.
  */
 
 (function () {
@@ -80,7 +83,140 @@
       brand: brand || 'MUSINSA',
       imageUrl: img && img.startsWith('https://') ? img : '',
       url: safeUrl,
+      // 실측 사이즈표 (공개 표시정보 — 읽기 전용). 없으면 null.
+      sizeChart: parseMusinsaSizeChart(),
     };
+  }
+
+  /**
+   * 무신사 실측 사이즈표 파서 (P2 핵심 기능).
+   *
+   * 무신사 DOM 구조 (2026-06-26 라이브 검증):
+   *   div[class*="ActiaulSizeWrap-sc-"]            (무신사 오타 그대로 — 깨지기 쉬우니 fallback 셀렉터 병행)
+   *   ├── ul[class*="ActualSizeHeaderUl-sc-"]
+   *   │     └── li × N : ["cm", "내 사이즈", "M", "L", "XL", "XXL"]   ← 사이즈 라벨
+   *   └── table[class*="ActualSizeTable-sc-"]
+   *         ├── thead > tr > th × M : ["총장", "가슴단면", "어깨너비"]  ← 측정 항목
+   *         └── tbody > tr
+   *               ├── (placeholder) td×1 "사이즈를 직접 입력해주세요"   ← 스킵
+   *               └── (사이즈별) td×M : [총장값, 가슴단면값, 어깨너비값]
+   *
+   * 셀렉터는 모두 [class*="...-sc-"] 부분일치 — styled-components 빌드 해시 변동에 견딤.
+   * @returns {{category:string, unit:'cm', measureKeys:string[], sizes:Object[], stretch:string|null}|null}
+   */
+  function parseMusinsaSizeChart() {
+    try {
+      const SIZE_RE = /^(XXS|XS|S|M|L|XL|XXL|XXXL|2XL|3XL|4XL|FREE|F|\d{2,3})$/;
+
+      const table = document.querySelector('[class*="ActualSizeTable-sc-"]');
+      if (!table) return null;
+
+      // 1. 측정 항목 (thead th) — textContent만 사용
+      const measureKeys = Array.from(table.querySelectorAll('thead th'))
+        .map(th => (th.textContent || '').trim())
+        .filter(Boolean);
+      if (measureKeys.length === 0) return null;
+
+      // 2. 데이터 행 = 셀 수가 측정항목 수와 일치하는 tbody 행만 (placeholder 행 자동 배제)
+      const dataRows = Array.from(table.querySelectorAll('tbody tr'))
+        .map(tr => Array.from(tr.querySelectorAll('td')).map(td => (td.textContent || '').trim()))
+        .filter(cells => cells.length === measureKeys.length);
+      if (dataRows.length === 0) return null;
+
+      // 3. 사이즈 라벨 = 헤더 ul 의 li 중 사이즈 패턴만 ("cm","내 사이즈" 등 자동 배제)
+      const headerUl = document.querySelector('[class*="ActualSizeHeaderUl-sc-"]');
+      let sizeLabels = [];
+      if (headerUl) {
+        sizeLabels = Array.from(headerUl.querySelectorAll('li'))
+          .map(li => (li.textContent || '').trim())
+          .filter(t => SIZE_RE.test(t));
+      }
+      // 라벨이 데이터 행보다 적으면 인덱스 기반 fallback (행 누락 시 데이터 보존)
+      if (sizeLabels.length < dataRows.length) {
+        sizeLabels = dataRows.map((_, i) => sizeLabels[i] || `SIZE_${i + 1}`);
+      }
+
+      // 4. 행렬 → 구조화 객체 (숫자 변환, 실패 시 null)
+      const sizes = dataRows.map((cells, i) => {
+        const obj = { size: sizeLabels[i] };
+        measureKeys.forEach((key, j) => {
+          const num = parseFloat(cells[j]);
+          obj[key] = Number.isFinite(num) ? num : null;
+        });
+        return obj;
+      });
+
+      return {
+        category: detectMusinsaCategory(),
+        unit: 'cm',
+        measureKeys,
+        sizes,
+        stretch: parseMusinsaStretch(), // 신축성(없음~있음) — 메쉬/스판 핏 보정용, best-effort
+      };
+    } catch (e) {
+      // 파싱 실패는 치명적이지 않음 — 상품 기본정보는 그대로 반환
+      console.warn('[MyFit] 사이즈표 파싱 실패:', e && e.message);
+      return null;
+    }
+  }
+
+  /**
+   * 카테고리 자동 감지 — 사이즈 측정법 안내 텍스트의 키워드로 추정.
+   * 예: "민소매 사이즈 측정법" → 'sleeveless'.  실패 시 'tops' 기본.
+   * @returns {string}
+   */
+  function detectMusinsaCategory() {
+    const wrap = document.querySelector('[class*="ActualSizeTable__Wrap-sc-"]');
+    const guideText = wrap ? (wrap.textContent || '') : '';
+    const map = [
+      [/민소매|나시|탱크/, 'sleeveless'],
+      [/반소매|반팔|티셔츠/, 'tshirt'],
+      [/긴소매|긴팔|맨투맨|니트|스웨터|후드/, 'longsleeve'],
+      [/셔츠|블라우스/, 'shirt'],
+      [/아우터|코트|자켓|재킷|점퍼|패딩/, 'outerwear'],
+      [/팬츠|바지|데님|슬랙스|쇼츠|반바지/, 'bottoms'],
+    ];
+    for (const [re, cat] of map) {
+      if (re.test(guideText)) return cat;
+    }
+    return 'tops';
+  }
+
+  /**
+   * 소재 신축성 감지 — MaterialInfo 테이블에서 "신축성" 행의 선택된 셀.
+   * 무신사는 선택 셀에 파란 배경(rgba(36,94,255,0.1))을 적용 → computed style로 판별.
+   * 신축성 행은 5개 데이터 행 중 3번째(핏/촉감/신축성/비침/두께) — 라벨 매칭으로 안전하게 찾음.
+   * @returns {string|null}  '없음'|'거의 없음'|'보통'|'약간 있음'|'있음' 등, 못 찾으면 null
+   */
+  function parseMusinsaStretch() {
+    try {
+      const matWrap = document.querySelector('[class*="MaterialInfo__MaterialWrap-sc-"]');
+      if (!matWrap) return null;
+      // 행 라벨 ("신축성")과 같은 행의 데이터 셀들을 찾는다.
+      // 무신사는 라벨 ul + 값 table 분리 구조 — 인덱스로 대응.
+      const labels = Array.from(matWrap.querySelectorAll('*'))
+        .filter(el => {
+          const t = Array.from(el.childNodes)
+            .filter(n => n.nodeType === 3)
+            .map(n => n.textContent.trim()).join('');
+          return t === '신축성';
+        });
+      const table = matWrap.querySelector('[class*="MaterialInfo__MaterialTable-sc-"]');
+      if (!table) return null;
+      const rows = Array.from(table.querySelectorAll('tr'));
+      // 라벨 순서: 핏(0) 촉감(1) 신축성(2) 비침(3) 두께(4) — 신축성 = index 2
+      const STRETCH_ROW = 2;
+      const row = rows[STRETCH_ROW];
+      if (!row) return null;
+      const selected = Array.from(row.querySelectorAll('th, td')).find(c => {
+        const bg = getComputedStyle(c).backgroundColor;
+        // 흰색/투명이 아니면 선택된 셀 (무신사 파란 하이라이트)
+        return bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'rgb(255, 255, 255)' && bg !== 'transparent';
+      });
+      return selected ? (selected.textContent || '').trim() || null : null;
+    } catch {
+      return null;
+    }
   }
 
   function parseNike() {
