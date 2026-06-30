@@ -1,0 +1,35 @@
+name            = "myfit-fashn-proxy"
+main            = "worker.js"
+compatibility_date = "2024-01-01"
+
+# ── workers.dev 서브도메인 배포 활성화 ──
+workers_dev = true
+
+# ── 배포 전 필수 설정 ──
+# 1. TryOnCloud API Key 등록 (코드 하드코딩 절대 금지):
+#      wrangler secret put TRYONCLOUD_API_KEY
+#
+# 2. KV 네임스페이스 생성 후 아래 id 교체:
+#      wrangler kv:namespace create "MYFIT_RATE_LIMIT"
+#    → 출력된 id를 아래 [[kv_namespaces]] id = "..." 에 붙여넣기
+#
+# 3. 배포:
+#      wrangler deploy
+#
+# 로컬 개발 (.dev.vars 파일 사용):
+#   TRYONCLOUD_API_KEY=your_key
+#   ENVIRONMENT=development
+#   wrangler dev
+
+[vars]
+# 공개 환경변수만 여기 선언 (비밀값 금지)
+ENVIRONMENT = "production"
+
+# ── KV 바인딩 (Rate Limiter — CISO SEC 요구사항) ──
+# 배포 전 wrangler kv:namespace create "MYFIT_RATE_LIMIT" 실행 후 id 교체 필수
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id      = "085dd51cc8974c559d62dc29022f35af"
+
+# ── 라우트 (workers.dev 서브도메인은 파일 상단에서 설정됨) ──
+# https://myfit-fashn-proxy.kgg2512.workers.dev 로 배포됨

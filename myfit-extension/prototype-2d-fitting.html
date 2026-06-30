@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyFit — 2D 피팅 프로토타입</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f0f0f;
+    color: #e0e0e0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  h1 { font-size: 1.4rem; color: #00e5ff; margin-bottom: 4px; }
+  .subtitle { font-size: 0.8rem; color: #666; margin-bottom: 20px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 16px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  /* ── 입력 패널 ── */
+  .input-panel {
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .section-title {
+    font-size: 0.75rem;
+    color: #00e5ff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  label { font-size: 0.75rem; color: #888; }
+  input[type="number"], select {
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    padding: 7px 10px;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  input[type="number"]:focus, select:focus {
+    outline: none;
+    border-color: #00e5ff;
+  }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* 사진 업로드 */
+  .photo-upload {
+    border: 2px dashed #333;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+  .photo-upload:hover { border-color: #00e5ff; }
+  .photo-upload input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+  .photo-upload-text { font-size: 0.8rem; color: #555; }
+  .photo-upload-text .icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+  #photo-preview {
+    width: 100%;
+    max-height: 140px;
+    object-fit: contain;
+    border-radius: 6px;
+    display: none;
+  }
+
+  .keypoints-status {
+    font-size: 0.72rem;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #252525;
+    color: #888;
+  }
+  .keypoints-status.done { background: #0d2e1a; color: #00c853; }
+  .keypoints-status.error { background: #2e0d0d; color: #ff5252; }
+
+  /* 사이즈 차트 선택 */
+  .size-chart-section { display: flex; flex-direction: column; gap: 6px; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #00b0ff, #7c4dff);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 11px;
+    width: 100%;
+    transition: opacity 0.2s;
+    margin-top: 4px;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── 캔버스 패널 ── */
+  .canvas-panel {
+    background: #141414;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .canvas-toolbar {
+    background: #1a1a1a;
+    padding: 8px 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .toolbar-label { font-size: 0.75rem; color: #666; margin-right: 2px; }
+  .toggle-btn {
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    transition: all 0.15s;
+  }
+  .toggle-btn.active {
+    background: #003a4d;
+    border-color: #00e5ff;
+    color: #00e5ff;
+  }
+
+  #main-canvas {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3/4;
+    background: #0a0a0a;
+  }
+
+  /* ── 핏 분석 패널 ── */
+  .fit-panel {
+    grid-column: 1 / -1;
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .fit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .fit-card {
+    background: #252525;
+    border-radius: 8px;
+    padding: 10px 12px;
+    border-left: 3px solid #333;
+  }
+  .fit-card.good { border-left-color: #00c853; }
+  .fit-card.warn { border-left-color: #ff9800; }
+  .fit-card.tight { border-left-color: #ff5252; }
+
+  .fit-card-label { font-size: 0.72rem; color: #888; margin-bottom: 4px; }
+  .fit-card-value { font-size: 1.1rem; font-weight: 700; }
+  .fit-card.good .fit-card-value { color: #00c853; }
+  .fit-card.warn .fit-card-value { color: #ff9800; }
+  .fit-card.tight .fit-card-value { color: #ff5252; }
+  .fit-card-detail { font-size: 0.7rem; color: #666; margin-top: 2px; }
+
+  /* ── 한계 경고 배너 ── */
+  .limit-banner {
+    grid-column: 1 / -1;
+    background: #1e1600;
+    border: 1px solid #5c4200;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.78rem;
+    color: #ffcc02;
+    line-height: 1.6;
+  }
+  .limit-banner strong { color: #ffd740; }
+
+  /* 로딩 오버레이 */
+  #loading-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 100;
+  }
+  #loading-overlay.show { display: flex; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid #333;
+    border-top-color: #00e5ff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 0.85rem; color: #aaa; }
+
+  @media (max-width: 680px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1>MyFit 2D 피팅 프로토타입</h1>
+<p class="subtitle">MediaPipe 없이 Canvas 2D + 파라메트릭 실루엣으로 구현한 기술 검증 버전</p>
+
+<div class="layout">
+
+  <!-- ── 입력 패널 ── -->
+  <div class="input-panel">
+
+    <!-- 사진 업로드 (옵션) -->
+    <div>
+      <div class="section-title">전신 사진 (선택)</div>
+      <div class="photo-upload" id="photo-drop">
+        <input type="file" id="photo-input" accept="image/*">
+        <img id="photo-preview" alt="업로드된 사진">
+        <div class="photo-upload-text" id="photo-placeholder">
+          <span class="icon">📷</span>
+          전신 사진 업로드<br>
+          <span style="font-size:0.68rem;color:#444">배경 대비 선명한 전신 사진</span>
+        </div>
+      </div>
+      <div class="keypoints-status" id="kp-status">
+        사진 업로드 시 Canvas에 참고 실루엣으로 표시됩니다
+      </div>
+    </div>
+
+    <!-- 체형 입력 -->
+    <div>
+      <div class="section-title">체형 정보</div>
+      <div class="field-group">
+        <div class="row2">
+          <div class="field">
+            <label>키 (cm)</label>
+            <input type="number" id="inp-height" value="175" min="140" max="210" step="1">
+          </div>
+          <div class="field">
+            <label>몸무게 (kg)</label>
+            <input type="number" id="inp-weight" value="70" min="40" max="150" step="0.5">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>가슴둘레 (cm)</label>
+            <input type="number" id="inp-chest" value="94" min="70" max="140">
+          </div>
+          <div class="field">
+            <label>어깨너비 (cm)</label>
+            <input type="number" id="inp-shoulder" value="42" min="30" max="60">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>허리둘레 (cm)</label>
+            <input type="number" id="inp-waist" value="78" min="55" max="130">
+          </div>
+          <div class="field">
+            <label>엉덩이둘레 (cm)</label>
+            <input type="number" id="inp-hip" value="96" min="70" max="140">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 의류 선택 -->
+    <div class="size-chart-section">
+      <div class="section-title">의류 선택</div>
+      <div class="field">
+        <label>의류 종류</label>
+        <select id="sel-type">
+          <option value="tshirt">티셔츠 (기본)</option>
+          <option value="shirt">셔츠 (오버사이즈)</option>
+          <option value="hoodie">후디 (박시핏)</option>
+          <option value="pants">팬츠</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>브랜드 / 사이즈 차트</label>
+        <select id="sel-brand">
+          <option value="nike">Nike (나이키)</option>
+          <option value="uniqlo">Uniqlo (유니클로)</option>
+          <option value="zara">Zara (자라)</option>
+          <option value="generic">일반 표준</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>선택 사이즈</label>
+        <select id="sel-size">
+          <option value="XS">XS</option>
+          <option value="S">S</option>
+          <option value="M" selected>M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="2XL">2XL</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-fit">2D 피팅 시작</button>
+  </div>
+
+  <!-- ── 캔버스 패널 ── -->
+  <div class="canvas-panel">
+    <div class="canvas-toolbar">
+      <span class="toolbar-label">표시:</span>
+      <button class="toggle-btn active" id="tog-body">체형</button>
+      <button class="toggle-btn active" id="tog-cloth">의류</button>
+      <button class="toggle-btn active" id="tog-fit">핏 색상</button>
+      <button class="toggle-btn" id="tog-measure">치수선</button>
+      <button class="toggle-btn" id="tog-photo">사진 참고</button>
+    </div>
+    <canvas id="main-canvas"></canvas>
+  </div>
+
+  <!-- ── 핏 분석 ── -->
+  <div class="fit-panel">
+    <div class="section-title">핏 분석 결과</div>
+    <div class="fit-grid" id="fit-grid">
+      <div class="fit-card" style="border-left-color:#333;grid-column:1/-1;text-align:center;padding:20px;">
+        <div style="color:#555;font-size:0.85rem">피팅 버튼을 눌러 분석을 시작하세요</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 한계 경고 ── -->
+  <div class="limit-banner">
+    <strong>기술 한계 안내 (CTO 정직 보고)</strong><br>
+    1. <strong>앞면 전용</strong>: 2D 사진은 정면만 캡처됨. 측면·뒤 체형은 추정 불가 — 허리·엉덩이 입력값으로 보완.<br>
+    2. <strong>원단 미반영</strong>: 신축성(면/폴리/울) 차이가 최대 ±4cm 오차를 만듦 — 치수 차이만으로 판단 시 한계.<br>
+    3. <strong>포즈 보정 없음</strong>: 다리 벌림·팔 각도 등 포즈에 따라 픽셀→cm 변환 오차 발생.<br>
+    4. <strong>MediaPipe CSP 이슈</strong>: Chrome Extension MV3 환경에서 MediaPipe WASM은 <code>wasm-unsafe-eval</code>로 로드 가능하나,
+    CDN 스크립트 주입 불가. 로컬 번들(약 8-12MB) 필요 — 현재 프로토타입은 수동 입력값 기반으로 대체.
+  </div>
+
+</div><!-- /layout -->
+
+<!-- 로딩 -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">분석 중...</div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════
+// 사이즈 차트 데이터 (실제 브랜드 공식 치수 기반)
+// ════════════════════════════════════════════
+const SIZE_CHARTS = {
+  nike: {
+    tshirt: {
+      XS:  { shoulder:41, chest:88,  length:68, sleeve:19 },
+      S:   { shoulder:43, chest:93,  length:70, sleeve:20 },
+      M:   { shoulder:45, chest:98,  length:72, sleeve:21 },
+      L:   { shoulder:47, chest:103, length:74, sleeve:22 },
+      XL:  { shoulder:49, chest:108, length:76, sleeve:23 },
+      '2XL':{ shoulder:52, chest:116, length:79, sleeve:24 },
+    },
+    shirt: {
+      XS:  { shoulder:43, chest:92,  length:71, sleeve:59 },
+      S:   { shoulder:45, chest:97,  length:73, sleeve:61 },
+      M:   { shoulder:47, chest:102, length:75, sleeve:63 },
+      L:   { shoulder:49, chest:107, length:77, sleeve:65 },
+      XL:  { shoulder:51, chest:112, length:79, sleeve:67 },
+      '2XL':{ shoulder:54, chest:120, length:82, sleeve:69 },
+    },
+    hoodie: {
+      XS:  { shoulder:44, chest:96,  length:65, sleeve:60 },
+      S:   { shoulder:46, chest:102, length:67, sleeve:62 },
+      M:   { shoulder:48, chest:108, length:69, sleeve:64 },
+      L:   { shoulder:50, chest:114, length:71, sleeve:66 },
+      XL:  { shoulder:52, chest:120, length:73, sleeve:68 },
+      '2XL':{ shoulder:55, chest:128, length:76, sleeve:70 },
+    },
+    pants: {
+      XS:  { waist:64, hip:88,  length:98, thigh:52 },
+      S:   { waist:69, hip:93,  length:100, thigh:55 },
+      M:   { waist:74, hip:98,  length:102, thigh:58 },
+      L:   { waist:80, hip:104, length:104, thigh:61 },
+      XL:  { waist:86, hip:110, length:106, thigh:64 },
+      '2XL':{ waist:94, hip:118, length:108, thigh:68 },
+    },
+  },
+  uniqlo: {
+    tshirt: {
+      XS:  { shoulder:40, chest:86,  length:65, sleeve:18 },
+      S:   { shoulder:42, chest:90,  length:67, sleeve:19 },
+      M:   { shoulder:44, chest:96,  length:69, sleeve:20 },
+      L:   { shoulder:46, chest:102, length:71, sleeve:21 },
+      XL:  { shoulder:48, chest:108, length:73, sleeve:22 },
+      '2XL':{ shoulder:51, chest:116, length:76, sleeve:23 },
+    },
+    shirt: {
+      XS:  { shoulder:41, chest:88,  length:68, sleeve:57 },
+      S:   { shoulder:43, chest:92,  length:70, sleeve:59 },
+      M:   { shoulder:45, chest:98,  length:72, sleeve:61 },
+      L:   { shoulder:47, chest:104, length:74, sleeve:63 },
+      XL:  { shoulder:49, chest:110, length:76, sleeve:65 },
+      '2XL':{ shoulder:52, chest:118, length:79, sleeve:67 },
+    },
+    hoodie: {
+      XS:  { shoulder:42, chest:92,  length:62, sleeve:58 },
+      S:   { shoulder:44, chest:98,  length:64, sleeve:60 },
+      M:   { shoulder:46, chest:104, length:66, sleeve:62 },
+      L:   { shoulder:48, chest:110, length:68, sleeve:64 },
+      XL:  { shoulder:50, chest:116, length:70, sleeve:66 },
+      '2XL':{ shoulder:53, chest:124, length:73, sleeve:68 },
+    },
+    pants: {
+      XS:  { waist:62, hip:86,  length:96, thigh:50 },
+      S:   { waist:67, hip:91,  length:98, thigh:53 },
+      M:   { waist:72, hip:96,  length:100, thigh:56 },
+      L:   { waist:78, hip:102, length:102, thigh:59 },
+      XL:  { waist:84, hip:108, length:104, thigh:62 },
+      '2XL':{ waist:92, hip:116, length:106, thigh:66 },
+    },
+  },
+  zara: {
+    tshirt: {
+      XS:  { shoulder:40, chest:84,  length:66, sleeve:17 },
+      S:   { shoulder:42, chest:88,  length:68, sleeve:18 },
+      M:   { shoulder:44, chest:94,  length:70, sleeve:19 },
+      L:   { shoulder:46, chest:100, length:72, sleeve:20 },
+      XL:  { shoulder:48, chest:106, length:74, sleeve:21 },
+      '2XL':{ shoulder:51, chest:114, length:77, sleeve:22 },
+    },
+    shirt:  {
+      XS:  { shoulder:42, chest:88,  length:70, sleeve:58 },
+      S:   { shoulder:44, chest:94,  length:72, sleeve:60 },
+      M:   { shoulder:46, chest:100, length:74, sleeve:62 },
+      L:   { shoulder:48, chest:106, length:76, sleeve:64 },
+      XL:  { shoulder:50, chest:112, length:78, sleeve:66 },
+      '2XL':{ shoulder:53, chest:120, length:81, sleeve:68 },
+    },
+    hoodie: {
+      XS:  { shoulder:43, chest:90,  length:63, sleeve:58 },
+      S:   { shoulder:45, chest:96,  length:65, sleeve:60 },
+      M:   { shoulder:47, chest:102, length:67, sleeve:62 },
+      L:   { shoulder:49, chest:108, length:69, sleeve:64 },
+      XL:  { shoulder:51, chest:114, length:71, sleeve:66 },
+      '2XL':{ shoulder:54, chest:122, length:74, sleeve:68 },
+    },
+    pants: {
+      XS:  { waist:60, hip:84,  length:95, thigh:49 },
+      S:   { waist:65, hip:89,  length:97, thigh:52 },
+      M:   { waist:70, hip:94,  length:99, thigh:55 },
+      L:   { waist:76, hip:100, length:101, thigh:58 },
+      XL:  { waist:82, hip:106, length:103, thigh:61 },
+      '2XL':{ waist:90, hip:114, length:105, thigh:65 },
+    },
+  },
+  generic: {
+    tshirt: {
+      XS:  { shoulder:40, chest:86,  length:66, sleeve:18 },
+      S:   { shoulder:42, chest:90,  length:68, sleeve:19 },
+      M:   { shoulder:44, chest:96,  length:70, sleeve:20 },
+      L:   { shoulder:46, chest:102, length:72, sleeve:21 },
+      XL:  { shoulder:48, chest:108, length:74, sleeve:22 },
+      '2XL':{ shoulder:51, chest:116, length:77, sleeve:23 },
+    },
+    shirt:  {
+      XS:  { shoulder:42, chest:88,  length:70, sleeve:58 },
+      S:   { shoulder:44, chest:94,  length:72, sleeve:60 },
+      M:   { shoulder:46, chest:100, length:74, sleeve:62 },
+      L:   { shoulder:48, chest:106, length:76, sleeve:64 },
+      XL:  { shoulder:50, chest:112, length:78, sleeve:66 },
+      '2XL':{ shoulder:53, chest:120, length:81, sleeve:68 },
+    },
+    hoodie: {
+      XS:  { shoulder:43, chest:92,  length:64, sleeve:59 },
+      S:   { shoulder:45, chest:98,  length:66, sleeve:61 },
+      M:   { shoulder:47, chest:104, length:68, sleeve:63 },
+      L:   { shoulder:49, chest:110, length:70, sleeve:65 },
+      XL:  { shoulder:51, chest:116, length:72, sleeve:67 },
+      '2XL':{ shoulder:54, chest:124, length:75, sleeve:69 },
+    },
+    pants: {
+      XS:  { waist:62, hip:86,  length:96, thigh:50 },
+      S:   { waist:67, hip:91,  length:98, thigh:53 },
+      M:   { waist:72, hip:96,  length:100, thigh:56 },
+      L:   { waist:78, hip:102, length:102, thigh:59 },
+      XL:  { waist:84, hip:108, length:104, thigh:62 },
+      '2XL':{ waist:92, hip:116, length:106, thigh:66 },
+    },
+  },
+};
+
+// ════════════════════════════════════════════
+// 상태
+// ════════════════════════════════════════════
+let uploadedPhoto = null;
+let showBody = true, showCloth = true, showFitColor = true;
+let showMeasureLines = false, showPhotoRef = false;
+let currentFitResult = null;
+
+// ════════════════════════════════════════════
+// DOM 참조
+// ════════════════════════════════════════════
+const canvas  = document.getElementById('main-canvas');
+const ctx     = canvas.getContext('2d');
+const loading = document.getElementById('loading-overlay');
+
+// ════════════════════════════════════════════
+// 캔버스 크기 동기화
+// ════════════════════════════════════════════
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  canvas.width  = rect.width  * window.devicePixelRatio;
+  canvas.height = rect.height * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  if (currentFitResult) drawFitting(currentFitResult);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ════════════════════════════════════════════
+// 사진 업로드
+// ════════════════════════════════════════════
+document.getElementById('photo-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      uploadedPhoto = img;
+      document.getElementById('photo-preview').src = e.target.result;
+      document.getElementById('photo-preview').style.display = 'block';
+      document.getElementById('photo-placeholder').style.display = 'none';
+      document.getElementById('kp-status').textContent =
+        '사진 로드 완료. "사진 참고" 토글로 표시 가능.';
+      document.getElementById('kp-status').className = 'keypoints-status done';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// ════════════════════════════════════════════
+// 토글 버튼
+// ════════════════════════════════════════════
+function bindToggle(id, varSetter) {
+  const btn = document.getElementById(id);
+  btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
+    varSetter(btn.classList.contains('active'));
+    if (currentFitResult) drawFitting(currentFitResult);
+  });
+}
+bindToggle('tog-body',    v => showBody = v);
+bindToggle('tog-cloth',   v => showCloth = v);
+bindToggle('tog-fit',     v => showFitColor = v);
+bindToggle('tog-measure', v => showMeasureLines = v);
+bindToggle('tog-photo',   v => showPhotoRef = v);
+
+// ════════════════════════════════════════════
+// 피팅 시작
+// ════════════════════════════════════════════
+document.getElementById('btn-fit').addEventListener('click', runFitting);
+
+function getUserInput() {
+  return {
+    height:   parseFloat(document.getElementById('inp-height').value)   || 175,
+    weight:   parseFloat(document.getElementById('inp-weight').value)   || 70,
+    chest:    parseFloat(document.getElementById('inp-chest').value)    || 94,
+    shoulder: parseFloat(document.getElementById('inp-shoulder').value) || 42,
+    waist:    parseFloat(document.getElementById('inp-waist').value)    || 78,
+    hip:      parseFloat(document.getElementById('inp-hip').value)      || 96,
+  };
+}
+
+async function runFitting() {
+  loading.classList.add('show');
+  document.getElementById('loading-text').textContent = '체형 분석 중...';
+
+  await new Promise(r => setTimeout(r, 80)); // UI 업데이트 여유
+
+  const user   = getUserInput();
+  const brand  = document.getElementById('sel-brand').value;
+  const type   = document.getElementById('sel-type').value;
+  const size   = document.getElementById('sel-size').value;
+
+  const chart  = SIZE_CHARTS[brand]?.[type]?.[size];
+  if (!chart) { loading.classList.remove('show'); alert('사이즈 차트 없음'); return; }
+
+  // 핏 차이 계산 (양수 = 여유, 음수 = 끼임)
+  const fit = calcFit(user, chart, type);
+  currentFitResult = { user, chart, fit, brand, type, size };
+
+  loading.classList.remove('show');
+
+  drawFitting(currentFitResult);
+  renderFitCards(currentFitResult);
+}
+
+// ════════════════════════════════════════════
+// 핏 차이 계산
+// ════════════════════════════════════════════
+function calcFit(user, chart, type) {
+  if (type === 'pants') {
+    return {
+      waist:  { diff: chart.waist - user.waist,   label: '허리 여유',  part: 'waist' },
+      hip:    { diff: chart.hip   - user.hip,     label: '엉덩이 여유', part: 'hip' },
+      length: { diff: null, label: '총장',         part: 'length', chartVal: chart.length },
+      thigh:  { diff: chart.thigh - (user.hip * 0.55), label: '허벅지 여유', part: 'thigh' },
+    };
+  }
+  // 상의 계열
+  return {
+    shoulder: { diff: chart.shoulder - user.shoulder, label: '어깨 여유', part: 'shoulder' },
+    chest:    { diff: chart.chest    - user.chest,    label: '가슴 여유', part: 'chest' },
+    length:   { diff: null, label: '총장',             part: 'length', chartVal: chart.length },
+    sleeve:   { diff: null, label: '소매길이',          part: 'sleeve', chartVal: chart.sleeve },
+  };
+}
+
+// ════════════════════════════════════════════
+// 핏 등급 판정
+// ════════════════════════════════════════════
+function fitGrade(diff) {
+  if (diff === null) return 'neutral';
+  if (diff < -2)  return 'tight';   // 2cm 이상 끼임
+  if (diff > 12)  return 'loose';   // 12cm 이상 헐렁
+  if (diff >= 4 && diff <= 10) return 'good'; // 여유분 적정
+  if (diff >= -2 && diff < 4)  return 'snug'; // 슬림핏 (끼지 않음)
+  return 'warn';
+}
+
+function gradeColor(grade) {
+  const map = {
+    tight:   '#ff5252',
+    snug:    '#ff9800',
+    good:    '#00c853',
+    loose:   '#00b0ff',
+    warn:    '#ff9800',
+    neutral: '#888888',
+  };
+  return map[grade] || '#888';
+}
+
+function gradeLabel(grade, diff) {
+  if (diff === null) return '—';
+  if (grade === 'tight')  return `끼임 ${Math.abs(diff).toFixed(1)}cm`;
+  if (grade === 'snug')   return `슬림 +${diff.toFixed(1)}cm`;
+  if (grade === 'good')   return `적정 +${diff.toFixed(1)}cm`;
+  if (grade === 'loose')  return `여유 +${diff.toFixed(1)}cm`;
+  return `+${diff.toFixed(1)}cm`;
+}
+
+// ════════════════════════════════════════════
+// Canvas 2D 드로잉 엔진
+// ════════════════════════════════════════════
+function drawFitting(result) {
+  const { user, chart, fit, type } = result;
+
+  const W = canvas.width  / window.devicePixelRatio;
+  const H = canvas.height / window.devicePixelRatio;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 배경
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, W, H);
+
+  // 격자 (미묘한 도움선)
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // 스케일 계산
+  // 캔버스 높이 = 사람 신장의 1.1배 여유
+  const scale   = (H * 0.88) / user.height; // px per cm
+  const centerX = W * 0.5;
+  const topY    = H * 0.06; // 머리 꼭대기 Y
+
+  // 사진 참고 모드
+  if (showPhotoRef && uploadedPhoto) {
+    const imgAspect = uploadedPhoto.naturalWidth / uploadedPhoto.naturalHeight;
+    const drawH = H;
+    const drawW = drawH * imgAspect;
+    ctx.globalAlpha = 0.25;
+    ctx.drawImage(uploadedPhoto, centerX - drawW / 2, 0, drawW, drawH);
+    ctx.globalAlpha = 1.0;
+  }
+
+  // 체형 실루엣
+  if (showBody) {
+    drawBodySilhouette(ctx, user, scale, centerX, topY, W, H);
+  }
+
+  // 의류 실루엣
+  if (showCloth) {
+    const isPants = type === 'pants';
+    if (isPants) {
+      drawPantsSilhouette(ctx, user, chart, fit, scale, centerX, topY, W, H);
+    } else {
+      drawTopSilhouette(ctx, user, chart, fit, type, scale, centerX, topY, W, H);
+    }
+  }
+
+  // 치수선
+  if (showMeasureLines) {
+    drawMeasureLines(ctx, user, chart, type, scale, centerX, topY, W, H);
+  }
+
+  // 범례
+  drawLegend(ctx, W, H);
+}
+
+// ── 체형 실루엣 (앞면 2D, 단순 기하 파라메트릭) ──
+function drawBodySilhouette(ctx, user, scale, cx, topY, W, H) {
+  const h   = user.height;
+  const bmi = user.weight / ((h / 100) ** 2);
+  const fat = Math.max(1, 1 + (bmi - 22) * 0.018); // BMI 22 기준 체형 팽창
+
+  // 황금비율 기반 인체 분할 (cm)
+  const headH   = h * 0.130;
+  const neckH   = h * 0.040;
+  const torsoH  = h * 0.300;
+  const hipH    = h * 0.080;
+  const thighH  = h * 0.230;
+  const shinH   = h * 0.220;
+
+  // 너비 (cm → px)
+  const shoulderW = user.shoulder * scale * fat;
+  const chestW    = (user.chest / Math.PI) * scale * fat; // 둘레→지름 근사
+  const waistW    = (user.waist / Math.PI) * scale * fat * 0.92;
+  const hipW      = (user.hip   / Math.PI) * scale * fat;
+  const thighW    = hipW * 0.52;
+  const shinW     = thighW * 0.65;
+  const ankleW    = shinW * 0.70;
+  const headR     = headH * scale * 0.42;
+  const neckW     = shoulderW * 0.22;
+
+  let y = topY;
+
+  // 머리
+  const headCY = y + headR;
+  ctx.beginPath();
+  ctx.ellipse(cx, headCY, headR * 0.78, headR, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(190,155,120,0.30)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(190,155,120,0.55)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  y += headH * scale + neckH * scale * 0.3;
+
+  // 몸통 (어깨→허리→엉덩이 베지어)
+  const shoulderY = y;
+  const torsoEndY = y + torsoH * scale;
+  const hipEndY   = torsoEndY + hipH * scale;
+
+  ctx.beginPath();
+  ctx.moveTo(cx - neckW * 0.5, shoulderY);
+  // 왼쪽 몸통
+  ctx.bezierCurveTo(
+    cx - shoulderW * 0.5, shoulderY + 2,
+    cx - waistW * 0.5, torsoEndY - 10,
+    cx - hipW * 0.5, hipEndY
+  );
+  // 아래 가랑이
+  ctx.lineTo(cx, hipEndY + 4);
+  // 오른쪽 몸통
+  ctx.lineTo(cx + hipW * 0.5, hipEndY);
+  ctx.bezierCurveTo(
+    cx + waistW * 0.5, torsoEndY - 10,
+    cx + shoulderW * 0.5, shoulderY + 2,
+    cx + neckW * 0.5, shoulderY
+  );
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(190,155,120,0.22)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(190,155,120,0.50)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 팔 (간소화: 직선 + 둥근 끝)
+  const armTopY  = shoulderY + 4;
+  const armBotY  = shoulderY + (torsoH * 0.78) * scale;
+  const armW     = shoulderW * 0.16;
+  ['left','right'].forEach(side => {
+    const sign = side === 'left' ? -1 : 1;
+    const ax   = cx + sign * (shoulderW * 0.5 + armW * 0.3);
+    ctx.beginPath();
+    ctx.moveTo(ax - armW * sign * 0.1, armTopY);
+    ctx.quadraticCurveTo(
+      ax + sign * armW * 0.6, (armTopY + armBotY) / 2,
+      ax + sign * armW * 0.2, armBotY
+    );
+    ctx.lineWidth = armW * 1.1;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(190,155,120,0.30)';
+    ctx.stroke();
+    ctx.lineCap = 'butt';
+  });
+
+  // 다리
+  const legTopY = hipEndY;
+  const legMidY = legTopY + thighH * scale;
+  const legBotY = legMidY + shinH * scale;
+
+  [[-1, thighW, shinW, ankleW], [1, thighW, shinW, ankleW]].forEach(([sign, tw, sw, aw]) => {
+    const legCX = cx + sign * hipW * 0.25;
+    ctx.beginPath();
+    ctx.moveTo(legCX - sign * tw * 0.4, legTopY);
+    ctx.bezierCurveTo(
+      legCX - sign * tw * 0.5, legTopY + thighH * scale * 0.4,
+      legCX - sign * sw * 0.4, legTopY + thighH * scale * 0.7,
+      legCX - sign * sw * 0.3, legMidY
+    );
+    ctx.lineTo(legCX - sign * aw * 0.3, legBotY);
+    ctx.lineTo(legCX + sign * aw * 0.3, legBotY);
+    ctx.lineTo(legCX + sign * sw * 0.3, legMidY);
+    ctx.bezierCurveTo(
+      legCX + sign * sw * 0.4, legTopY + thighH * scale * 0.7,
+      legCX + sign * tw * 0.5, legTopY + thighH * scale * 0.4,
+      legCX + sign * tw * 0.4, legTopY
+    );
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(190,155,120,0.20)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(190,155,120,0.40)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+  });
+}
+
+// ── 상의 실루엣 (티셔츠/셔츠/후디 파라메트릭) ──
+function drawTopSilhouette(ctx, user, chart, fit, type, scale, cx, topY, W, H) {
+  const h = user.height;
+  const headH = h * 0.130;
+  const neckH = h * 0.040;
+  const topStartY = topY + (headH + neckH) * scale;
+
+  // 옷 치수 (cm → px)
+  const cShoulderW = chart.shoulder * scale;
+  const cChestW    = (chart.chest / Math.PI) * scale;
+  const cLength    = chart.length * scale;
+  const cSleeve    = chart.sleeve * scale;
+
+  // 핏 색상 결정
+  const shoulderGrade = fit.shoulder ? fitGrade(fit.shoulder.diff) : 'neutral';
+  const chestGrade    = fit.chest    ? fitGrade(fit.chest.diff)    : 'neutral';
+
+  // 옷 실루엣
+  const clothEndY = topStartY + cLength;
+  const shWidth   = cShoulderW * 0.5;
+  const chWidth   = cChestW * 0.5;
+
+  // 몸통 패스
+  ctx.beginPath();
+  ctx.moveTo(cx - shWidth * 0.18, topStartY); // 목선 왼쪽
+  // 왼쪽 어깨
+  ctx.lineTo(cx - shWidth, topStartY + cLength * 0.06);
+  // 왼쪽 소매 연결
+  if (type !== 'tshirt') {
+    // 긴소매: 소매 연장
+    ctx.lineTo(cx - shWidth - cSleeve, topStartY + cLength * 0.06 + cSleeve * 0.22);
+    ctx.lineTo(cx - shWidth - cSleeve, topStartY + cLength * 0.06 + cSleeve * 0.22 + 8);
+    ctx.lineTo(cx - shWidth, topStartY + cLength * 0.13);
+  } else {
+    // 반소매
+    ctx.lineTo(cx - shWidth - cSleeve * 0.28, topStartY + cLength * 0.08);
+    ctx.lineTo(cx - shWidth, topStartY + cLength * 0.14);
+  }
+  // 왼쪽 옆선
+  ctx.bezierCurveTo(
+    cx - chWidth * 0.92, topStartY + cLength * 0.5,
+    cx - chWidth * 0.98, topStartY + cLength * 0.75,
+    cx - chWidth * 0.95, clothEndY
+  );
+  // 밑단
+  ctx.lineTo(cx + chWidth * 0.95, clothEndY);
+  // 오른쪽 옆선
+  ctx.bezierCurveTo(
+    cx + chWidth * 0.98, topStartY + cLength * 0.75,
+    cx + chWidth * 0.92, topStartY + cLength * 0.5,
+    cx + shWidth, topStartY + cLength * 0.13
+  );
+  // 오른쪽 소매
+  if (type !== 'tshirt') {
+    ctx.lineTo(cx + shWidth + cSleeve, topStartY + cLength * 0.06 + cSleeve * 0.22 + 8);
+    ctx.lineTo(cx + shWidth + cSleeve, topStartY + cLength * 0.06 + cSleeve * 0.22);
+    ctx.lineTo(cx + shWidth, topStartY + cLength * 0.06);
+  } else {
+    ctx.lineTo(cx + shWidth + cSleeve * 0.28, topStartY + cLength * 0.08);
+    ctx.lineTo(cx + shWidth, topStartY + cLength * 0.06);
+  }
+  // 오른쪽 어깨 → 목선
+  ctx.lineTo(cx + shWidth * 0.18, topStartY);
+  ctx.closePath();
+
+  // 배경 fill (핏 색상)
+  if (showFitColor) {
+    const avgGrade = shoulderGrade === 'tight' || chestGrade === 'tight' ? 'tight'
+      : shoulderGrade === 'good' && chestGrade === 'good' ? 'good' : 'warn';
+    const col = gradeColor(avgGrade);
+    ctx.fillStyle = hexToRgba(col, 0.18);
+  } else {
+    ctx.fillStyle = 'rgba(100,100,200,0.15)';
+  }
+  ctx.fill();
+
+  // 외곽선 (어깨 / 가슴 부분 색상 분리)
+  ctx.lineWidth = 2;
+
+  // 어깨선 강조
+  if (showFitColor) {
+    ctx.strokeStyle = gradeColor(shoulderGrade);
+  } else {
+    ctx.strokeStyle = 'rgba(150,150,255,0.7)';
+  }
+  ctx.stroke();
+
+  // 핏 라벨 오버레이
+  if (showFitColor && fit.shoulder?.diff !== null) {
+    const sg = fitGrade(fit.shoulder.diff);
+    drawFitLabel(ctx, cx - shWidth * 0.7, topStartY + cLength * 0.08,
+      `어깨 ${gradeLabel(sg, fit.shoulder.diff)}`, gradeColor(sg));
+  }
+  if (showFitColor && fit.chest?.diff !== null) {
+    const cg = fitGrade(fit.chest.diff);
+    drawFitLabel(ctx, cx - chWidth * 0.6, topStartY + cLength * 0.35,
+      `가슴 ${gradeLabel(cg, fit.chest.diff)}`, gradeColor(cg));
+  }
+  if (showFitColor && chart.length) {
+    drawFitLabel(ctx, cx, clothEndY + 12,
+      `총장 ${chart.length}cm`, '#666', 'center');
+  }
+}
+
+// ── 팬츠 실루엣 ──
+function drawPantsSilhouette(ctx, user, chart, fit, scale, cx, topY, W, H) {
+  const h = user.height;
+  const headH = h * 0.130;
+  const neckH = h * 0.040;
+  const torsoH = h * 0.300;
+  const hipH  = h * 0.080;
+
+  const pantsTopY = topY + (headH + neckH + torsoH + hipH) * scale;
+  const cLength   = chart.length * scale;
+  const cHipW     = (chart.hip   / Math.PI) * scale;
+  const cWaistW   = (chart.waist / Math.PI) * scale;
+  const cThighW   = chart.thigh  * scale * 0.32;
+
+  const pantsEndY = pantsTopY + cLength;
+
+  // 핏 등급
+  const waistGrade = fit.waist ? fitGrade(fit.waist.diff) : 'neutral';
+  const hipGrade   = fit.hip   ? fitGrade(fit.hip.diff)   : 'neutral';
+
+  // 왼쪽 다리
+  ctx.beginPath();
+  ctx.moveTo(cx - cWaistW * 0.45, pantsTopY);
+  ctx.bezierCurveTo(
+    cx - cHipW * 0.5, pantsTopY + cLength * 0.15,
+    cx - cThighW * 0.9, pantsTopY + cLength * 0.5,
+    cx - cThighW * 0.55, pantsEndY
+  );
+  ctx.lineTo(cx - cThighW * 0.1, pantsEndY);
+  ctx.lineTo(cx, pantsTopY + cLength * 0.62);
+  ctx.lineTo(cx, pantsTopY + cLength * 0.15);
+  ctx.lineTo(cx - cWaistW * 0.45, pantsTopY);
+  ctx.closePath();
+
+  const lFill = showFitColor ? hexToRgba(gradeColor(waistGrade), 0.18) : 'rgba(100,180,100,0.15)';
+  ctx.fillStyle = lFill;
+  ctx.fill();
+  ctx.strokeStyle = showFitColor ? gradeColor(waistGrade) : 'rgba(100,200,100,0.6)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 오른쪽 다리
+  ctx.beginPath();
+  ctx.moveTo(cx + cWaistW * 0.45, pantsTopY);
+  ctx.bezierCurveTo(
+    cx + cHipW * 0.5, pantsTopY + cLength * 0.15,
+    cx + cThighW * 0.9, pantsTopY + cLength * 0.5,
+    cx + cThighW * 0.55, pantsEndY
+  );
+  ctx.lineTo(cx + cThighW * 0.1, pantsEndY);
+  ctx.lineTo(cx, pantsTopY + cLength * 0.62);
+  ctx.lineTo(cx, pantsTopY + cLength * 0.15);
+  ctx.lineTo(cx + cWaistW * 0.45, pantsTopY);
+  ctx.closePath();
+
+  ctx.fillStyle = lFill;
+  ctx.fill();
+  ctx.strokeStyle = showFitColor ? gradeColor(hipGrade) : 'rgba(100,200,100,0.6)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 라벨
+  if (showFitColor && fit.waist?.diff !== null) {
+    const wg = fitGrade(fit.waist.diff);
+    drawFitLabel(ctx, cx, pantsTopY + cLength * 0.1,
+      `허리 ${gradeLabel(wg, fit.waist.diff)}`, gradeColor(wg), 'center');
+  }
+  if (showFitColor && fit.hip?.diff !== null) {
+    const hg = fitGrade(fit.hip.diff);
+    drawFitLabel(ctx, cx, pantsTopY + cLength * 0.25,
+      `엉덩이 ${gradeLabel(hg, fit.hip.diff)}`, gradeColor(hg), 'center');
+  }
+}
+
+// ── 치수선 그리기 ──
+function drawMeasureLines(ctx, user, chart, type, scale, cx, topY, W, H) {
+  ctx.save();
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+
+  const h = user.height;
+  const headH = h * 0.130;
+  const neckH = h * 0.040;
+  const topStartY = topY + (headH + neckH) * scale;
+
+  if (type !== 'pants') {
+    // 어깨너비 선
+    const shY = topStartY + chart.length * scale * 0.06;
+    ctx.beginPath();
+    ctx.moveTo(cx - chart.shoulder * scale * 0.5, shY);
+    ctx.lineTo(cx + chart.shoulder * scale * 0.5, shY);
+    ctx.stroke();
+    drawDimLabel(ctx, cx, shY - 8, `어깨 ${chart.shoulder}cm`);
+
+    // 총장 선
+    const endY = topStartY + chart.length * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx + chart.chest * scale * 0.35 + 12, topStartY);
+    ctx.lineTo(cx + chart.chest * scale * 0.35 + 12, endY);
+    ctx.stroke();
+    drawDimLabel(ctx, cx + chart.chest * scale * 0.35 + 20, (topStartY + endY) / 2, `총장 ${chart.length}cm`);
+  }
+
+  ctx.restore();
+}
+
+// ── 핏 라벨 ──
+function drawFitLabel(ctx, x, y, text, color, align = 'left') {
+  ctx.save();
+  ctx.font = 'bold 11px -apple-system, sans-serif';
+  ctx.textAlign = align;
+  ctx.textBaseline = 'middle';
+  const pad = 5;
+  const tw = ctx.measureText(text).width;
+  const bx = align === 'center' ? x - tw / 2 - pad : x - pad;
+  ctx.fillStyle = 'rgba(10,10,10,0.7)';
+  ctx.beginPath();
+  ctx.roundRect(bx, y - 8, tw + pad * 2, 16, 3);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function drawDimLabel(ctx, x, y, text) {
+  ctx.save();
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+// ── 범례 ──
+function drawLegend(ctx, W, H) {
+  const items = [
+    { color: '#ff5252', label: '끼임 (2cm↑)' },
+    { color: '#ff9800', label: '슬림핏 (~2cm)' },
+    { color: '#00c853', label: '적정 (4~10cm)' },
+    { color: '#00b0ff', label: '여유 (12cm↑)' },
+  ];
+  const startX = 10;
+  const startY = H - 14;
+  ctx.save();
+  ctx.font = '10px sans-serif';
+  ctx.textBaseline = 'middle';
+  let x = startX;
+  items.forEach(({ color, label }) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, startY - 4, 8, 8);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillText(label, x + 11, startY);
+    x += ctx.measureText(label).width + 24;
+  });
+  ctx.restore();
+}
+
+// ── 핏 카드 렌더 ──
+function renderFitCards(result) {
+  const { fit, chart, type } = result;
+  const grid = document.getElementById('fit-grid');
+  grid.textContent = '';
+
+  const entries = Object.values(fit);
+  entries.forEach(entry => {
+    const { diff, label, chartVal } = entry;
+    const grade = fitGrade(diff);
+
+    const card = document.createElement('div');
+    card.className = 'fit-card ' + (
+      grade === 'good' ? 'good' :
+      grade === 'tight' ? 'tight' :
+      grade === 'snug' ? 'warn' : 'good'
+    );
+
+    const lEl = document.createElement('div');
+    lEl.className = 'fit-card-label';
+    lEl.textContent = label;
+
+    const vEl = document.createElement('div');
+    vEl.className = 'fit-card-value';
+
+    const dEl = document.createElement('div');
+    dEl.className = 'fit-card-detail';
+
+    if (diff !== null) {
+      vEl.textContent = gradeLabel(grade, diff);
+      vEl.style.color = gradeColor(grade);
+      dEl.textContent = `옷 치수 ${
+        label.includes('어깨') ? chart.shoulder :
+        label.includes('가슴') ? chart.chest :
+        label.includes('허리') ? chart.waist :
+        label.includes('엉덩이') ? chart.hip :
+        label.includes('허벅지') ? chart.thigh : '—'
+      }cm`;
+    } else {
+      vEl.textContent = (chartVal || 0) + 'cm';
+      vEl.style.color = '#888';
+      dEl.textContent = '사이즈 차트 기준';
+    }
+
+    card.appendChild(lEl);
+    card.appendChild(vEl);
+    card.appendChild(dEl);
+    grid.appendChild(card);
+  });
+
+  // 추천 사이즈 계산
+  const best = recommendSize(result.user, result.brand, result.type);
+  const infoCard = document.createElement('div');
+  infoCard.className = 'fit-card good';
+  infoCard.style.borderLeftColor = '#00e5ff';
+  const iL = document.createElement('div'); iL.className = 'fit-card-label'; iL.textContent = '추천 사이즈';
+  const iV = document.createElement('div'); iV.className = 'fit-card-value'; iV.textContent = best; iV.style.color = '#00e5ff';
+  const iD = document.createElement('div'); iD.className = 'fit-card-detail'; iD.textContent = `${result.brand.toUpperCase()} ${result.type} 기준`;
+  infoCard.appendChild(iL); infoCard.appendChild(iV); infoCard.appendChild(iD);
+  grid.appendChild(infoCard);
+}
+
+// ── 최적 사이즈 추천 ──
+function recommendSize(user, brand, type) {
+  const chart = SIZE_CHARTS[brand]?.[type];
+  if (!chart) return 'M';
+
+  let bestSize = 'M';
+  let minScore = Infinity;
+  const isPants = type === 'pants';
+
+  Object.entries(chart).forEach(([size, dims]) => {
+    let score = 0;
+    if (isPants) {
+      const wd = dims.waist - user.waist;
+      const hd = dims.hip   - user.hip;
+      // 여유 있되 너무 헐렁하지 않게: 2~8cm 여유가 최적
+      score += Math.abs(wd - 5);
+      score += Math.abs(hd - 5);
+    } else {
+      const sd = dims.shoulder - user.shoulder;
+      const cd = dims.chest    - user.chest;
+      score += Math.abs(sd - 3);
+      score += Math.abs(cd - 6);
+    }
+    if (score < minScore) { minScore = score; bestSize = size; }
+  });
+
+  return bestSize;
+}
+
+// ── 유틸 ──
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ── CanvasRenderingContext2D.roundRect 폴리필 (Safari/Chrome 구버전) ──
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    this.beginPath();
+    this.moveTo(x + r, y);
+    this.lineTo(x + w - r, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + r);
+    this.lineTo(x + w, y + h - r);
+    this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    this.lineTo(x + r, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - r);
+    this.lineTo(x, y + r);
+    this.quadraticCurveTo(x, y, x + r, y);
+    this.closePath();
+  };
+}
+
+// ── 초기 드로잉 ──
+window.addEventListener('load', () => {
+  resizeCanvas();
+  // 기본 체형만 표시
+  const defaultUser = getUserInput();
+  const W = canvas.width / window.devicePixelRatio;
+  const H = canvas.height / window.devicePixelRatio;
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, W, H);
+  const scale = (H * 0.88) / defaultUser.height;
+  const cx = W * 0.5;
+  const topY = H * 0.06;
+  drawBodySilhouette(ctx, defaultUser, scale, cx, topY, W, H);
+  ctx.save();
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = '#444';
+  ctx.textAlign = 'center';
+  ctx.fillText('체형 정보 입력 후 "2D 피팅 시작" 버튼 클릭', cx, H - 30);
+  ctx.restore();
+  drawLegend(ctx, W, H);
+});
+</script>
+</body>
+</html>

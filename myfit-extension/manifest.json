@@ -1,0 +1,83 @@
+{
+  "manifest_version": 3,
+  "name": "MyFit — AI 가상 피팅",
+  "version": "0.1.0",
+  "description": "무신사·Nike·Zara에서 AI가 내 체형에 사이즈를 확인해줍니다. 반품 걱정 없이, 자신 있게 구매하세요.",
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "sidePanel"
+  ],
+
+  "host_permissions": [
+    "https://www.musinsa.com/*",
+    "https://store.nike.com/*",
+    "https://www.zara.com/*",
+    "https://www.uniqlo.com/*",
+    "https://www.hm.com/*",
+    "https://www2.hm.com/*",
+    "https://myfit-fashn-proxy.kgg2512.workers.dev/*"
+  ],
+
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.musinsa.com/products/*",
+        "https://store.nike.com/*/pd/*",
+        "https://www.zara.com/*/article/*",
+        "https://www.uniqlo.com/*/en/products/*",
+        "https://www.hm.com/*/productpage.*"
+      ],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "side_panel": {
+    "default_path": "sidepanel/panel.html"
+  },
+
+  "action": {
+    "default_title": "MyFit 열기",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://myfit-fashn-proxy.kgg2512.workers.dev"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lib/three.module.min.js"
+      ],
+      "matches": [
+        "https://www.musinsa.com/*",
+        "https://store.nike.com/*",
+        "https://www.zara.com/*",
+        "https://www.uniqlo.com/*",
+        "https://www.hm.com/*",
+        "https://www2.hm.com/*"
+      ]
+    }
+  ]
+}

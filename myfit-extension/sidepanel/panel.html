@@ -1,0 +1,470 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://*.workers.dev;">
+  <title>MyFit</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════
+       동의 모달 (CISO/CLO 필수 — 최초 실행 시 표시)
+       ═══════════════════════════════════════════ -->
+  <div id="consent-overlay" class="consent-overlay hidden">
+    <div class="consent-sheet">
+      <div class="consent-title">MyFit 시작 전 동의</div>
+      <div class="consent-desc">서비스 이용을 위해 아래 항목에 동의해 주세요.</div>
+
+      <!-- 전체 동의 -->
+      <div class="consent-all" id="consent-all-btn">
+        <div class="consent-check" id="check-all"></div>
+        <span class="consent-all-label">전체 동의</span>
+      </div>
+
+      <!-- 개인정보 처리방침 (필수) -->
+      <div class="consent-item" id="consent-item-privacy">
+        <div class="consent-check" id="check-privacy"></div>
+        <div>
+          <div class="consent-item-text">[필수] 개인정보 처리방침 동의</div>
+          <div class="consent-item-sub">신체 치수는 이 기기에만 저장됩니다. AI 피팅 이용 시 사진이 외부 서버로 전송됩니다 (아래 동의 참고).</div>
+        </div>
+      </div>
+
+      <!-- AI 피팅 국외 이전 동의 (필수 — CLO/CISO 기준) -->
+      <div class="consent-item" id="consent-item-ai">
+        <div class="consent-check" id="check-ai"></div>
+        <div>
+          <div class="consent-item-text">[필수] AI 피팅 국외이전 동의 (신체 사진 — PIPA 제28조의8)</div>
+          <div class="consent-item-sub">신체 사진은 AI 피팅 처리를 위해 인도 소재 TryOnCloud 서버로 전송됩니다. 원본 사진은 처리 후 즉시 삭제, 피팅 결과 이미지는 최대 7일 후 삭제됩니다. 동의를 철회하려면 AI 피팅 탭을 이용하지 않으시면 됩니다.</div>
+        </div>
+      </div>
+
+      <!-- 제휴 마케팅 고지 (필수) -->
+      <div class="consent-item" id="consent-item-affiliate">
+        <div class="consent-check" id="check-affiliate"></div>
+        <div>
+          <div class="consent-item-text">[필수] 제휴 마케팅 링크 고지 동의</div>
+          <div class="consent-item-sub">이 서비스는 쿠팡파트너스 활동의 일환으로, 구매 시 수수료를 받을 수 있습니다. 이는 사용자에게 추가 비용을 발생시키지 않습니다.</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-consent-confirm" disabled>동의하고 시작하기</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 1: 온보딩 (최초 실행)
+       ═══════════════════════════════════════════ -->
+  <div id="s-onboard" class="screen active">
+    <div class="logo-wrap">
+      <div class="logo-icon">M</div>
+      <div class="logo-name">MyFit</div>
+      <div class="logo-sub">반품 없는 쇼핑 — AI 사이즈 확신</div>
+    </div>
+
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-icon">📏</div>
+        <div class="feature-text">
+          <strong>치수 한 번만 입력</strong>
+          <span>무신사 · Nike · Zara — 모든 쇼핑몰에서 자동 적용</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">👗</div>
+        <div class="feature-text">
+          <strong>AI 가상 피팅</strong>
+          <span>사기 전에 내 몸에 직접 입혀본다</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">✅</div>
+        <div class="feature-text">
+          <strong>사이즈 확신</strong>
+          <span>망설임 없이 주문 — 반품 없이 딱 맞는다</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 지원 쇼핑몰 -->
+    <div class="info-box">
+      지원 쇼핑몰: <strong>무신사 · Nike · Zara · Uniqlo · H&amp;M</strong>
+      <br><span class="info-sub">상품 페이지 방문 시 자동으로 피팅이 시작됩니다.</span>
+    </div>
+
+    <button class="btn btn-primary" id="btn-start-onboard">시작하기</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 2: 신체 치수 입력
+       ═══════════════════════════════════════════ -->
+  <div id="s-manual" class="screen">
+    <div class="panel-header">
+      <button class="back-btn" id="btn-back-onboard">←</button>
+      <span class="header-title">내 치수 입력</span>
+    </div>
+
+    <div class="notice-box">
+      <strong>한 번만 입력하면 저장됩니다.</strong><br>
+      <span class="notice-sub">신체 사진은 수집하지 않습니다 (Phase 1)</span>
+    </div>
+
+    <!-- 빠른 입력 -->
+    <div class="quick-size">
+      <div class="quick-size-label">쇼핑몰 사이즈 기준 자동 입력:</div>
+      <button class="quick-btn" data-size="XS">XS</button>
+      <button class="quick-btn" data-size="S">S</button>
+      <button class="quick-btn" data-size="M">M</button>
+      <button class="quick-btn" data-size="L">L</button>
+      <button class="quick-btn" data-size="XL">XL</button>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">기본 정보</div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">키 (cm)</label>
+          <input class="field-input" type="number" id="inp-height" min="140" max="220" placeholder="175">
+        </div>
+        <div class="field-group">
+          <label class="field-label">몸무게 (kg)</label>
+          <input class="field-input" type="number" id="inp-weight" min="30" max="200" placeholder="70">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section form-section--gutter">
+      <div class="form-section-title">신체 둘레</div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">어깨 너비 (cm)</label>
+          <input class="field-input" type="number" id="inp-shoulder" min="30" max="70" placeholder="43">
+        </div>
+        <div class="field-group">
+          <label class="field-label">가슴 둘레 (cm)</label>
+          <input class="field-input" type="number" id="inp-chest" min="60" max="140" placeholder="94">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">허리 둘레 (cm)</label>
+          <input class="field-input" type="number" id="inp-waist" min="50" max="130" placeholder="78">
+        </div>
+        <div class="field-group">
+          <label class="field-label">엉덩이 둘레 (cm)</label>
+          <input class="field-input" type="number" id="inp-hip" min="60" max="150" placeholder="90">
+        </div>
+      </div>
+    </div>
+
+    <div class="privacy-note">이 기기에만 저장 · 서버 전송 없음</div>
+    <button class="btn btn-primary" id="btn-save-measurements">저장하고 피팅 시작 →</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 3: 대기 (상품 감지 대기 / 분석 중)
+       ═══════════════════════════════════════════ -->
+  <div id="s-waiting" class="screen">
+    <div class="panel-header">
+      <span class="header-title">MyFit</span>
+      <button class="btn-text" id="btn-edit-profile">수정</button>
+    </div>
+
+    <!-- 내 치수 요약 -->
+    <div class="profile-summary" id="profile-summary">
+      <!-- JS로 채워짐 -->
+    </div>
+
+    <!-- 상품 미감지 상태 -->
+    <div id="waiting-idle" class="waiting-idle">
+      <div class="waiting-icon">🔍</div>
+      <div class="waiting-text">쇼핑몰 상품 페이지로 이동하세요</div>
+      <div class="waiting-sub">무신사 · Nike · Zara · Uniqlo · H&amp;M<br>상품 페이지 방문 시 자동으로 피팅이 시작됩니다.</div>
+    </div>
+
+    <!-- 상품 감지 + 분석 중 (JS로 토글: .visible 클래스 추가) -->
+    <div id="waiting-analyzing" class="analyzing-container">
+      <!-- 감지된 상품 -->
+      <div class="detected-product" id="detected-product">
+        <div class="detected-thumb" id="detected-thumb">👗</div>
+        <div class="detected-info">
+          <div class="detected-brand" id="detected-brand">무신사</div>
+          <div class="detected-name" id="detected-name">상품명 로딩 중...</div>
+          <div class="detected-price" id="detected-price">-</div>
+        </div>
+      </div>
+
+      <!-- 스캔 애니메이션 -->
+      <div class="scan-wrap">
+        <div class="scan-ring"></div>
+        <div class="scan-ring"></div>
+        <div class="scan-ring"></div>
+        <div class="scan-center">👗</div>
+      </div>
+
+      <!-- 분석 단계 -->
+      <div class="step-list" id="step-list">
+        <div class="step-item" id="step-1">
+          <div class="step-dot done">✓</div>
+          <span class="step-label">치수 데이터 로드</span>
+        </div>
+        <div class="step-item" id="step-2">
+          <div class="step-dot running"></div>
+          <span class="step-label">3D 모델 생성 중...</span>
+        </div>
+        <div class="step-item" id="step-3">
+          <div class="step-dot pending"></div>
+          <span class="step-label">핏 분석</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 커미션 고지 (상시 표시 — CFO 필수) -->
+    <div class="commission-notice commission-notice--bottom">
+      <span class="commission-icon">ⓘ</span>
+      <span class="commission-text">이 서비스는 쿠팡파트너스 활동의 일환으로 수수료를 받을 수 있습니다.</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN 4: 피팅 결과 (3D 사이즈 가이드 + AI 피팅 탭)
+       ═══════════════════════════════════════════ -->
+  <div id="s-fitting" class="screen">
+    <div class="panel-header">
+      <button class="back-btn" id="btn-back-waiting">←</button>
+      <span class="header-title" id="fitting-product-name">가상 피팅</span>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <div class="fitting-tabs" role="tablist">
+      <button class="fitting-tab active" id="tab-3d" role="tab" aria-selected="true" aria-controls="panel-3d" type="button">3D 가이드</button>
+      <button class="fitting-tab" id="tab-ai" role="tab" aria-selected="false" aria-controls="panel-ai" type="button">AI 피팅</button>
+      <button class="fitting-tab" id="tab-fit" role="tab" aria-selected="false" aria-controls="panel-fit" type="button">핏 분석</button>
+    </div>
+
+    <!-- 탭 1: 3D 사이즈 가이드 (기존 Three.js 아바타) -->
+    <div id="panel-3d" class="fitting-tab-panel scroll-area" role="tabpanel" aria-labelledby="tab-3d">
+      <!-- 3D 캔버스 -->
+      <div class="canvas-wrap">
+        <canvas id="fitting-canvas"></canvas>
+        <div class="canvas-overlay-top">
+          <span class="size-badge" id="rec-size-badge">추천: M</span>
+        </div>
+        <div class="canvas-drag-hint">드래그로 회전</div>
+      </div>
+
+      <!-- 사이즈 선택 -->
+      <div class="size-section">
+        <div class="size-label">사이즈 선택 (● = AI 추천)</div>
+        <div class="size-btns" id="size-btns">
+          <!-- JS로 채워짐 -->
+        </div>
+      </div>
+
+      <!-- 핏 점수 -->
+      <div class="fit-score-card" id="fit-score-card">
+        <div class="fit-row">
+          <span class="fit-lbl">어깨</span>
+          <div class="fit-track"><div class="fit-fill fit-fill--init" id="fit-shoulder"></div></div>
+          <span class="fit-val" id="fit-shoulder-val">-</span>
+        </div>
+        <div class="fit-row">
+          <span class="fit-lbl">가슴</span>
+          <div class="fit-track"><div class="fit-fill fit-fill--init" id="fit-chest"></div></div>
+          <span class="fit-val" id="fit-chest-val">-</span>
+        </div>
+        <div class="fit-row">
+          <span class="fit-lbl">허리</span>
+          <div class="fit-track"><div class="fit-fill fit-fill--init" id="fit-waist"></div></div>
+          <span class="fit-val" id="fit-waist-val">-</span>
+        </div>
+      </div>
+
+      <!-- 실측 사이즈표 기반 핏 (FitEngine) — sizeChart 추출 성공 시 표시 -->
+      <div id="fit-engine-card" class="hidden"><!-- JS(renderFitFromEngine)가 채움 --></div>
+
+      <!-- 상품 정보 -->
+      <div class="product-row">
+        <div class="product-thumb" id="fitting-thumb">👗</div>
+        <div class="product-info">
+          <div class="product-brand" id="fitting-brand">-</div>
+          <div class="product-name" id="fitting-name">-</div>
+        </div>
+        <div class="product-price" id="fitting-price">-</div>
+      </div>
+
+      <!-- 커미션 고지 (상시 표시) -->
+      <div class="commission-notice">
+        <span class="commission-icon">ⓘ</span>
+        <span class="commission-text">쿠팡파트너스 제휴 링크 — 구매 시 수수료가 발생할 수 있습니다. 사용자 추가 비용 없음.</span>
+      </div>
+    </div>
+
+    <!-- 탭 2: AI 피팅 (TryOnCloud — 사진 업로드 → 결과 이미지) -->
+    <div id="panel-ai" class="fitting-tab-panel scroll-area hidden" role="tabpanel" aria-labelledby="tab-ai">
+      <div class="ai-fitting-section">
+        <div class="ai-fitting-desc">내 사진을 업로드하면 AI가 이 옷을 실제로 입혀드립니다.</div>
+
+        <!-- 사진 업로드 -->
+        <label class="ai-upload-label" id="ai-upload-label" for="ai-photo-input">
+          <span id="ai-upload-text">사진 선택</span>
+          <span class="ai-upload-hint">전신 또는 상반신 정면 사진 권장</span>
+        </label>
+        <input type="file" id="ai-photo-input" accept="image/*" class="ai-file-input" aria-label="사용자 사진 업로드">
+
+        <!-- 사진 미리보기 -->
+        <div class="ai-preview-wrap hidden" id="ai-preview-wrap">
+          <img id="ai-preview-img" class="ai-preview-img" alt="업로드한 사진 미리보기">
+        </div>
+
+        <!-- 피팅 시작 버튼 -->
+        <button class="btn btn-primary" id="btn-tryon-fit" disabled type="button">AI 피팅 시작</button>
+
+        <!-- 개인정보 고지 -->
+        <div class="ai-privacy-note">사진은 AI 피팅 처리 후 즉시 삭제됩니다. 서버에 저장되지 않습니다.</div>
+
+        <!-- 로딩 상태 — 단계별 진행 표시 (15-30초 이탈 방지) -->
+        <div class="ai-loading hidden" id="ai-loading" aria-live="polite">
+          <div class="ai-loading-spinner"></div>
+          <span id="ai-loading-text">AI가 옷을 입히는 중...</span>
+          <div class="ai-loading-steps">
+            <div class="ai-step" id="ai-step-1">
+              <div class="ai-step-dot ai-step-dot--active"></div>
+              <span id="ai-step-1-label">사진 분석 중</span>
+            </div>
+            <div class="ai-step" id="ai-step-2">
+              <div class="ai-step-dot"></div>
+              <span id="ai-step-2-label">옷 패턴 매핑</span>
+            </div>
+            <div class="ai-step" id="ai-step-3">
+              <div class="ai-step-dot"></div>
+              <span id="ai-step-3-label">피팅 이미지 생성</span>
+            </div>
+          </div>
+          <div class="ai-loading-bar-wrap">
+            <div class="ai-loading-bar" id="ai-loading-bar"></div>
+          </div>
+          <span class="ai-loading-tip" id="ai-loading-tip">정면 사진일수록 결과가 정확합니다</span>
+        </div>
+
+        <!-- 에러 메시지 (실제 오류 — 빨간색) -->
+        <div class="ai-error hidden" id="ai-error" role="alert"></div>
+
+        <!-- DEMO 모드 안내 (API Key 미등록 시 — 주황색, 에러 아님) -->
+        <div class="ai-demo-notice" id="ai-demo-notice" role="status" aria-live="polite"></div>
+
+        <!-- 결과 이미지 + PMF 피드백 -->
+        <div class="ai-result-wrap hidden" id="ai-result-wrap">
+          <div class="ai-result-header">
+            <div class="ai-result-label">AI 피팅 결과</div>
+            <button class="ai-result-save" id="btn-save-result" type="button" title="이미지 저장">저장</button>
+          </div>
+          <img id="tryon-result" class="ai-result-img" alt="AI 피팅 결과 이미지">
+          <div class="ai-result-disclaimer">AI 생성 이미지입니다. 실제 착용과 차이가 있을 수 있습니다.</div>
+          <!-- PMF 테스트: "이 결과 보고 샀겠냐?" -->
+          <div class="ai-pmf-block">
+            <div class="ai-pmf-question">이 피팅 결과, 구매에 도움이 됐나요?</div>
+            <div class="ai-pmf-btns">
+              <button class="ai-pmf-btn ai-pmf-btn--yes" id="btn-pmf-yes" type="button">도움 됐어요</button>
+              <button class="ai-pmf-btn ai-pmf-btn--no" id="btn-pmf-no" type="button">별로예요</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 커미션 고지 -->
+      <div class="commission-notice">
+        <span class="commission-icon">ⓘ</span>
+        <span class="commission-text">쿠팡파트너스 제휴 링크 — 구매 시 수수료가 발생할 수 있습니다. 사용자 추가 비용 없음.</span>
+      </div>
+    </div>
+
+    <!-- 탭 3: 핏 분석 (2D Canvas 피팅 시각화) -->
+    <div id="panel-fit" class="fitting-tab-panel scroll-area hidden" role="tabpanel" aria-labelledby="tab-fit">
+      <div class="fit2d-section">
+
+        <!-- 의류 선택 -->
+        <div class="fit2d-controls">
+          <div class="fit2d-control-row">
+            <div class="fit2d-field">
+              <label class="fit2d-label">의류 종류</label>
+              <select class="fit2d-select" id="fit2d-type">
+                <option value="tshirt">티셔츠</option>
+                <option value="shirt">셔츠 (긴소매)</option>
+                <option value="hoodie">후디</option>
+                <option value="pants">팬츠</option>
+              </select>
+            </div>
+            <div class="fit2d-field">
+              <label class="fit2d-label">브랜드</label>
+              <select class="fit2d-select" id="fit2d-brand">
+                <option value="nike">Nike</option>
+                <option value="uniqlo">Uniqlo</option>
+                <option value="zara">Zara</option>
+                <option value="generic">일반 표준</option>
+              </select>
+            </div>
+          </div>
+          <div class="fit2d-control-row">
+            <div class="fit2d-field fit2d-field--full">
+              <label class="fit2d-label">사이즈</label>
+              <div class="fit2d-size-btns" id="fit2d-size-btns">
+                <button class="fit2d-size-btn" data-size="XS" type="button">XS</button>
+                <button class="fit2d-size-btn" data-size="S" type="button">S</button>
+                <button class="fit2d-size-btn active" data-size="M" type="button">M</button>
+                <button class="fit2d-size-btn" data-size="L" type="button">L</button>
+                <button class="fit2d-size-btn" data-size="XL" type="button">XL</button>
+                <button class="fit2d-size-btn" data-size="2XL" type="button">2XL</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 추천 사이즈 뱃지 -->
+        <div class="fit2d-rec-row">
+          <span class="fit2d-rec-label">내 체형 기반 추천:</span>
+          <span class="fit2d-rec-badge" id="fit2d-rec-badge">—</span>
+        </div>
+
+        <!-- Canvas 피팅 시각화 -->
+        <div class="fit2d-canvas-wrap">
+          <canvas id="fit2d-canvas" class="fit2d-canvas"></canvas>
+          <!-- 표시 토글 -->
+          <div class="fit2d-toggles">
+            <button class="fit2d-tog active" id="fit2d-tog-body" type="button">체형</button>
+            <button class="fit2d-tog active" id="fit2d-tog-cloth" type="button">의류</button>
+            <button class="fit2d-tog active" id="fit2d-tog-fitcolor" type="button">핏 색상</button>
+          </div>
+        </div>
+
+        <!-- 핏 분석 카드 -->
+        <div class="fit2d-cards" id="fit2d-cards">
+          <div class="fit2d-empty">의류 선택 후 자동 분석됩니다</div>
+        </div>
+
+        <!-- 체형 정보 표시 (현재 저장된 값) -->
+        <div class="fit2d-body-info" id="fit2d-body-info">
+          <!-- JS로 채워짐 -->
+        </div>
+
+      </div>
+    </div>
+
+    <button class="btn btn-buy" id="btn-buy">이 사이즈로 쿠팡에서 구매하기 →</button>
+  </div>
+
+  <script src="fitEngine.js"></script>
+  <script src="panel.js"></script>
+
+  <!-- 개인정보처리방침 / 이용약관 링크 (CLO 필수) -->
+  <p class="legal-footer">
+    <a href="https://kgg2512.github.io/MyFit/privacy.html" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>
+    &nbsp;·&nbsp;
+    <a href="https://kgg2512.github.io/MyFit/terms.html" target="_blank" rel="noopener noreferrer">이용약관</a>
+  </p>
+</body>
+</html>
+

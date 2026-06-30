@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>MyFit Screenshot 4 — 온보딩</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1280px; height: 800px; overflow: hidden;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .bg-orb-1 {
+      position: absolute; top: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 700px; height: 700px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,0.04) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .grid-bg {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    .center-content {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 48px;
+      width: 100%;
+    }
+
+    /* 상단 로고 */
+    .logo-section {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .logo-icon-wrap {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(124,77,255,0.15));
+      border: 1px solid rgba(0,229,255,0.2);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 0 40px rgba(0,229,255,0.1);
+    }
+    .logo-name {
+      font-size: 48px; font-weight: 700;
+      background: linear-gradient(135deg, #00e5ff 0%, #7c4dff 60%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+    .logo-sub { font-size: 16px; color: rgba(255,255,255,0.4); letter-spacing: 0.05em; }
+
+    /* 피처 카드 행 */
+    .features-row {
+      display: flex; gap: 20px;
+    }
+    .feat-card {
+      width: 280px;
+      background: #141414;
+      border: 1px solid #1e1e1e;
+      border-radius: 16px;
+      padding: 24px;
+      display: flex; flex-direction: column; gap: 12px;
+      transition: border-color 0.2s;
+    }
+    .feat-card.highlight {
+      border-color: rgba(0,229,255,0.2);
+      background: linear-gradient(135deg, rgba(0,229,255,0.04), rgba(124,77,255,0.04));
+    }
+    .feat-icon {
+      width: 40px; height: 40px;
+      background: rgba(0,229,255,0.08);
+      border: 1px solid rgba(0,229,255,0.15);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .feat-icon.purple {
+      background: rgba(124,77,255,0.08);
+      border-color: rgba(124,77,255,0.15);
+    }
+    .feat-title { font-size: 15px; font-weight: 600; color: #fff; }
+    .feat-desc { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.6; }
+
+    /* 하단 CTA */
+    .cta-section { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .cta-btn {
+      padding: 16px 64px;
+      background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(124,77,255,0.15));
+      border: 1px solid rgba(0,229,255,0.3);
+      border-radius: 12px;
+      font-size: 16px; font-weight: 600; color: #00e5ff;
+      cursor: pointer;
+      box-shadow: 0 0 30px rgba(0,229,255,0.1);
+    }
+    .cta-sub { font-size: 12px; color: rgba(255,255,255,0.3); }
+
+    /* 지원 쇼핑몰 */
+    .stores-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .stores-label { font-size: 11px; color: #333; }
+    .store-badge {
+      padding: 4px 12px;
+      background: #141414; border: 1px solid #222; border-radius: 4px;
+      font-size: 11px; color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb-1"></div>
+  <div class="grid-bg"></div>
+
+  <div class="center-content">
+    <!-- 로고 -->
+    <div class="logo-section">
+      <div class="logo-icon-wrap">👗</div>
+      <div class="logo-name">MyFit</div>
+      <div class="logo-sub">쇼핑몰 AI 가상 피팅 · Chrome Extension</div>
+    </div>
+
+    <!-- 피처 카드 3개 -->
+    <div class="features-row">
+      <div class="feat-card highlight">
+        <div class="feat-icon">📏</div>
+        <div class="feat-title">치수 한 번만 입력</div>
+        <div class="feat-desc">키·몸무게·신체 둘레를 한 번만 입력하면 모든 쇼핑몰에서 자동으로 적용됩니다.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon purple">🤖</div>
+        <div class="feat-title">AI 가상 피팅</div>
+        <div class="feat-desc">내 사진을 업로드하면 TryOnCloud가 실제 착용 이미지를 생성합니다. 15~30초 소요.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📦</div>
+        <div class="feat-title">사이즈 추천 + 3D 모델</div>
+        <div class="feat-desc">내 치수로 만드는 3D 체형 모델로 어깨·가슴·허리 핏을 시각적으로 확인하세요.</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <div class="cta-btn">시작하기 →</div>
+      <div class="cta-sub">무료 · 30초 설정 · 개인정보 기기 내 보관</div>
+    </div>
+
+    <!-- 지원 쇼핑몰 -->
+    <div class="stores-row">
+      <div class="stores-label">지원:</div>
+      <div class="store-badge">무신사</div>
+      <div class="store-badge">Nike</div>
+      <div class="store-badge">Zara</div>
+      <div class="store-badge">Uniqlo</div>
+      <div class="store-badge">H&M</div>
+    </div>
+  </div>
+</body>
+</html>

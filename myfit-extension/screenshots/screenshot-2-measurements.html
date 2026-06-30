@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>MyFit Screenshot 2 — 치수 입력</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1280px; height: 800px; overflow: hidden;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* 배경 그라데이션 */
+    .bg-orb-1 {
+      position: absolute; top: -100px; right: 100px;
+      width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .bg-orb-2 {
+      position: absolute; bottom: -100px; left: 100px;
+      width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,77,255,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .layout {
+      display: flex;
+      gap: 80px;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* 왼쪽 설명 */
+    .left-info {
+      width: 460px;
+      color: #fff;
+    }
+    .left-tag {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: #00e5ff;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      opacity: 0.8;
+    }
+    .left-title {
+      font-size: 42px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .left-desc {
+      font-size: 16px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.7;
+      margin-bottom: 36px;
+    }
+    .left-steps { display: flex; flex-direction: column; gap: 16px; }
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .step-num {
+      width: 28px; height: 28px;
+      background: rgba(0,229,255,0.1);
+      border: 1px solid rgba(0,229,255,0.25);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: #00e5ff; font-weight: 600;
+      flex-shrink: 0;
+    }
+    .step-text { font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.5; }
+    .step-text strong { color: #fff; }
+
+    /* 오른쪽 패널 UI */
+    .panel-mock {
+      width: 360px;
+      background: #141414;
+      border-radius: 20px;
+      border: 1px solid #222;
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+    }
+    .panel-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid #1e1e1e;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .back-btn {
+      width: 28px; height: 28px;
+      background: #1e1e1e; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: #666;
+    }
+    .header-title { font-size: 14px; font-weight: 600; color: #fff; }
+
+    .panel-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+
+    .notice {
+      background: rgba(0,229,255,0.05);
+      border: 1px solid rgba(0,229,255,0.12);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px; color: rgba(255,255,255,0.6);
+      line-height: 1.5;
+    }
+    .notice strong { color: #00e5ff; }
+
+    .quick-label { font-size: 11px; color: #555; margin-bottom: 6px; }
+    .quick-btns { display: flex; gap: 6px; }
+    .qbtn {
+      flex: 1; padding: 7px;
+      background: #1e1e1e; border: 1px solid #2a2a2a;
+      border-radius: 6px; font-size: 12px; color: #666;
+      text-align: center;
+    }
+    .qbtn.active {
+      background: rgba(0,229,255,0.1);
+      border-color: rgba(0,229,255,0.3);
+      color: #00e5ff;
+    }
+
+    .form-section { display: flex; flex-direction: column; gap: 8px; }
+    .section-title { font-size: 11px; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .field-row { display: flex; gap: 10px; }
+    .field-group { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 11px; color: #555; }
+    .field-input {
+      background: #1e1e1e; border: 1px solid #2a2a2a;
+      border-radius: 7px; padding: 9px 12px;
+      font-size: 14px; color: #fff;
+      display: flex; align-items: center;
+    }
+    .field-input.filled { border-color: rgba(0,229,255,0.2); }
+
+    .privacy-line { font-size: 10px; color: #333; text-align: center; }
+
+    .save-btn {
+      padding: 13px;
+      background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(124,77,255,0.15));
+      border: 1px solid rgba(0,229,255,0.3);
+      border-radius: 10px;
+      font-size: 13px; font-weight: 600; color: #00e5ff;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb-1"></div>
+  <div class="bg-orb-2"></div>
+
+  <div class="layout">
+    <!-- 왼쪽 -->
+    <div class="left-info">
+      <div class="left-tag">Step 1 of 2</div>
+      <div class="left-title">내 치수로 만드는<br>개인화 3D 모델</div>
+      <div class="left-desc">키·몸무게·신체 둘레를 한 번만 입력하면<br>이후 모든 쇼핑몰에서 자동으로 피팅됩니다.</div>
+      <div class="left-steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-text"><strong>기본 정보 입력</strong> — 키와 몸무게로 체형 기본값 설정</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-text"><strong>신체 둘레 입력</strong> — 어깨·가슴·허리·엉덩이 둘레로 정밀 피팅</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>기기에만 저장</strong> — 서버 전송 없음, 내 기기에서만 보관</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 오른쪽: 패널 UI -->
+    <div class="panel-mock">
+      <div class="panel-header">
+        <div class="back-btn">←</div>
+        <div class="header-title">내 치수 입력</div>
+      </div>
+      <div class="panel-body">
+        <div class="notice">
+          <strong>한 번만 입력하면 저장됩니다.</strong><br>
+          신체 사진은 수집하지 않습니다
+        </div>
+
+        <div>
+          <div class="quick-label">쇼핑몰 사이즈 기준 자동 입력:</div>
+          <div class="quick-btns">
+            <div class="qbtn">XS</div>
+            <div class="qbtn">S</div>
+            <div class="qbtn active">M</div>
+            <div class="qbtn">L</div>
+            <div class="qbtn">XL</div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-title">기본 정보</div>
+          <div class="field-row">
+            <div class="field-group">
+              <div class="field-label">키 (cm)</div>
+              <div class="field-input filled">175</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">몸무게 (kg)</div>
+              <div class="field-input filled">70</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-title">신체 둘레</div>
+          <div class="field-row">
+            <div class="field-group">
+              <div class="field-label">어깨 너비 (cm)</div>
+              <div class="field-input filled">43</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">가슴 둘레 (cm)</div>
+              <div class="field-input filled">94</div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <div class="field-label">허리 둘레 (cm)</div>
+              <div class="field-input">78</div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">엉덩이 둘레 (cm)</div>
+              <div class="field-input">90</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="privacy-line">이 기기에만 저장 · 서버 전송 없음</div>
+        <div class="save-btn">저장하고 피팅 시작 →</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

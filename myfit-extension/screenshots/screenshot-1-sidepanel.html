@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>MyFit Screenshot 1 — 사이드 패널</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1280px; height: 800px; overflow: hidden;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #f0f0f0;
+      display: flex;
+    }
+
+    /* 왼쪽: 쇼핑몰 페이지 시뮬레이션 */
+    .browser-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+    .browser-chrome {
+      height: 52px;
+      background: #f1f3f4;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 8px;
+    }
+    .browser-dots { display: flex; gap: 6px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .browser-bar {
+      flex: 1;
+      height: 28px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 12px;
+      color: #555;
+      margin: 0 12px;
+    }
+    .browser-content {
+      flex: 1;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 무신사 상품 페이지 모의 */
+    .musinsa-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .musinsa-logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: #222;
+    }
+    .musinsa-nav { display: flex; gap: 20px; font-size: 13px; color: #666; }
+
+    .product-layout {
+      display: flex;
+      gap: 48px;
+      width: 100%;
+      max-width: 860px;
+    }
+    .product-img-area {
+      width: 340px;
+      height: 420px;
+      background: linear-gradient(135deg, #e8e8e8 0%, #d0d0d0 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .product-img-placeholder {
+      font-size: 80px;
+      opacity: 0.4;
+    }
+    .product-img-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: #ff3b30;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .product-info-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .product-brand-name { font-size: 13px; color: #888; font-weight: 500; }
+    .product-title { font-size: 22px; font-weight: 700; color: #111; line-height: 1.4; }
+    .product-price { font-size: 26px; font-weight: 700; color: #111; }
+    .product-price-orig { font-size: 15px; color: #aaa; text-decoration: line-through; margin-left: 8px; }
+    .product-size-section { margin-top: 8px; }
+    .size-label { font-size: 12px; color: #888; margin-bottom: 8px; }
+    .size-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .size-chip {
+      padding: 6px 14px; border: 1px solid #ddd; border-radius: 6px;
+      font-size: 13px; color: #444; cursor: pointer;
+    }
+    .size-chip.sel { border-color: #222; background: #222; color: #fff; }
+    .buy-btn-area { display: flex; gap: 10px; margin-top: 16px; }
+    .btn-cart {
+      flex: 1; padding: 14px; background: #fff; border: 2px solid #222;
+      border-radius: 8px; font-size: 14px; font-weight: 600; color: #222; cursor: pointer;
+    }
+    .btn-buy {
+      flex: 1; padding: 14px; background: #222; border: none;
+      border-radius: 8px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer;
+    }
+    .myfit-cta {
+      margin-top: 12px;
+      padding: 11px 16px;
+      background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+      border: 1px solid rgba(0,229,255,0.3);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .myfit-cta-icon { width: 20px; height: 20px; background: linear-gradient(135deg, #00e5ff, #7c4dff); border-radius: 4px; }
+    .myfit-cta-text { font-size: 13px; color: #fff; font-weight: 500; }
+    .myfit-cta-badge {
+      margin-left: auto;
+      font-size: 10px;
+      color: #00e5ff;
+      background: rgba(0,229,255,0.1);
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,229,255,0.2);
+    }
+
+    /* 오른쪽: MyFit 사이드 패널 */
+    .side-panel {
+      width: 400px;
+      height: 800px;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      border-left: 1px solid #222;
+      overflow: hidden;
+    }
+    .panel-header {
+      height: 52px;
+      background: #0a0a0a;
+      border-bottom: 1px solid #1e1e1e;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 10px;
+    }
+    .panel-logo-icon {
+      width: 24px; height: 24px;
+      background: linear-gradient(135deg, #00e5ff, #7c4dff);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+    }
+    .panel-title { font-size: 15px; font-weight: 600; color: #fff; }
+    .panel-sub { font-size: 11px; color: #555; margin-left: auto; }
+
+    .panel-body { flex: 1; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+
+    /* 피팅 결과 상태로 표시 */
+    .tabs {
+      display: flex;
+      background: #141414;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .tab {
+      flex: 1; padding: 7px; text-align: center;
+      font-size: 12px; color: #666; border-radius: 6px; cursor: pointer;
+    }
+    .tab.active {
+      background: #1e1e1e; color: #00e5ff; font-weight: 600;
+    }
+
+    .canvas-mock {
+      background: linear-gradient(180deg, #141414 0%, #0e0e1a 100%);
+      border-radius: 12px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border: 1px solid #1e1e1e;
+    }
+    .avatar-figure {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.9;
+    }
+    .avatar-head {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #00e5ff22, #7c4dff22);
+      border: 2px solid rgba(0,229,255,0.4);
+      border-radius: 50%;
+    }
+    .avatar-body {
+      width: 52px; height: 72px;
+      background: linear-gradient(180deg, rgba(0,229,255,0.15), rgba(124,77,255,0.15));
+      border: 1px solid rgba(0,229,255,0.25);
+      border-radius: 8px 8px 4px 4px;
+      position: relative;
+    }
+    .avatar-body::after {
+      content: '';
+      position: absolute;
+      bottom: -20px; left: 8px;
+      width: 16px; height: 20px;
+      background: rgba(124,77,255,0.2);
+      border: 1px solid rgba(124,77,255,0.3);
+      border-radius: 2px;
+    }
+    .avatar-leg-r {
+      position: absolute;
+      bottom: -20px; left: 28px;
+      width: 16px; height: 20px;
+      background: rgba(124,77,255,0.2);
+      border: 1px solid rgba(124,77,255,0.3);
+      border-radius: 2px;
+    }
+    .size-badge-overlay {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(0,229,255,0.15);
+      border: 1px solid rgba(0,229,255,0.3);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px; font-weight: 600; color: #00e5ff;
+    }
+    .drag-hint {
+      position: absolute; bottom: 10px;
+      font-size: 10px; color: #333;
+    }
+
+    .size-row {
+      display: flex; gap: 6px;
+    }
+    .sz {
+      flex: 1; padding: 7px; text-align: center;
+      background: #141414; border: 1px solid #222; border-radius: 6px;
+      font-size: 12px; color: #555;
+    }
+    .sz.rec {
+      background: rgba(0,229,255,0.1);
+      border-color: #00e5ff;
+      color: #00e5ff;
+      font-weight: 600;
+    }
+
+    .fit-bars { display: flex; flex-direction: column; gap: 8px; }
+    .fit-row-item { display: flex; align-items: center; gap: 8px; }
+    .fit-row-label { font-size: 11px; color: #666; width: 28px; }
+    .fit-track { flex: 1; height: 4px; background: #1e1e1e; border-radius: 2px; }
+    .fit-fill { height: 4px; border-radius: 2px; background: linear-gradient(90deg, #00e5ff, #7c4dff); }
+    .fit-row-val { font-size: 11px; color: #888; width: 32px; text-align: right; }
+
+    .buy-panel-btn {
+      margin-top: auto;
+      padding: 14px;
+      background: linear-gradient(135deg, #00e5ff22, #7c4dff22);
+      border: 1px solid rgba(0,229,255,0.3);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #00e5ff;
+      text-align: center;
+    }
+
+    /* 캡션 오버레이 */
+    .caption-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 400px;
+      background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+      padding: 32px 60px 20px;
+      color: #fff;
+    }
+    .caption-main { font-size: 22px; font-weight: 700; }
+    .caption-sub { font-size: 14px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="browser-area">
+    <div class="browser-chrome">
+      <div class="browser-dots">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+      </div>
+      <div class="browser-bar">🔒 fashion-store.com/products/3842617</div>
+    </div>
+    <div class="browser-content">
+      <div class="musinsa-header">
+        <div class="musinsa-logo">FASHION</div>
+        <div class="musinsa-nav">
+          <span>남성</span><span>여성</span><span>브랜드</span><span>랭킹</span><span>세일</span>
+        </div>
+      </div>
+      <div class="product-layout">
+        <div class="product-img-area">
+          <div class="product-img-placeholder">👕</div>
+          <div class="product-img-badge">-30%</div>
+        </div>
+        <div class="product-info-area">
+          <div class="product-brand-name">KIRSH</div>
+          <div class="product-title">체리 로고 오버핏<br>크루넥 스웨트셔츠</div>
+          <div>
+            <span class="product-price">55,900원</span>
+            <span class="product-price-orig">79,900원</span>
+          </div>
+          <div class="product-size-section">
+            <div class="size-label">사이즈 선택</div>
+            <div class="size-chips">
+              <div class="size-chip">S</div>
+              <div class="size-chip sel">M</div>
+              <div class="size-chip">L</div>
+              <div class="size-chip">XL</div>
+            </div>
+          </div>
+          <div class="buy-btn-area">
+            <button class="btn-cart">장바구니</button>
+            <button class="btn-buy">바로구매</button>
+          </div>
+          <div class="myfit-cta">
+            <div class="myfit-cta-icon"></div>
+            <div class="myfit-cta-text">MyFit으로 가상 피팅해보기</div>
+            <div class="myfit-cta-badge">열림 ›</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="caption-overlay">
+        <div class="caption-main">쇼핑 페이지에서 바로 — 탭 전환 없이</div>
+        <div class="caption-sub">상품 페이지에서 MyFit 아이콘 클릭 → 사이드 패널이 열립니다</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 사이드 패널 -->
+  <div class="side-panel">
+    <div class="panel-header">
+      <div class="panel-logo-icon">M</div>
+      <div class="panel-title">MyFit</div>
+      <div class="panel-sub">AI 가상 피팅</div>
+    </div>
+    <div class="panel-body">
+      <div class="tabs">
+        <div class="tab active">3D 가이드</div>
+        <div class="tab">AI 피팅</div>
+        <div class="tab">핏 분석</div>
+      </div>
+
+      <div class="canvas-mock">
+        <div class="avatar-figure">
+          <div class="avatar-head"></div>
+          <div class="avatar-body">
+            <div class="avatar-leg-r"></div>
+          </div>
+        </div>
+        <div class="size-badge-overlay">추천: M</div>
+        <div class="drag-hint">드래그로 회전</div>
+      </div>
+
+      <div class="size-row">
+        <div class="sz">S</div>
+        <div class="sz rec">● M</div>
+        <div class="sz">L</div>
+        <div class="sz">XL</div>
+      </div>
+
+      <div class="fit-bars">
+        <div class="fit-row-item">
+          <div class="fit-row-label">어깨</div>
+          <div class="fit-track"><div class="fit-fill" style="width:82%"></div></div>
+          <div class="fit-row-val">딱 맞음</div>
+        </div>
+        <div class="fit-row-item">
+          <div class="fit-row-label">가슴</div>
+          <div class="fit-track"><div class="fit-fill" style="width:75%"></div></div>
+          <div class="fit-row-val">약간 여유</div>
+        </div>
+        <div class="fit-row-item">
+          <div class="fit-row-label">허리</div>
+          <div class="fit-track"><div class="fit-fill" style="width:88%"></div></div>
+          <div class="fit-row-val">딱 맞음</div>
+        </div>
+      </div>
+
+      <div class="buy-panel-btn">이 사이즈로 쿠팡에서 구매하기 →</div>
+    </div>
+  </div>
+</body>
+</html>
