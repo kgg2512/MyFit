@@ -24,6 +24,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Next.js source builds (신형 renewal) — 배포본은 레포 /v2 에만 커밋
+renewal/**/.next/
+renewal/**/out/
+renewal/**/tsconfig.tsbuildinfo
+# Cloudflare Worker 로컬 상태 (재커밋 방지)
+**/.wrangler/
+
 # OS
 Thumbs.db
 .DS_Store
@@ -32,4 +39,8 @@ Thumbs.db
 *.pem
 *.key
 *.cert
-api/pose_landmarker_lite.task
+legacy/api/pose_landmarker_lite.task
+
+# Python
+__pycache__/
+*.pyc

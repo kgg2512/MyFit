@@ -14,8 +14,8 @@
 | 핵심 접근 | **AI 이미지 합성 가상피팅** | **치수 기반 핏 예측** |
 | 한 줄 정의 | 사진 업로드 → AI가 옷 입은 모습 *생성* | 내 치수 × 쇼핑몰 사이즈표 → 부위별 핏 *예측* |
 | 벤더/엔진 | FASHN AI → TryOnCloud (외부 합성 API) | 자체 `FitEngine` + 무신사 사이즈표 자동추출 파서 |
-| 코드 위치 | `app/`, `app-demo/`, `api/` | `myfit-mobile/`, `myfit-extension/` |
-| 배포 | **라이브** https://kgg2512.github.io/MyFit/ (gh-pages) | 미배포 (소스 정착 완료, 빌드/배포 대기) |
+| 코드 위치 | **`legacy/`** (app, app-demo, api) | **`renewal/`** (myfit-mobile, myfit-extension) |
+| 배포 | **라이브** `/legacy/` | **라이브** `/v2/` (2026-07-01 배포 완료) |
 | 레퍼런스 | — | TrueToForm (측정→핏 예측의 B2C판) |
 | 한계 | 합성 이미지 ≠ 실제 착용감, "맞을지" 답 못 줌 | (개발 중) 사이즈표 없는 쇼핑몰 커버리지 |
 
@@ -58,6 +58,10 @@
 
 - **발견:** 2기 신형 작업 전부가 **MyFit 레포가 아니라 G2 회사 모노레포(`kgg2512/G2-Company-Ltd`)에 잘못 커밋**돼 있었음. 원인 = 매시간 `git add .` 후 자동 푸시하던 스케줄 작업(`MyFit-Auto-Commit` + `auto_commit.ps1`)이 작업폴더 전체를 무차별 덤프 → MyFit 공개레포에는 회사 내부 인프라(`.claude/` 539파일)·타 프로젝트(cinderella)까지 섞여 있었음.
 - **정정:** 신형(myfit-mobile/extension/docs)을 `git subtree split`로 **이력 보존**하며 MyFit 레포로 이전. 무관/내부 파일 569개 제거. 원흉 스케줄 작업·스크립트 영구 폐기.
+- **폴더 분리 + 신형 배포 + 히스토리 정화 (2026-07-01 2차):**
+  - 구형 → `legacy/`, 신형 → `renewal/`로 **물리 분리**(각 버전 독립 업데이트/저장). 구형 built 자산 basePath `/MyFit/app` → `/MyFit/legacy/app` 재작성.
+  - 신형 웹 빌드(Next export, basePath `/MyFit/v2`, 데모모드) → 레포 `/v2/` 배포 = **라이브**. 루트에 버전 선택 랜딩 신설.
+  - git 히스토리에서 회사 내부 덤프(`.claude`·`.claude-flow`·`.swarm`·`agents`(C레벨)·`cinderella`·`G2_Office`·`CLAUDE.md`·`.env.*`·워커 `.wrangler` 캐시·셸 artifact) `git filter-repo`로 **전 커밋 완전 제거** 후 force-push(`9d5a626`→`e28ac2b`). CISO 시크릿 스캔 0. 복구 번들 `Desktop/MyFit-backups/` 보존.
 
 ---
 
