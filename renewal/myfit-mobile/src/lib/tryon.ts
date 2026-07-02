@@ -6,12 +6,11 @@
 
 'use client';
 
+import { DEMO_MODE } from '@/lib/appMode';
+
 export const CF_WORKER_URL =
   process.env.NEXT_PUBLIC_CF_WORKER_URL ||
   'https://myfit-fashn-proxy.kgg2512.workers.dev';
-
-// NEXT_PUBLIC_DEMO_MODE=true 이면 데모 버전 (CF Worker 호출 없음)
-export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 export type FitCategory = 'tops' | 'bottoms';
 

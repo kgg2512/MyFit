@@ -8,7 +8,6 @@ import {
   validateImageUrl,
   fileToBase64,
   blobUrlToBase64,
-  DEMO_MODE,
   type FitCategory,
 } from '@/lib/tryon';
 import { captureImage } from '@/lib/camera';
@@ -22,10 +21,10 @@ import {
   isAgeConfirmed,
   setAgeConfirmed,
   calcRecommendedSize,
-  seedDemoData,
   type Measurements,
 } from '@/lib/storage';
 import LoadingSteps from '@/components/LoadingSteps';
+import DemoBanner from '@/demo/DemoBanner';
 
 // ── 피팅 단계 ──
 type FitStep = 'person' | 'garment' | 'result';
@@ -136,12 +135,6 @@ const IconAlertCircle = (
     <line x1="12" y1="16" x2="12.01" y2="16"/>
   </svg>
 );
-const IconDemo = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/>
-    <polyline points="17 2 12 7 7 2"/>
-  </svg>
-);
 
 export default function FitPage() {
   const router = useRouter();
@@ -175,10 +168,6 @@ export default function FitPage() {
 
   useEffect(() => {
     setMounted(true);
-    // 데모 빌드: seed 치수·동의 주입 (실사용 데이터 있으면 덮어쓰지 않음)
-    if (DEMO_MODE) {
-      seedDemoData(process.env.NEXT_PUBLIC_BASE_PATH || '');
-    }
     const m = loadMeasurements();
     setMeasurements(m);
     const last = loadLastPersonImage();
@@ -450,13 +439,8 @@ export default function FitPage() {
         </div>
       )}
 
-      {/* 데모 모드 배너 */}
-      {DEMO_MODE && (
-        <div style={{ background: 'var(--myfit-primary-soft)', borderBottom: '1px solid #a5f0fc', padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: 'var(--myfit-primary)', flexShrink: 0 }}>{IconDemo}</span>
-          <span style={{ fontSize: 12, color: 'var(--myfit-primary)', fontWeight: 600 }}>데모 버전 — 핏 예측 결과는 샘플입니다</span>
-        </div>
-      )}
+      {/* 데모 모드 배너 (데모 빌드에서만, 컴포넌트 내부가 판정) */}
+      <DemoBanner />
 
       {/* 헤더 */}
       <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px 8px' }}>

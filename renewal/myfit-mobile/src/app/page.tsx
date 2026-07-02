@@ -2,9 +2,9 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { loadMeasurements, loadFitHistory, seedDemoData, clearAllData, type FitHistoryItem } from '@/lib/storage';
-import { DEMO_MODE } from '@/lib/tryon';
+import { loadMeasurements, loadFitHistory, type FitHistoryItem } from '@/lib/storage';
 import { isOnboarded } from '@/lib/onboarding';
+import DemoReset from '@/demo/DemoReset';
 
 /* ── 아이콘 (SVG, Lucide 스타일 — 이모지 금지) ── */
 const IconRuler = (
@@ -38,12 +38,6 @@ const IconChevronRight = (
     <path d="m9 18 6-6-6-6"/>
   </svg>
 );
-const IconRefresh = (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
-    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>
-  </svg>
-);
 
 const STEPS: { icon: ReactNode; title: string; desc: string }[] = [
   { icon: IconRuler, title: '내 치수 한 번 입력', desc: '무신사·나이키·자라 어디서든 자동 적용' },
@@ -60,10 +54,6 @@ export default function HomePage() {
 
   useEffect(() => {
     setMounted(true);
-    // 데모 빌드: 첫 진입을 풍성하게 (실사용 데이터 있으면 덮어쓰지 않음)
-    if (DEMO_MODE) {
-      seedDemoData(process.env.NEXT_PUBLIC_BASE_PATH || '');
-    }
     const m = loadMeasurements();
     setHasMeasurements(!!m);
     setHistory(loadFitHistory().slice(0, 3));
@@ -78,12 +68,6 @@ export default function HomePage() {
   const goToProfile = () => router.push('/profile');
   const goToOnboarding = () => router.push('/onboarding');
   const goToPrivacy = () => router.push('/privacy');
-
-  // 데모 리셋: 모든 데이터 삭제 후 온보딩 처음부터 (투자/사용자 시연용)
-  const handleDemoReset = () => {
-    clearAllData();
-    router.push('/onboarding');
-  };
 
   if (!mounted) {
     return (
@@ -216,21 +200,8 @@ export default function HomePage() {
           <span style={{ flexShrink: 0, display: 'flex', color: 'var(--myfit-text-muted)' }}>{IconChevronRight}</span>
         </button>
 
-        {/* 데모 리셋 (투자/사용자 시연용 — 데모 빌드에서만) */}
-        {DEMO_MODE && (
-          <button
-            onClick={handleDemoReset}
-            aria-label="데모 리셋 — 모든 데이터를 지우고 온보딩부터 다시 시작"
-            style={{ width: '100%', textAlign: 'left', background: '#fff', border: '1px dashed var(--myfit-border-strong)', borderRadius: 'var(--myfit-radius)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, minHeight: 0 }}
-          >
-            <span style={{ flexShrink: 0, display: 'flex', color: 'var(--myfit-text-sub)' }}>{IconRefresh}</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--myfit-text)' }}>데모 리셋 · 온보딩 다시 보기</div>
-              <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', marginTop: 2 }}>저장 데이터를 초기화하고 첫 사용자 흐름을 처음부터 시연</div>
-            </div>
-            <span style={{ flexShrink: 0, display: 'flex', color: 'var(--myfit-text-muted)' }}>{IconChevronRight}</span>
-          </button>
-        )}
+        {/* 데모 리셋 (투자/사용자 시연용 — 데모 빌드에서만, 컴포넌트 내부가 판정) */}
+        <DemoReset />
 
         {/* 쿠팡파트너스 고지 */}
         <div style={{ fontSize: 11, color: 'var(--myfit-text-muted)', textAlign: 'center', padding: '8px 0', borderTop: '1px solid var(--myfit-border)' }}>

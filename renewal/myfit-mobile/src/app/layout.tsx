@@ -2,6 +2,7 @@
 
 import './globals.css';
 import { useEffect } from 'react';
+import DemoGate from '@/demo/DemoGate';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // StatusBar 스타일 (Capacitor 네이티브)
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           flexDirection: 'column',
         }}
       >
+        <DemoGate />
         {children}
       </body>
     </html>
