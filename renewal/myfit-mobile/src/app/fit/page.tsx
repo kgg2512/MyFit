@@ -398,7 +398,7 @@ export default function FitPage() {
               서비스 이용을 위해 아래 항목에 동의해 주세요.
             </div>
             {[
-              { label: '[필수] 개인정보 처리방침 동의', desc: '신체 치수는 이 기기에만 저장됩니다. 전체 방침: kgg2512.github.io/MyFit/privacy.html' },
+              { label: '[필수] 개인정보 처리방침 동의', desc: '신체 치수는 이 기기에만 저장됩니다. 전체 방침: kgg2512.github.io/MyFit/v2/privacy/' },
               { label: '[필수] AI 피팅 국외이전 동의 (신체 사진 — PIPA 제28조의8)', desc: '신체 사진은 AI 피팅 처리를 위해 인도 소재 TryOnCloud 서버로 전송됩니다. 원본 사진은 처리 후 즉시 삭제, 피팅 결과 이미지는 최대 7일 후 삭제됩니다. 동의를 철회하려면 AI 피팅 기능을 이용하지 않으시면 됩니다.' },
               { label: '[필수] 제휴 마케팅 링크 고지 동의', desc: '이 서비스는 쿠팡파트너스 활동의 일환으로 수수료를 받을 수 있습니다.' },
             ].map((item) => (
