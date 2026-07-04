@@ -1,0 +1,44 @@
+name: Deploy to GitHub Pages
+
+# legacy 자동빌더 → workflow 방식 전환 (2026-07-04).
+# 이유: legacy 빌더가 GitHub Pages 배포 큐 장애(deployment_queued 타임아웃)에 취약 +
+#       GitHub이 legacy Pages를 단계적 폐지 중. saju-paljja는 이미 workflow로 전환함.
+# 동작: 레포 루트를 그대로 서빙(index.html + legacy/ + v2/ + renewal/ …). .nojekyll로 정적 처리.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 동시 배포 1개만. 진행 중 배포는 끝까지 완료(취소 안 함), 대기는 최신 1개로 합침.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      # 루트 = 사이트. .nojekyll이 루트에 있어 Jekyll 처리 없이 정적 서빙.
+      - name: Upload artifact (repo root)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
