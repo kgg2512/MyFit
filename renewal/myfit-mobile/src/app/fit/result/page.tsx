@@ -267,6 +267,7 @@ export default function FitResultPage() {
   const [fitResult, setFitResult] = useState<FitResult | null>(null);
   const [bodyUsed, setBodyUsed] = useState<{ height: number; chestHalf: number; shoulder: number } | null>(null);
   const [isFallback, setIsFallback] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string>(''); // 인터랙티브 사이즈 비교 선택
 
   useEffect(() => {
     setMounted(true);
@@ -294,6 +295,8 @@ export default function FitResultPage() {
     // (XL=바디핏/XXL=스탠다드/추천=XXL 일치 조건)
     const result = fitEngine.predict(DEMO_CHART, body);
     setFitResult(result);
+    // 인터랙티브 비교 기본 선택 = 추천 사이즈
+    setSelectedSize(result.recommended || result.sizes[0]?.size || '');
   }, []);
 
   // 로딩 상태
@@ -344,9 +347,14 @@ export default function FitResultPage() {
   }
 
   const recommendedSize = fitResult.recommended;
+  const selectedFit =
+    fitResult.sizes.find((s) => s.size === selectedSize) ||
+    fitResult.sizes.find((s) => s.size === recommendedSize) ||
+    fitResult.sizes[0];
 
   return (
     <main
+      className="mf-page-enter"
       style={{
         flex: 1,
         display: 'flex',
@@ -469,19 +477,45 @@ export default function FitResultPage() {
           </section>
         )}
 
-        {/* 사이즈별 카드 목록 */}
-        <section aria-label="사이즈별 핏 상세">
+        {/* 사이즈 비교 (TrueToForm식 인터랙티브 — 사이즈 탭 → 부위별 핏 즉시 갱신) */}
+        <section aria-label="사이즈별 핏 비교">
           <div style={{ fontSize: 12, color: 'var(--myfit-text-muted)', marginBottom: 10, fontWeight: 600 }}>
-            사이즈별 부위 핏 상세
+            사이즈를 눌러 부위별 핏을 비교하세요
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {fitResult.sizes.map((sf) => (
-              <SizeCard
-                key={sf.size}
-                sizeFit={sf}
-                isRecommended={sf.size === recommendedSize}
-              />
-            ))}
+
+          {/* 사이즈 트랙 */}
+          <div role="tablist" aria-label="사이즈 선택" style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+            {fitResult.sizes.map((sf) => {
+              const isSel = sf.size === selectedFit.size;
+              const isRec = sf.size === recommendedSize;
+              return (
+                <button
+                  key={sf.size}
+                  role="tab"
+                  aria-selected={isSel}
+                  onClick={() => setSelectedSize(sf.size)}
+                  aria-label={`사이즈 ${sf.size}${isRec ? ' (추천)' : ''} 핏 보기`}
+                  style={{
+                    flex: 1, minWidth: 0, height: 52, borderRadius: 10,
+                    background: isSel ? 'var(--myfit-ink)' : 'var(--myfit-surface2)',
+                    border: `1.5px solid ${isSel ? 'var(--myfit-ink)' : isRec ? 'var(--myfit-primary)' : 'var(--myfit-border)'}`,
+                    color: isSel ? '#fff' : 'var(--myfit-text)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1,
+                    transition: 'background 0.2s, border-color 0.2s, color 0.2s',
+                  }}
+                >
+                  <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.5px' }}>{sf.size}</span>
+                  {isRec && (
+                    <span style={{ fontSize: 9, fontWeight: 700, color: isSel ? 'rgba(255,255,255,0.85)' : 'var(--myfit-primary)' }}>추천</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 선택 사이즈 상세 (선택 변경 시 크로스페이드로 즉시 갱신) */}
+          <div key={selectedFit.size} className="mf-step">
+            <SizeCard sizeFit={selectedFit} isRecommended={selectedFit.size === recommendedSize} />
           </div>
         </section>
 

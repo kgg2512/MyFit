@@ -371,7 +371,7 @@ export default function FitPage() {
   }
 
   return (
-    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--myfit-bg)', minHeight: '100dvh', color: 'var(--myfit-text)' }}>
+    <main className="mf-page-enter" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--myfit-bg)', minHeight: '100dvh', color: 'var(--myfit-text)' }}>
 
       {/* 동의 모달 (TryOnCloud 국외 이전 동의 — CLO/CISO 필수) */}
       {showConsent && (
@@ -508,6 +508,8 @@ export default function FitPage() {
           </div>
         )}
 
+        {/* 스텝 전환: 단일 컨테이너 내부 크로스페이드 (라우팅 없이 연속 전환) */}
+        <div key={step} className="mf-step" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* ─── STEP 1: 신체 사진 ─── */}
         {step === 'person' && (
           <>
@@ -913,6 +915,7 @@ export default function FitPage() {
             </div>
           </>
         )}
+        </div>
       </div>
     </main>
   );

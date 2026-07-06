@@ -479,6 +479,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
+  const [dir, setDir] = useState<'fwd' | 'back'>('fwd'); // 전환 방향 (연속감)
   const [mounted, setMounted] = useState(false);
 
   const TOTAL_STEPS = 3;
@@ -492,6 +493,7 @@ export default function OnboardingPage() {
   }, [router]);
 
   const handleNext = useCallback(() => {
+    setDir('fwd');
     setStep(s => Math.min(s + 1, TOTAL_STEPS - 1));
   }, []);
 
@@ -499,6 +501,7 @@ export default function OnboardingPage() {
     if (step === 0) {
       router.push('/');
     } else {
+      setDir('back');
       setStep(s => s - 1);
     }
   }, [step, router]);
@@ -517,7 +520,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--myfit-bg)', minHeight: '100dvh', color: 'var(--myfit-text)' }}>
+    <main className="mf-page-enter" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--myfit-bg)', minHeight: '100dvh', color: 'var(--myfit-text)' }}>
       {/* 헤더 */}
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(16px + var(--safe-top)) 20px 12px' }}>
         <button
@@ -544,11 +547,13 @@ export default function OnboardingPage() {
         )}
       </header>
 
-      {/* 스텝 콘텐츠 */}
+      {/* 스텝 콘텐츠 — 단일 컨테이너 내부 크로스페이드(라우팅 없이 연속 전환) */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {step === 0 && <StepValue onNext={handleNext} />}
-        {step === 1 && <StepMeasure onNext={handleNext} onBack={handleBack} />}
-        {step === 2 && <StepComplete onFinish={handleFinish} />}
+        <div key={step} className={`mf-step${dir === 'back' ? ' mf-step--back' : ''}`} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {step === 0 && <StepValue onNext={handleNext} />}
+          {step === 1 && <StepMeasure onNext={handleNext} onBack={handleBack} />}
+          {step === 2 && <StepComplete onFinish={handleFinish} />}
+        </div>
       </div>
     </main>
   );

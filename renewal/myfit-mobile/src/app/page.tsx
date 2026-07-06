@@ -68,6 +68,7 @@ export default function HomePage() {
   const goToProfile = () => router.push('/profile');
   const goToOnboarding = () => router.push('/onboarding');
   const goToPrivacy = () => router.push('/privacy');
+  const goToCommunity = () => router.push('/community');
 
   if (!mounted) {
     return (
@@ -78,7 +79,7 @@ export default function HomePage() {
   }
 
   return (
-    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--myfit-bg)', minHeight: '100dvh', color: 'var(--myfit-text)' }}>
+    <main className="mf-page-enter" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--myfit-bg)', minHeight: '100dvh', color: 'var(--myfit-text)' }}>
       {/* 헤더 */}
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(16px + var(--safe-top)) 20px 8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -157,6 +158,28 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        {/* 핏 커뮤니티 진입 */}
+        <button
+          onClick={goToCommunity}
+          aria-label="핏 커뮤니티 — 같은 체형의 착용 핏 보기"
+          style={{ width: '100%', textAlign: 'left', background: 'var(--myfit-ink)', borderRadius: 'var(--myfit-radius)', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, minHeight: 0 }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 3 }}>핏 커뮤니티</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', lineHeight: 1.4 }}>나와 비슷한 체형은 이 브랜드 이 사이즈를 어떻게 입었을까</div>
+          </div>
+          <span style={{ display: 'flex', color: 'rgba(255,255,255,0.72)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </span>
+        </button>
 
         {/* 최근 핏 */}
         <section>

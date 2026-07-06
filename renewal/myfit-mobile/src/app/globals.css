@@ -200,3 +200,76 @@ img { display: block; max-width: 100%; }
   font-size: 12px; font-weight: 600;
   background: var(--myfit-primary-soft); color: var(--myfit-primary);
 }
+
+/* ══════════════════════════════════════════════════════════════
+   연속 전환 (TrueToForm식 매끄러운 스텝 이동) — 2026-07-06
+   단계가 즉시 스왑되던 것을 슬라이드+페이드로 이어지게. 페이지 진입도 부드럽게.
+   (전역 prefers-reduced-motion 블록이 duration을 0으로 눌러 접근성 보장)
+   ══════════════════════════════════════════════════════════════ */
+@keyframes mf-slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes mf-slide-in-left {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes mf-rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* 스텝 전환: 방향에 따라 좌/우에서 슬라이드 (key 변경 시 remount → 재생) */
+.mf-step { animation: mf-slide-in-right 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.mf-step--back { animation-name: mf-slide-in-left; }
+/* 페이지 진입 페이드-라이즈 */
+.mf-page-enter { animation: mf-rise-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+/* 진행 인디케이터 fill 트랜지션 (연속감의 핵심) */
+.mf-progress-track { height: 4px; border-radius: 2px; background: var(--myfit-border); overflow: hidden; }
+.mf-progress-fill { height: 100%; border-radius: 2px; background: var(--myfit-ink); transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* ══════════════════════════════════════════════════════════════
+   커뮤니티 (핏 자랑 피드) — 2026-07-06
+   ══════════════════════════════════════════════════════════════ */
+/* 아바타 (닉네임 이니셜) */
+.mf-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 15px; flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+/* 필터 칩 (가로 스크롤) */
+.mf-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+.mf-chips::-webkit-scrollbar { display: none; }
+.mf-chip {
+  flex-shrink: 0; height: 36px; padding: 0 14px; border-radius: 999px;
+  background: var(--myfit-surface2); border: 1px solid var(--myfit-border);
+  font-size: 13px; font-weight: 600; color: var(--myfit-text-sub);
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.mf-chip--active {
+  background: var(--myfit-ink); border-color: var(--myfit-ink); color: #fff;
+}
+/* 게시물 카드 */
+.mf-post {
+  background: var(--myfit-surface); border: 1px solid var(--myfit-border);
+  border-radius: var(--myfit-radius-lg); padding: 16px;
+  box-shadow: var(--myfit-shadow-sm);
+  display: flex; flex-direction: column; gap: 12px;
+}
+/* "나와 비슷한 체형" 강조 테두리 */
+.mf-post--similar { border-color: var(--myfit-primary); box-shadow: 0 0 0 1px var(--myfit-primary-soft), var(--myfit-shadow-sm); }
+/* 좋아요 버튼 탭 애니메이션 */
+@keyframes mf-pop { 0% { transform: scale(1); } 40% { transform: scale(1.28); } 100% { transform: scale(1); } }
+.mf-like--on { animation: mf-pop 0.32s ease; }
+/* 플로팅 액션 (핏 자랑하기) */
+.mf-fab {
+  position: fixed; right: 20px; bottom: calc(20px + var(--safe-bottom)); z-index: 40;
+  height: 52px; padding: 0 20px; border-radius: 999px;
+  background: var(--myfit-ink); color: #fff; font-weight: 700; font-size: 15px;
+  display: inline-flex; align-items: center; gap: 8px;
+  box-shadow: 0 6px 20px rgba(17,24,39,0.24);
+  transition: transform 0.15s, background 0.2s;
+}
+.mf-fab:hover { background: #000; }
+.mf-fab:active { transform: scale(0.96); }
