@@ -2,7 +2,6 @@
 # 2026-07-08 G2 보안감사 P0#1: 배포본 CF API 회수로 버전관리 복원.
 #
 # 배포: wrangler deploy   (main = 회수 번들 myfit-fashn-proxy.js)
-# ⚠️ RATE_LIMIT_KV의 id는 CF 대시보드에서 확인해 채울 것(회수 시 부분값만 노출).
 # ⚠️ 벤더 API키·서명키는 코드에 없음 → `wrangler secret put`으로만 등록(하드코딩 금지).
 
 name = "myfit-fashn-proxy"
@@ -12,9 +11,13 @@ compatibility_date = "2024-01-01"
 [vars]
 ENVIRONMENT = "production"
 
-# 레이트리밋 KV (배포된 워커 바인딩)
-# [[kv_namespaces]]
-# binding = "RATE_LIMIT_KV"
-# id = "REPLACE_FROM_CF_DASHBOARD"   # settings 조회 시 085dd51cc8974c559d62dc29022f35a… (부분)
+# 레이트리밋 KV — 배포된 워커의 실제 바인딩 (N1 시정 2026-07-09):
+# 주석처리 상태로 재배포하면 rate-limit이 통째로 풀리는(fail-open) 회귀가 발생하므로 바인딩 복원.
+# id는 `wrangler kv namespace list` 실측으로 확인한 실값(title=MYFIT_RATE_LIMIT) — 추측값 아님.
+# ⚠️ 이 바인딩을 다시 주석처리/삭제하지 말 것 — 바인딩 없이 배포 시 워커가 /try-on 요청을
+#    거부(fail-closed, 500)하도록 방어코드가 있다 (myfit-fashn-proxy.js handleTryOn).
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "085dd51cc8974c559d62dc29022f35af"
 
 # 시크릿(값은 wrangler secret put 으로만): 벤더 API 키, 이미지 서명키 등

@@ -432,6 +432,10 @@ async function handleTryOn(request, env, corsHeaders) {
   if (!env.TRYONCLOUD_API_KEY) {
     return jsonResponse({ error: "Server configuration error" }, 500, corsHeaders);
   }
+  if (!env.RATE_LIMIT_KV) {
+    console.error("[MyFit Worker] RATE_LIMIT_KV not bound — refusing request (fail-closed). Bind KV in wrangler.toml before deploy.");
+    return jsonResponse({ error: "Server configuration error" }, 500, corsHeaders);
+  }
   const clientIp = request.headers.get("CF-Connecting-IP") || "unknown";
   const rateCheck = await checkRateLimit(env.RATE_LIMIT_KV, clientIp);
   if (!rateCheck.allowed) {
