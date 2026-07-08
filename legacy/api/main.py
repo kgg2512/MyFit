@@ -14,7 +14,27 @@ import json
 from pathlib import Path
 
 app = FastAPI(title="MyFit API", version="0.1.0")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+# 보안(감사 2026-07-07 P0#2): CORS 와일드카드(*) → 명시적 허용 오리진.
+# 신체사진을 받는 무인증 엔드포인트이므로 임의 사이트의 교차출처 호출을 차단한다.
+# 배포 시 환경변수 MYFIT_ALLOWED_ORIGINS(콤마구분)로 프로덕션 오리진을 주입할 수 있다.
+import os
+ALLOWED_ORIGINS = [
+    o.strip() for o in os.environ.get(
+        "MYFIT_ALLOWED_ORIGINS",
+        "http://localhost:8000,http://127.0.0.1:8000,http://localhost:3000,https://kgg2512.github.io",
+    ).split(",") if o.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
+
+# 업로드 검증 상수(자원 남용·비이미지 방지)
+_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+_MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10MB
 
 MODEL_PATH = Path(__file__).parent / "pose_landmarker_lite.task"
 _detector = None
@@ -112,8 +132,22 @@ async def analyze_body(
 ):
     if not MODEL_PATH.exists():
         return {"success": False, "error": "모델 파일 없음. api/pose_landmarker_lite.task 필요"}
-    front_kp = extract_keypoints(await front.read())
-    side_kp  = extract_keypoints(await side.read())
+
+    # 보안(감사 2026-07-07 P0#2): 업로드 타입·크기 검증 — 비이미지/과대 파일 거부.
+    async def _read_valid(upload: UploadFile) -> bytes | None:
+        if upload.content_type not in _ALLOWED_IMAGE_TYPES:
+            return None
+        data = await upload.read()
+        if not data or len(data) > _MAX_UPLOAD_BYTES:
+            return None
+        return data
+
+    front_bytes = await _read_valid(front)
+    side_bytes  = await _read_valid(side)
+    if front_bytes is None or side_bytes is None:
+        return {"success": False, "error": "이미지 형식(JPEG/PNG/WebP)·크기(10MB 이하)를 확인해주세요."}
+    front_kp = extract_keypoints(front_bytes)
+    side_kp  = extract_keypoints(side_bytes)
     if not front_kp or not side_kp:
         return {"success": False, "error": "키포인트 추출 실패. 사진을 다시 찍어주세요."}
     return {"success": True, "measurements": calc_measurements(front_kp, side_kp, height_cm)}
