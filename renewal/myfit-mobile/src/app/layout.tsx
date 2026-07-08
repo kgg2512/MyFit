@@ -26,6 +26,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko">
       <head>
         <meta charSet="UTF-8" />
+        {/* 보안(감사 2026-07-08): 클릭재킹 방어. GitHub Pages는 X-Frame-Options/frame-ancestors
+            헤더 불가 → framebusting으로 프레임 탈출(리소스 제약 0, 앱 파손 없음). 네이티브 웹뷰는 self===top이라 무동작. */}
+        <script dangerouslySetInnerHTML={{ __html: 'try{if(self!==top)top.location=self.location.href;}catch(e){}' }} />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <meta name="theme-color" content="#0a0a0a" />
         <meta name="mobile-web-app-capable" content="yes" />
