@@ -1,0 +1,7 @@
+# myfit-web-proxy — MyFit 정적사이트(GitHub Pages) 앞단 보안헤더 프록시
+# 2026-07-08 G2 보안감사: 헤더기반 클릭재킹 완전차단(frame-ancestors/X-Frame-Options)+HSTS+CSP.
+# 배포: wrangler deploy   (카나리 검증 후 커스텀 도메인 연결 시 canonical 전환)
+
+name = "myfit-web-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-01"
