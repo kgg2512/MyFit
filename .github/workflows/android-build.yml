@@ -1,0 +1,109 @@
+name: MyFit Android (AAB)
+
+# ⚠️ 수동 전용(workflow_dispatch). push/pull_request 트리거 절대 금지 — 자동 실행 = 메일폭탄/과금.
+# 목적: renewal/myfit-mobile 을 Play Store 제출용 서명 AAB 로 빌드.
+# 서명키: 레포에 커밋됐던 release.keystore 는 공개 노출로 오염 → 폐기됨.
+#         Play 등록 전 새 keystore 를 로컬 생성 후 아래 secrets 로 주입해야 이 워크플로가 성공한다.
+#         (docs/STORE_SUBMISSION.md 의 "새 keystore 생성 절차" 참고)
+# 필요 secrets: MYFIT_KEYSTORE_B64(base64 인코딩된 .keystore), MYFIT_STORE_PASSWORD,
+#               MYFIT_KEY_ALIAS, MYFIT_KEY_PASSWORD
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildType:
+        description: '빌드 대상: store(.env.app · DEMO=false) | demo(.env.app.demo · DEMO=true)'
+        required: false
+        default: 'store'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: myfit-android
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: renewal/myfit-mobile
+    env:
+      KEYSTORE_B64: ${{ secrets.MYFIT_KEYSTORE_B64 }}
+      STORE_PASSWORD: ${{ secrets.MYFIT_STORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.MYFIT_KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.MYFIT_KEY_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: renewal/myfit-mobile/package-lock.json
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK packages (target API 35)
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Select build env (store = DEMO false, basePath empty)
+        run: |
+          if [ "${{ github.event.inputs.buildType }}" = "demo" ]; then
+            cp .env.app.demo .env.production.local
+          else
+            cp .env.app .env.production.local
+          fi
+          echo "선택된 env:" && cat .env.production.local
+
+      - name: Build web (Next.js static export)
+        run: npm run build
+
+      - name: Capacitor sync android
+        run: npx cap sync android
+
+      - name: Require signing secret (오염 키 폐기 — 새 keystore secret 필수)
+        if: ${{ env.KEYSTORE_B64 == '' }}
+        run: |
+          echo "::error::MYFIT_KEYSTORE_B64 secret 미설정. 레포에 있던 옛 keystore 는 노출로 오염되어 폐기됨. 새 keystore 를 생성(STORE_SUBMISSION.md)한 뒤 서명 secrets 를 등록하고 다시 실행하세요."
+          exit 1
+
+      - name: Restore signing keystore + properties (from secrets)
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > android/release.keystore
+          {
+            echo "storeFile=../release.keystore"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > android/keystore.properties
+
+      - name: Build signed AAB (bundleRelease)
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease --no-daemon --stacktrace
+
+      - name: Clean up signing material
+        if: always()
+        run: rm -f android/release.keystore android/keystore.properties .env.production.local
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: myfit-release-aab
+          path: renewal/myfit-mobile/android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error

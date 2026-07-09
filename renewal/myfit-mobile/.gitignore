@@ -10,8 +10,13 @@ out/
 .env.local
 .env.*.local
 
-# Signing credentials (CISO — 평문 커밋 금지)
+# Signing credentials (CISO — 평문/키스토어 커밋 절대 금지)
 android/keystore.properties
+# 릴리스 서명 키스토어 — 커밋 금지(노출 시 서명키 오염). 로컬/CI-secret으로만 주입.
+*.keystore
+*.jks
+android/release.keystore
+android/app/release.keystore
 
 # OS
 .DS_Store

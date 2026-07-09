@@ -1,0 +1,120 @@
+name: MyFit iOS (unsigned)
+
+# ⚠️ 수동 전용(workflow_dispatch). push/pull_request 트리거 절대 금지 — 자동 실행 = 메일폭탄/과금.
+# 목적: renewal/myfit-mobile 을 iOS 앱으로 스캐폴딩 + 권한 문구/프라이버시 매니페스트 병합 + unsigned 빌드 검증.
+# ios/ 는 레포에 커밋하지 않으므로(플랫폼은 CI에서 생성) 매 실행 시 npx cap add ios 로 재생성한다.
+# 실제 TestFlight/App Store 업로드용 서명 아카이브는 Apple 인증서/프로파일(secrets) 주입 후 별도 단계로 확장.
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildType:
+        description: '빌드 대상: store(.env.app · DEMO=false) | demo(.env.app.demo · DEMO=true)'
+        required: false
+        default: 'store'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: myfit-ios
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: renewal/myfit-mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: renewal/myfit-mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Select build env (store = DEMO false, basePath empty)
+        run: |
+          if [ "${{ github.event.inputs.buildType }}" = "demo" ]; then
+            cp .env.app.demo .env.production.local
+          else
+            cp .env.app .env.production.local
+          fi
+          echo "선택된 env:" && cat .env.production.local
+
+      - name: Build web (Next.js static export)
+        run: npm run build
+
+      - name: Add iOS platform + sync
+        run: |
+          if [ ! -d ios ]; then npx cap add ios; fi
+          npx cap sync ios
+
+      - name: Merge Info.plist usage descriptions (카메라·사진 — 필수)
+        run: |
+          PLIST=ios/App/App/Info.plist
+          set_str() { /usr/libexec/PlistBuddy -c "Add :$1 string $2" "$PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :$1 $2" "$PLIST"; }
+          set_str NSCameraUsageDescription "AI 피팅을 위해 카메라로 사진을 촬영합니다. 촬영된 사진은 AI 처리 후 즉시 삭제됩니다."
+          set_str NSPhotoLibraryUsageDescription "앨범에서 사진을 선택하여 AI 피팅을 진행합니다. 사진은 AI 처리 후 즉시 삭제됩니다."
+          # 앱-바운드 도메인(capacitor.config.ts: limitsNavigationsToAppBoundDomains=true 요건)
+          /usr/libexec/PlistBuddy -c "Delete :WKAppBoundDomains" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :WKAppBoundDomains array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :WKAppBoundDomains:0 string myfit-fashn-proxy.kgg2512.workers.dev" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :WKAppBoundDomains:1 string kgg2512.github.io" "$PLIST"
+          # 세로 방향 고정
+          /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:0 string UIInterfaceOrientationPortrait" "$PLIST"
+          echo "=== Info.plist 검증 ===" && /usr/libexec/PlistBuddy -c "Print :NSCameraUsageDescription" "$PLIST"
+
+      - name: Add privacy manifest (PrivacyInfo.xcprivacy) to App target
+        run: |
+          cp ios-templates/PrivacyInfo.xcprivacy ios/App/App/PrivacyInfo.xcprivacy
+          gem install xcodeproj --no-document
+          ruby -e '
+            require "xcodeproj"
+            proj = Xcodeproj::Project.open("ios/App/App.xcodeproj")
+            target = proj.targets.find { |t| t.name == "App" }
+            group = proj.main_group["App"]
+            unless group.files.any? { |f| f.display_name == "PrivacyInfo.xcprivacy" }
+              ref = group.new_reference("PrivacyInfo.xcprivacy")
+              target.resources_build_phase.add_file_reference(ref)
+              proj.save
+              puts "PrivacyInfo.xcprivacy 를 App 타겟 리소스에 추가함"
+            else
+              puts "이미 등록됨"
+            end
+          '
+
+      - name: Build unsigned (iphoneos, code signing off)
+        run: |
+          cd ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            clean build
+
+      - name: Clean up temp env
+        if: always()
+        run: rm -f .env.production.local
+
+      - name: Upload unsigned .app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: myfit-ios-unsigned
+          path: renewal/myfit-mobile/ios/App/build/Build/Products/Release-iphoneos/*.app
+          if-no-files-found: error

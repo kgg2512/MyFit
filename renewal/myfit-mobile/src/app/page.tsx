@@ -226,8 +226,15 @@ export default function HomePage() {
         {/* 데모 리셋 (투자/사용자 시연용 — 데모 빌드에서만, 컴포넌트 내부가 판정) */}
         <DemoReset />
 
+        {/* 약관·방침 진입 (스토어 심사 요건 — 인앱 접근 경로) */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, fontSize: 12, fontWeight: 600, paddingTop: 8, borderTop: '1px solid var(--myfit-border)' }}>
+          <button type="button" onClick={() => router.push('/terms')} style={{ color: 'var(--myfit-text-sub)', background: 'none', border: 'none', padding: 4 }}>이용약관</button>
+          <span style={{ color: 'var(--myfit-border-strong)' }} aria-hidden="true">·</span>
+          <button type="button" onClick={goToPrivacy} style={{ color: 'var(--myfit-text-sub)', background: 'none', border: 'none', padding: 4 }}>내 데이터 · 프라이버시</button>
+        </div>
+
         {/* 쿠팡파트너스 고지 */}
-        <div style={{ fontSize: 11, color: 'var(--myfit-text-muted)', textAlign: 'center', padding: '8px 0', borderTop: '1px solid var(--myfit-border)' }}>
+        <div style={{ fontSize: 11, color: 'var(--myfit-text-muted)', textAlign: 'center', padding: '4px 0 8px' }}>
           이 서비스는 쿠팡파트너스 활동의 일환으로 수수료를 받을 수 있습니다.
         </div>
       </div>
