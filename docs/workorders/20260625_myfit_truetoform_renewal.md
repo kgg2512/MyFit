@@ -323,10 +323,16 @@
 ### 2026-07-10 — QA FAIL 2건 시정 + 재검증 (Alpha, evaluator 루프 1회차)
 
 **BUG-1 시정 (avatarModel.ts):** `legLen = clamp((height-171)*1.4+150, 118, 155)` → `clamp((height-175)*0.55+138.5, 115, 160)`. 원인 = 기울기 1.4가 클램프 폭(37유닛)의 2.6배 범위(70cm×1.4=98유닛)를 생성해 174.6cm+에서 포화. 새 공식은 입력 도메인(140~210cm) 전 구간 비포화 + viewH 370 내 수렴.
-- **증빙 (완료형, 독립 재실행):** tsc 단독 컴파일 후 node 오라클 — h=140→210(5cm 간격) 15포인트 legBottomY 329.25→367.75 **전 구간 단조 증가·오버플로 0**, QA 지적 케이스 175(348.50) vs 185(354.00) DISTINCT → `MONO_ORACLE_PASS`, EXIT 0. 전체 `npx tsc --noEmit` EXIT 0.
+- **증빙 (완료형, Alpha 자가 재실행 — CAE 🟡1 지적 반영 정정: 시정 주체 본인의 오라클 실행이므로 "독립" 아님):** tsc 단독 컴파일 후 node 오라클 — h=140→210(5cm 간격) 15포인트 legBottomY 329.25→367.75 **전 구간 단조 증가·오버플로 0**, QA 지적 케이스 175(348.50) vs 185(354.00) DISTINCT → `MONO_ORACLE_PASS`, EXIT 0. 전체 `npx tsc --noEmit` EXIT 0. (순수함수 전 구간 오라클 = 객관 증빙이라 신뢰 유지, 라벨만 정정)
 
 **BUG-2 시정 (증빙 정정, 코드 무변경):** 구현자 완료보고의 "스토어 빌드 grep '약간 있음' 0건" 주장은 **부정확**했음을 인정하고 본 기록으로 정정. QA 재확인 결과 실데이터 누출은 없음 — `getDemoFitInput`/`demoChart` 심볼·'무신사 나시' 리터럴은 스토어 청크 0건(tree-shaking 정상)이며, 매치된 것은 `/fit/check` UI 상수(`STRETCH_OPTS` 선택지·`PASTE_EXAMPLE` placeholder)로 데모 데이터와 무관한 실사용 문자열. **올바른 데모 격리 판정 기준 = 심볼·상품명 grep**(문자열 우연 일치 아님)로 확정.
 
 **QA 증빙 스크린샷 이동:** G2 루트 → `docs/evidence/20260710/`(g5-demo-direct-result.png · g6-fit-result-photo-compare.png · g-mobile375-fit-check.png).
 
 **재검증 판정: 두 FAIL 항목 해소 → P7+P8+P9 전 게이트 PASS.**
+
+### 2026-07-10 — CAE 감사(VIOLATIONS 2 🟡) 시정 완료 (Alpha)
+
+- 🟡1 증빙 라벨링: BUG-1 재검증 표기 "독립 재실행" → "Alpha 자가 재실행"으로 정정(위 섹션 반영). 향후 자가 재실행에 "독립" 표기 금지 준수.
+- 🟡2 스킬화 판정 정정: "해당없음" 철회 → **`demo-isolation-check` 스킬 생성**(G2 `.claude/skills/demo-isolation-check/SKILL.md`, `g2_origin: agent-created`) — 데모/스토어 격리 검증의 심볼 grep 원칙, 4개 프로젝트 공통 적용.
+- 감사 리포트: G2 `docs/reports/audit/20260710_b714655d_audit.md`.
