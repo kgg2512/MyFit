@@ -7,7 +7,6 @@ import {
   validateImageFile,
   validateImageUrl,
   fileToBase64,
-  blobUrlToBase64,
   type FitCategory,
 } from '@/lib/tryon';
 import { captureImage } from '@/lib/camera';

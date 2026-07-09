@@ -5,6 +5,8 @@
 
 'use client';
 
+import type { GarmentSizeChart } from './fitEngine';
+
 export interface Measurements {
   height: number;   // cm
   weight: number;   // kg
@@ -32,6 +34,7 @@ const KEYS = {
   LAST_PERSON_TS: 'myfit_last_person_ts',        // 신체 사진 저장 시각 (만료 자동폐기용)
   DEMO_SEEDED: 'myfit_demo_seeded',              // 데모 seed 1회 주입 마커
   ONBOARDED: 'myfit_onboarded',                  // 온보딩 완료 (onboarding.ts와 동일 키 — clearAllData용)
+  ACTIVE_FIT_INPUT: 'myfit_active_fit_input',    // 핏 체크용 활성 사이즈표(사용자 입력/붙여넣기 파싱)
 };
 
 /**
@@ -67,6 +70,56 @@ export function loadMeasurements(): Measurements | null {
 export function clearMeasurements(): void {
   if (!isBrowser()) return;
   localStorage.removeItem(KEYS.MEASUREMENTS);
+}
+
+// ── 활성 사이즈표 (핏 체크 입력 — /fit/check → /fit/result 전달) ──
+
+/** 핏 체크 입력: 사이즈표 + 카테고리/신축/상품 메타 (사용자 제공, 1회성 처리) */
+export interface ActiveFitInput {
+  chart: GarmentSizeChart;
+  category: string;
+  stretch: string | null;
+  productUrl?: string;
+  productName?: string;
+  savedAt: number;
+}
+
+export function saveActiveFitInput(
+  chart: GarmentSizeChart,
+  meta: { category: string; stretch: string | null; productUrl?: string; productName?: string },
+): void {
+  if (!isBrowser()) return;
+  const payload: ActiveFitInput = {
+    chart,
+    category: meta.category,
+    stretch: meta.stretch,
+    productUrl: meta.productUrl?.trim() || undefined,
+    productName: meta.productName?.trim() || undefined,
+    savedAt: Date.now(),
+  };
+  try {
+    localStorage.setItem(KEYS.ACTIVE_FIT_INPUT, JSON.stringify(payload));
+  } catch {
+    // storage quota 초과 시 무시
+  }
+}
+
+export function getActiveFitInput(): ActiveFitInput | null {
+  if (!isBrowser()) return null;
+  try {
+    const raw = localStorage.getItem(KEYS.ACTIVE_FIT_INPUT);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ActiveFitInput;
+    if (!parsed?.chart?.sizes?.length) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function clearActiveFitInput(): void {
+  if (!isBrowser()) return;
+  localStorage.removeItem(KEYS.ACTIVE_FIT_INPUT);
 }
 
 // ── 동의 여부 ──

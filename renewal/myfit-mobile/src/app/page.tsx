@@ -64,6 +64,7 @@ export default function HomePage() {
     }
   }, []);
 
+  const goToFitCheck = () => router.push('/fit/check');
   const goToFit = () => router.push('/fit');
   const goToProfile = () => router.push('/profile');
   const goToOnboarding = () => router.push('/onboarding');
@@ -105,7 +106,7 @@ export default function HomePage() {
           <p style={{ fontSize: 14, color: 'var(--myfit-text-sub)', margin: '0 0 24px', lineHeight: 1.6 }}>
             옷의 실측 사이즈 × 내 신체 치수로<br />이 옷이 나에게 어떤 핏인지 미리 확인하세요
           </p>
-          <button className="btn-primary" onClick={goToFit}>내 핏 예측하기</button>
+          <button className="btn-primary" onClick={goToFitCheck}>내 핏 예측하기</button>
         </section>
 
         {/* 신규 유저 온보딩 유도 배너 (온보딩 미완료 + 측정값 없을 때) */}
@@ -159,6 +160,27 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* 스타일 미리보기 (베타) — AI 가상피팅 보조 진입(강등) */}
+        <button
+          onClick={goToFit}
+          aria-label="스타일 미리보기 (베타) — AI 가상 착장 이미지 생성"
+          style={{ width: '100%', textAlign: 'left', background: 'var(--myfit-surface2)', border: '1px solid var(--myfit-border)', borderRadius: 'var(--myfit-radius)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, minHeight: 0 }}
+        >
+          <span style={{ flexShrink: 0, display: 'flex', color: 'var(--myfit-text-sub)' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+            </svg>
+          </span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--myfit-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              스타일 미리보기
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--myfit-text-muted)', background: 'var(--myfit-border)', padding: '1px 6px', borderRadius: 999 }}>베타</span>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', marginTop: 2 }}>내 사진에 옷을 입혀보는 AI 가상 착장 이미지</div>
+          </div>
+          <span style={{ flexShrink: 0, display: 'flex', color: 'var(--myfit-text-muted)' }}>{IconChevronRight}</span>
+        </button>
+
         {/* 핏 커뮤니티 진입 */}
         <button
           onClick={goToCommunity}
@@ -201,7 +223,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <button type="button" onClick={goToFit} style={{ width: '100%', padding: '28px 16px', background: 'var(--myfit-surface2)', border: '1px dashed var(--myfit-border-strong)', borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <button type="button" onClick={goToFitCheck} style={{ width: '100%', padding: '28px 16px', background: 'var(--myfit-surface2)', border: '1px dashed var(--myfit-border-strong)', borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
               <span style={{ color: 'var(--myfit-text-muted)' }}>{IconGauge}</span>
               <span style={{ fontSize: 13, color: 'var(--myfit-text-sub)', fontWeight: 600 }}>아직 핏 예측 기록이 없어요</span>
               <span style={{ fontSize: 12, color: 'var(--myfit-primary)', fontWeight: 700 }}>첫 핏 예측 시작하기 →</span>

@@ -341,7 +341,7 @@ function StepComplete({ onFinish }: { onFinish: () => void }) {
 
   const handleGoFit = () => {
     setOnboarded();
-    router.push('/fit');
+    router.push('/fit/check');
   };
 
   const handleGoHome = () => {

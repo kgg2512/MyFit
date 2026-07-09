@@ -9,8 +9,12 @@ import {
   isConsented,
   isAgeConfirmed,
   setAgeConfirmed,
+  saveLastPersonImage,
+  loadLastPersonImage,
+  clearLastPersonImage,
   type Measurements,
 } from '@/lib/storage';
+import { captureImage } from '@/lib/camera';
 
 const QUICK_SIZE_MAP: Record<string, Measurements> = {
   XS: { height: 163, weight: 50, shoulder: 37, chest: 82, waist: 62, hip: 86 },
@@ -42,6 +46,22 @@ const IconRuler = (
     <path d="m7.5 10.5 2 2M11 7l2 2M14.5 3.5l2 2"/>
   </svg>
 );
+const IconCamera = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+    <circle cx="12" cy="13" r="4"/>
+  </svg>
+);
+const IconImage = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+  </svg>
+);
+const IconX = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -53,6 +73,8 @@ export default function ProfilePage() {
   const [ageConfirmed, setAgeConfirmedState] = useState(false); // 만 14세 이상 확인 (PIPA §22)
   const [showConsent, setShowConsent] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string>(''); // 내 몸 기록 미리보기 (dataUrl)
+  const [photoError, setPhotoError] = useState<string>('');
 
   useEffect(() => {
     setMounted(true);
@@ -62,7 +84,30 @@ export default function ProfilePage() {
     setConsentedState(c);
     setAgeConfirmedState(isAgeConfirmed());
     if (!c) setShowConsent(true);
+    // 저장된 신체 사진(미만료)이 있으면 미리보기 (온디바이스, 만료 자동폐기 정책)
+    const photo = loadLastPersonImage();
+    if (photo) setPhotoPreview(`data:image/jpeg;base64,${photo}`);
   }, []);
+
+  // ── 내 몸 기록 (선택, P9) — 기존 camera.ts + storage 사진 인프라 재사용, 신규 수집항목 0 ──
+  const handleCapturePhoto = async (mode: 'camera' | 'gallery') => {
+    if (!consented) { setShowConsent(true); return; }
+    setPhotoError('');
+    try {
+      const result = await captureImage(mode);
+      saveLastPersonImage(result.base64); // localStorage만 (서버 전송 없음)
+      setPhotoPreview(result.dataUrl);
+    } catch (e) {
+      const err = e as Error;
+      if (!err.message.includes('취소')) setPhotoError('사진을 불러오지 못했습니다: ' + err.message);
+    }
+  };
+
+  const handleDeletePhoto = () => {
+    clearLastPersonImage();
+    setPhotoPreview('');
+    setPhotoError('');
+  };
 
   const handleQuickSize = (size: string) => {
     const preset = QUICK_SIZE_MAP[size];
@@ -84,7 +129,7 @@ export default function ProfilePage() {
     saveMeasurements(form);
     setSaved(true);
     setTimeout(() => {
-      router.push('/fit');
+      router.push('/fit/check');
     }, 800);
   };
 
@@ -98,7 +143,7 @@ export default function ProfilePage() {
     saveMeasurements(form);
     setSaved(true);
     setTimeout(() => {
-      router.push('/fit');
+      router.push('/fit/check');
     }, 800);
   };
 
@@ -302,6 +347,47 @@ export default function ProfilePage() {
           <span style={{ color: 'var(--myfit-text-muted)' }}>{IconShield}</span>
           이 기기에만 저장 · 서버 전송 없음
         </div>
+
+        {/* 내 몸 기록 (선택) — P9. 결과 화면에서 실루엣 대신 내 사진으로 확인 */}
+        <section aria-label="내 몸 기록">
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--myfit-text-sub)', marginBottom: 8, letterSpacing: '0.04em' }}>
+            내 몸 기록 <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--myfit-text-muted)' }}>(선택)</span>
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', marginBottom: 12, lineHeight: 1.5 }}>
+            사진을 더하면 핏 결과 화면에서 실루엣 대신 내 사진으로 비교할 수 있어요.
+          </div>
+
+          {photoPreview ? (
+            <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid var(--myfit-border)', position: 'relative' }}>
+              <img src={photoPreview} alt="내 몸 기록 사진 미리보기" style={{ width: '100%', maxHeight: 300, objectFit: 'cover', display: 'block' }} />
+              <button
+                onClick={handleDeletePhoto}
+                aria-label="내 몸 기록 사진 삭제"
+                style={{ position: 'absolute', top: 8, right: 8, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', border: '1px solid var(--myfit-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--myfit-text)' }}
+              >
+                {IconX}
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn-secondary" onClick={() => handleCapturePhoto('camera')} style={{ flex: 1, gap: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span>{IconCamera}</span> 촬영
+              </button>
+              <button className="btn-secondary" onClick={() => handleCapturePhoto('gallery')} style={{ flex: 1, gap: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span>{IconImage}</span> 사진 선택
+              </button>
+            </div>
+          )}
+
+          {photoError && (
+            <div role="alert" style={{ marginTop: 10, fontSize: 12, color: 'var(--myfit-error)' }}>{photoError}</div>
+          )}
+
+          <div style={{ fontSize: 11, color: 'var(--myfit-text-muted)', textAlign: 'center', marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, lineHeight: 1.5 }}>
+            <span style={{ color: 'var(--myfit-text-muted)' }}>{IconShield}</span>
+            사진은 이 기기에만 저장됩니다 · 서버 전송 없음 · 7일 후 자동 삭제
+          </div>
+        </section>
 
         {/* 내 데이터 · 프라이버시 진입 */}
         <button
