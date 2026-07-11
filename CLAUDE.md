@@ -16,10 +16,15 @@
 | **스토어 신형** | `/v2/` | 데모 검증 PASS 후 복사 승격만 |
 | **스토어 구형** | `/legacy/` | 데모 검증 PASS 후 복사 승격만 |
 
-**작업 절차 (웹 기본):**
-1. 빌드/수정 산출물을 **`demo/v2/`(또는 `demo/legacy/`)에 먼저** 반영 → push → 라이브 데모 URL 검증
-2. PASS 후 승격: `robocopy demo\v2 v2 /MIR` (구형이면 `demo\legacy legacy`) → push
-3. **스토어 폴더(`v2/`·`legacy/`) 직접 수정 금지.** 데모 폴더는 언제 망가져도 된다.
-4. 앱(플레이/앱스토어)·크롬 확장(CWS): 스토어 제출 빌드는 **데모 웹 검증 PASS된 코드로만** 생성.
+**작업 절차 (웹 신형 기본 — 2026-07-11 재작성: 복사 승격 폐기):**
+1. 데모 반영: `cd renewal/myfit-mobile; .\build-all.ps1 -Target web:demo` → `/demo/v2/`에 DEMO_MODE=true·basePath `/MyFit/demo/v2`·noindex로 빌드 → push → 라이브 데모 URL 검증.
+2. **승격 = 재빌드 (복사 아님):** 데모 검증 PASS 후 `.\build-all.ps1 -Target web:store` → `/v2/`에 **DEMO_MODE=false**·basePath `/MyFit/v2`로 재빌드 → push.
+   - ⚠️ **`robocopy demo\v2 v2`(복사) 금지.** 데모 슬롯은 DEMO_MODE=true라 데모 시드·샘플 데이터를 포함한다. 복사하면 그 데이터가 스토어로 새어든다(2026-07-11 QA 적발: "무신사 나시 (데모)" 스토어 유출). 승격은 반드시 `DEMO_MODE=false` 재빌드여야 tree-shaking이 데모 데이터를 제거한다.
+3. **스토어 폴더(`v2/`·`legacy/`)는 `web:store` 빌드 산출물로만 갱신.** 손으로 직접 수정 금지. 데모 폴더는 언제 망가져도 된다.
+4. 격리 검증: 승격 후 `demo-isolation-check` 스킬로 `/v2/` 청크에 데모 심볼(`getDemoFitInput`·`무신사 나시`) 0건 확인.
+5. 앱(플레이/앱스토어)·크롬 확장(CWS): 스토어 제출 빌드는 **데모 웹 검증 PASS된 코드로만** 생성.
+
+**⚠️ 스토어 승격 전제 (2026-07-11 — 미해결, 회장 결정 대기):**
+`DEMO_MODE=false` 스토어 빌드는 회장이 2026-07-09 종결 확정한 **AI 가상피팅(TryOnCloud 인도 국외이전)을 활성화**한다(`tryon.ts` 실호출 경로 + profile 국외이전 [필수] 동의). 신형 스토어 승격 전에 AI 피팅 처리(제거/유지)를 확정해야 한다. 그전까지 `/v2/`는 데모/프리뷰 상태 유지.
 
 주의: `v2/demo/`(앱 내 데모 모드 페이지)와 루트 `demo/`(작업용 스테이징 폴더)는 별개다.
