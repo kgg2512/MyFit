@@ -12,6 +12,10 @@ import {
   type Measurements,
 } from '@/lib/storage';
 import { setOnboarded, isOnboarded } from '@/lib/onboarding';
+// 모듈 로컬 process.env 직접 참조 — appMode.DEMO_MODE import는 'use client' 모듈 경계로
+// 리터럴 치환이 안정적으로 전파되지 않아 스토어 빌드(false)에서 데모 전용 문구가
+// 확실히 dead-code 제거되도록 DemoBanner.tsx와 동일한 방식으로 로컬 상수화한다.
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 /* ── 아이콘 (SVG, Lucide 스타일 — 이모지 금지) ── */
 const IconMeasure = (
@@ -215,11 +219,15 @@ function StepMeasure({ onNext, onBack }: { onNext: () => void; onBack: () => voi
             <p style={{ fontSize: 13, color: 'var(--myfit-text-sub)', marginBottom: 20 }}>
               서비스 이용을 위해 아래 항목에 동의해 주세요.
             </p>
-            {[
+            {(DEMO_MODE ? [
+              { label: '[필수] 개인정보 처리방침 동의', desc: '신체 치수는 이 기기에만 저장됩니다.' },
+              { label: '[안내] 현재 샘플 이미지 시연 중입니다', desc: '지금은 실제 AI 피팅이 아닌 샘플 이미지 시연 버전입니다. 업로드하신 신체 사진은 서버로 전송·저장되지 않으며, 이 기기에서만 사용됩니다.' },
+              { label: '[필수] 제휴 마케팅 링크 고지 동의', desc: '쿠팡파트너스 활동의 일환으로 구매 시 수수료를 받을 수 있습니다.' },
+            ] : [
               { label: '[필수] 개인정보 처리방침 동의', desc: '신체 치수는 이 기기에만 저장됩니다. AI 피팅 이용 시 신체 사진이 외부 서버로 전송됩니다.' },
               { label: '[필수] AI 피팅 국외이전 동의 (신체 사진 — PIPA 제28조의8)', desc: '신체 사진은 AI 피팅 처리를 위해 외부 서버로 전송됩니다. 처리 후 즉시 삭제됩니다.' },
               { label: '[필수] 제휴 마케팅 링크 고지 동의', desc: '쿠팡파트너스 활동의 일환으로 구매 시 수수료를 받을 수 있습니다.' },
-            ].map(item => (
+            ]).map(item => (
               <div key={item.label} style={{ padding: '12px 0', borderBottom: '1px solid var(--myfit-border)', display: 'flex', gap: 12 }}>
                 <div style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--myfit-primary-soft)', border: '1px solid var(--myfit-primary)', flexShrink: 0, marginTop: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--myfit-primary)' }}>
                   {IconCheck}

@@ -10,7 +10,11 @@ import {
   type FitCategory,
 } from '@/lib/tryon';
 import { captureImage } from '@/lib/camera';
-import { DEMO_MODE } from '@/lib/appMode';
+// 모듈 로컬 process.env 직접 참조 — appMode.DEMO_MODE import는 'use client' 모듈 경계로
+// 리터럴 치환이 안정적으로 전파되지 않아(관측: 인도 소재 TryOnCloud 문구가 데모 빌드에
+// 잔존) 스토어 빌드(false)에서 아래 데모 전용 문구가 확실히 dead-code 제거되도록
+// DemoBanner.tsx와 동일한 방식으로 로컬 상수화한다.
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 import {
   loadMeasurements,
   loadLastPersonImage,
