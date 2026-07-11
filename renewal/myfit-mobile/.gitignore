@@ -5,10 +5,13 @@ node_modules/
 .next/
 out/
 
-# Environment
-.env
-.env.local
-.env.*.local
+# Environment variables (블랭킷 + 현재 추적 4파일 명시 예외 — CI 빌드가 NEXT_PUBLIC_* 플래그로 실사용, git rm --cached 금지)
+.env*
+!.env.*.example
+!.env.app
+!.env.app.demo
+!.env.demo
+!.env.production
 
 # Signing credentials (CISO — 평문/키스토어 커밋 절대 금지)
 android/keystore.properties

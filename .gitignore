@@ -3,10 +3,9 @@ node_modules/
 .npm
 .yarn
 
-# Environment variables
-.env
-.env.local
-.env.*.local
+# Environment variables (블랭킷 — 신규 .env 오커밋 방지, 기존 추적 파일엔 영향 없음)
+.env*
+!.env.*.example
 
 # IDE
 .vscode/
