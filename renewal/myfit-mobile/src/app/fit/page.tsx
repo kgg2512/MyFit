@@ -10,6 +10,7 @@ import {
   type FitCategory,
 } from '@/lib/tryon';
 import { captureImage } from '@/lib/camera';
+import { DEMO_MODE } from '@/lib/appMode';
 import {
   loadMeasurements,
   loadLastPersonImage,
@@ -385,11 +386,15 @@ export default function FitPage() {
             <div style={{ fontSize: 13, color: 'var(--myfit-text-sub)', marginBottom: 20, lineHeight: 1.6 }}>
               서비스 이용을 위해 아래 항목에 동의해 주세요.
             </div>
-            {[
+            {(DEMO_MODE ? [
+              { label: '[필수] 개인정보 처리방침 동의', desc: '신체 치수는 이 기기에만 저장됩니다. 전체 방침: kgg2512.github.io/MyFit/v2/privacy/' },
+              { label: '[안내] 현재 샘플 이미지 시연 중입니다', desc: '지금은 실제 AI 피팅이 아닌 샘플 이미지 시연 버전입니다. 업로드하신 신체 사진은 서버로 전송·저장되지 않으며, 이 기기에서만 사용된 뒤 결과 화면에 시뮬레이션 배지와 함께 안내됩니다.' },
+              { label: '[필수] 제휴 마케팅 링크 고지 동의', desc: '이 서비스는 쿠팡파트너스 활동의 일환으로 수수료를 받을 수 있습니다.' },
+            ] : [
               { label: '[필수] 개인정보 처리방침 동의', desc: '신체 치수는 이 기기에만 저장됩니다. 전체 방침: kgg2512.github.io/MyFit/v2/privacy/' },
               { label: '[필수] AI 피팅 국외이전 동의 (신체 사진 — PIPA 제28조의8)', desc: '신체 사진은 AI 피팅 처리를 위해 인도 소재 TryOnCloud 서버로 전송됩니다. 원본 사진은 처리 후 즉시 삭제, 피팅 결과 이미지는 최대 7일 후 삭제됩니다. 동의를 철회하려면 AI 피팅 기능을 이용하지 않으시면 됩니다.' },
               { label: '[필수] 제휴 마케팅 링크 고지 동의', desc: '이 서비스는 쿠팡파트너스 활동의 일환으로 수수료를 받을 수 있습니다.' },
-            ].map((item) => (
+            ]).map((item) => (
               <div key={item.label} style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
                 <span style={{ color: 'var(--myfit-primary)', marginTop: 2, flexShrink: 0 }}>{IconCheck}</span>
                 <div>
@@ -604,7 +609,9 @@ export default function FitPage() {
             {/* 개인정보 안내 */}
             <div style={{ fontSize: 11, color: 'var(--myfit-text-muted)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
               <span>{IconShield}</span>
-              사진은 TryOnCloud 서버 처리 후 즉시 삭제됩니다. 이 기기에만 임시 보관됩니다.
+              {DEMO_MODE
+                ? '현재 샘플 이미지 시연 버전입니다. 사진은 서버로 전송되지 않고 이 기기에만 임시 보관됩니다.'
+                : '사진은 TryOnCloud 서버 처리 후 즉시 삭제됩니다. 이 기기에만 임시 보관됩니다.'}
             </div>
 
             {/* 다음 단계 버튼 */}
@@ -806,18 +813,34 @@ export default function FitPage() {
         {step === 'result' && (
           <>
             {/* 결과 이미지 */}
-            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid var(--myfit-border)' }}>
+            <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--myfit-border)' }}>
+              {DEMO_MODE && (
+                <div
+                  role="status"
+                  style={{
+                    position: 'absolute', top: 10, left: 10, zIndex: 2,
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e',
+                    fontSize: 12, fontWeight: 700, padding: '6px 12px', borderRadius: 999,
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                  }}
+                >
+                  시뮬레이션(샘플) 결과 — 실제 AI 피팅 아님
+                </div>
+              )}
               <img
                 ref={resultImgRef}
                 src={resultImageUrl}
-                alt="핏 예측 결과 이미지"
+                alt={DEMO_MODE ? '시뮬레이션(샘플) 핏 예측 결과 이미지' : '핏 예측 결과 이미지'}
                 loading="lazy"
                 style={{ width: '100%', objectFit: 'contain', background: 'var(--myfit-surface2)' }}
               />
             </div>
 
             <div style={{ fontSize: 11, color: 'var(--myfit-text-muted)', textAlign: 'center' }}>
-              AI 생성 이미지입니다. 실제 착용과 차이가 있을 수 있습니다.
+              {DEMO_MODE
+                ? '현재 샘플 이미지 시연 버전입니다. 업로드한 사진은 AI 처리에 사용되지 않았습니다.'
+                : 'AI 생성 이미지입니다. 실제 착용과 차이가 있을 수 있습니다.'}
             </div>
 
             {/* PMF 피드백 */}
