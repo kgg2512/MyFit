@@ -175,9 +175,6 @@ export default function PrivacyPage() {
             <li>신체 사진은 저장 후 <strong style={{ color: 'var(--myfit-text)' }}>{PHOTO_RETENTION_DAYS}일이 지나면 자동 삭제</strong>됩니다.</li>
             <li>아래에서 <strong style={{ color: 'var(--myfit-text)' }}>언제든 직접 삭제</strong>할 수 있습니다.</li>
           </ul>
-          <p style={{ margin: '10px 0 0', fontSize: 11, color: 'var(--myfit-text-muted)', lineHeight: 1.6 }}>
-            ※ AI 피팅 이용 시에만 신체 사진이 외부 처리 서버로 전송되며(별도 동의), 처리 후 즉시 삭제됩니다. 위 자동삭제는 이 기기에 재사용을 위해 보관된 사진에 적용됩니다.
-          </p>
         </section>
 
         {/* 저장된 데이터 카테고리 */}
