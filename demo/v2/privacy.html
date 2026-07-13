@@ -45,7 +45,7 @@
 <header><meta name="robots" content="noindex,nofollow">
   <div class="brand">G2 Company Ltd.</div>
   <h1>MyFit 개인정보처리방침</h1>
-  <div class="meta">시행일: 2026년 6월 6일 &nbsp;·&nbsp; 최종 개정: 2026년 6월 21일 &nbsp;|&nbsp; 버전: 1.2</div>
+  <div class="meta">시행일: 2026년 6월 6일 &nbsp;·&nbsp; 최종 개정: 2026년 7월 14일 &nbsp;|&nbsp; 버전: 1.3</div>
 </header>
 
 <div class="container">
@@ -58,8 +58,8 @@
   <section id="p1">
     <h2>제1조 (개인정보의 처리 목적)</h2>
     <ul>
-      <li><strong>AI 가상 피팅 서비스 제공</strong>: 신체 치수 및 사진 기반 피팅 결과 생성</li>
-      <li><strong>서비스 개선</strong>: 피팅 품질 분석, 오류 개선</li>
+      <li><strong>핏 예측 서비스 제공</strong>: 신체 치수와 의류 실측 사이즈를 대조한 부위별 핏 예측 및 사이즈 추천</li>
+      <li><strong>서비스 개선</strong>: 핏 예측 품질 분석, 오류 개선</li>
       <li><strong>법령 의무 이행</strong>: 관련 법령상 의무 이행</li>
     </ul>
   </section>
@@ -68,13 +68,12 @@
     <h2>제2조 (수집하는 개인정보 항목 및 수집 방법)</h2>
     <table>
       <tr><th>수집 항목</th><th>수집 목적</th><th>저장 위치</th></tr>
-      <tr><td>신체 치수 (키, 몸무게 등)</td><td>AI 피팅 결과 생성 및 사이즈 추천</td><td>이용자 기기의 브라우저 저장소(localStorage)</td></tr>
-      <tr><td>피팅 히스토리 (결과 이미지 경로 등)</td><td>이전 피팅 기록 표시</td><td>이용자 기기의 브라우저 저장소(localStorage)</td></tr>
-      <tr><td>사용자 사진 (업로드 시)</td><td>AI 가상 피팅 처리</td><td>처리 완료 즉시 삭제 (서버 미보관). 재사용 편의를 위해 마지막 1장은 이용자 기기 저장소에 임시 보관될 수 있음</td></tr>
-      <tr><td>의류 이미지 URL</td><td>AI 피팅 처리</td><td>처리 완료 즉시 삭제</td></tr>
+      <tr><td>신체 치수 (키·몸무게·둘레 등)</td><td>부위별 핏 예측 및 사이즈 추천</td><td>이용자 기기의 브라우저 저장소(localStorage)</td></tr>
+      <tr><td>핏 예측 기록</td><td>이전 핏 예측 기록 표시</td><td>이용자 기기의 브라우저 저장소(localStorage)</td></tr>
+      <tr><td>신체 사진 (선택)</td><td>기기 내 핏 참고·미리보기</td><td>이용자 기기에만 저장. 저장 후 7일 경과 시 자동 삭제되며, 외부 서버로 전송하지 않음</td></tr>
     </table>
     <div class="highlight-box">
-      <strong>중요:</strong> 사용자 사진은 AI 피팅 처리 목적으로만 외부 API에 전달되며, 처리 완료 즉시 삭제됩니다. 회사 서버에 영구 저장하지 않습니다. 신체 치수·피팅 기록은 <strong>이용자 기기의 브라우저 저장소(localStorage)에 저장</strong>되며 당사 서버로 전송되지 않습니다. 회사는 별도의 회원가입·계정·이메일을 수집하지 않습니다.
+      <strong>중요:</strong> 신체 치수·핏 기록·신체 사진은 <strong>모두 이용자 기기(브라우저)에만 저장</strong>되며, MyFit(회사) 서버나 외부 업체로 전송·보관하지 않습니다. 핏 예측은 이용자 기기 내에서 자체 계산됩니다. 회사는 별도의 회원가입·계정·이메일을 수집하지 않습니다.
     </div>
   </section>
 
@@ -82,22 +81,15 @@
     <h2>제3조 (개인정보의 처리 및 보유 기간)</h2>
     <table>
       <tr><th>항목</th><th>보유 기간</th><th>보유 위치</th></tr>
-      <tr><td>신체 치수 · 피팅 히스토리</td><td>이용자가 데이터 초기화 또는 앱·브라우저 데이터 삭제 시까지</td><td>이용자 기기의 브라우저 저장소(localStorage)</td></tr>
-      <tr><td>사용자 사진</td><td>원본: 피팅 처리 완료 즉시 삭제 / 피팅 결과 이미지: 최대 7일 후 삭제</td><td>TryOnCloud(인도) 처리 중 임시 보관</td></tr>
+      <tr><td>신체 치수 · 핏 예측 기록</td><td>이용자가 데이터 초기화 또는 앱·브라우저 데이터 삭제 시까지</td><td>이용자 기기의 브라우저 저장소(localStorage)</td></tr>
+      <tr><td>신체 사진</td><td>저장 후 7일 경과 시 자동 삭제 (또는 이용자가 직접 삭제 시)</td><td>이용자 기기 내 저장소</td></tr>
     </table>
   </section>
 
   <section id="p4">
-    <h2>제4조 (개인정보의 처리 위탁 및 국외이전)</h2>
-    <p>피팅 서비스 제공을 위해 사용자 사진이 아래 서비스에 전달됩니다.</p>
-    <table>
-      <tr><th>수탁사</th><th>이전 항목</th><th>이전 목적</th><th>서버 위치</th><th>보유 기간</th></tr>
-      <tr><td>TryOnCloud (tryoncloud.com)</td><td>사용자 사진</td><td>AI 가상 피팅 처리</td><td>인도 (India)</td><td>원본 사진: 처리 후 즉시 삭제 / 피팅 결과 이미지: 최대 7일 보관 후 삭제</td></tr>
-    </table>
+    <h2>제4조 (제3자 제공 · 처리위탁 · 국외이전)</h2>
     <div class="highlight-box">
-      위 처리는 「개인정보보호법」 제28조의8에 따라 국외이전에 해당합니다. AI 피팅 기능 이용(사진 전송) 시 해당 국외이전에 동의하게 됩니다. 동의를 원하지 않는 경우 AI 피팅 기능을 이용하지 않거나, kgg2512@gmail.com 으로 철회를 요청하십시오(제5조 참조).<br><br>
-      <strong>하위 처리(재위탁):</strong> TryOnCloud는 피팅 결과 이미지 보관을 위해 Google LLC의 Google Cloud Platform(GCP)을 하위 처리자로 이용하며, 결과 이미지는 최대 7일 후 자동 삭제됩니다. GCP 저장 리전(국가)은 TryOnCloud가 직접 설정하며, 현재 당사가 확인 중입니다 (DPA 요청 진행 중). 확인 즉시 본 방침에 반영합니다. 원본 신체 사진은 처리 직후 즉시 삭제되어 GCP에 보관되지 않습니다.<br><br>
-      TryOnCloud 개인정보처리방침: <a href="https://www.tryoncloud.com/privacy" target="_blank" rel="noopener noreferrer">tryoncloud.com/privacy</a>
+      MyFit은 핏 예측을 <strong>이용자 기기 내에서 자체 처리</strong>하며, 이용자의 개인정보(신체 치수·핏 기록·신체 사진)를 <strong>제3자에게 제공하거나 처리위탁하지 않으며, 국외로 이전하지 않습니다.</strong> 신체 사진을 포함한 어떠한 개인정보도 외부(해외 포함) 서버로 전송되지 않으므로, 「개인정보보호법」 제28조의8상 국외이전에 해당하는 처리가 없습니다.
     </div>
   </section>
 
@@ -106,8 +98,7 @@
     <ul>
       <li><strong>열람·정정·삭제</strong>: 아래 이메일로 요청 시 지체 없이 조치합니다.</li>
       <li><strong>처리정지 요구 (PIPA 제37조)</strong>: 특정 처리 목적에 대한 처리정지를 요청할 수 있습니다. 아래 이메일로 요청하면 지체 없이 조치합니다.</li>
-      <li><strong>AI 피팅 국외이전 동의 철회</strong>: AI 피팅 기능(신체 사진의 인도 소재 TryOnCloud 전송)에 대한 동의를 철회하려면 앱 내 AI 피팅 기능을 이용하지 않거나, kgg2512@gmail.com 으로 철회 의사를 통보하십시오. 철회 후에는 AI 피팅 기능을 이용할 수 없습니다. 철회 이전에 이미 전송된 사진은 TryOnCloud 정책에 따라 삭제됩니다(원본: 즉시, 결과 이미지: 최대 7일 내).</li>
-      <li><strong>기기 데이터 삭제</strong>: 앱 설정 내 '데이터 초기화' 또는 앱 삭제로 직접 삭제 가능</li>
+      <li><strong>기기 데이터 삭제</strong>: 앱 내 '내 데이터 · 프라이버시' 화면에서 항목별 또는 전체 데이터를 언제든 직접 삭제할 수 있으며, 앱·브라우저 데이터 삭제로도 제거됩니다.</li>
     </ul>
     <p>문의: <a href="mailto:kgg2512@gmail.com">kgg2512@gmail.com</a></p>
   </section>
@@ -116,9 +107,9 @@
     <h2>제6조 (기술적 보호 조치)</h2>
     <ul>
       <li><strong>HTTPS 강제</strong>: 모든 통신 구간 TLS 암호화</li>
-      <li><strong>기기 내 저장</strong>: 신체 치수·피팅 기록은 이용자 기기의 브라우저 저장소(localStorage)에 저장되며 당사 서버로 전송되지 않습니다. 별도의 암호화는 적용되지 않으므로, 기기 잠금 등 기기 자체의 보안 설정 이용을 권장합니다.</li>
+      <li><strong>기기 내 저장</strong>: 신체 치수·핏 기록·신체 사진은 이용자 기기의 브라우저 저장소(localStorage)에 저장되며 당사 서버로 전송되지 않습니다. 별도의 암호화는 적용되지 않으므로, 기기 잠금 등 기기 자체의 보안 설정 이용을 권장합니다.</li>
       <li><strong>최소 수집</strong>: 서비스에 필요한 최소 정보만 수집하며 회원가입·이메일을 수집하지 않습니다.</li>
-      <li><strong>즉시 파기</strong>: 피팅 처리 완료 후 원본 사진 즉시 삭제</li>
+      <li><strong>신체 사진 자동 삭제</strong>: 신체 사진은 기기 내 저장 후 7일 경과 시 자동 삭제되며, 이용자가 언제든 직접 삭제할 수 있습니다.</li>
     </ul>
   </section>
 
@@ -144,12 +135,13 @@
 
   <section id="p9">
     <h2>제9조 (개인정보처리방침 변경)</h2>
-    <p>본 방침은 관련 법령 변경 시 사전 고지 후 개정됩니다. 현행 시행일: 2026년 6월 6일 (최종 개정: 2026년 6월 21일)</p>
+    <p>본 방침은 관련 법령 변경 시 사전 고지 후 개정됩니다. 현행 시행일: 2026년 6월 6일 (최종 개정: 2026년 7월 14일)</p>
     <table>
       <tr><th>버전</th><th>시행일</th><th>변경 요약</th></tr>
       <tr><td>v1.0</td><td>2026.06.06</td><td>최초 제정</td></tr>
-      <tr><td>v1.1</td><td>2026.06.21</td><td>AI 피팅 처리자 정정(FASHN→TryOnCloud, 미국→인도) + Google Cloud Platform 하위수탁(결과 이미지 7일 보관) 고지 추가 + 국외이전 동의 철회 방법 명문화(PIPA 제37조) + GCS 저장 리전 확인 중 고지</td></tr>
-      <tr><td>v1.2</td><td>2026.06.21</td><td>정직성 정정: 실제 미수집 항목(이메일·Supabase) 기재 삭제, 신체 치수 "AES-256 암호화" 표현을 실제 구현(브라우저 localStorage 평문 저장, 미암호화)에 맞게 정정. 회원가입 미수집 명시</td></tr>
+      <tr><td>v1.1</td><td>2026.06.21</td><td>외부 AI 피팅 처리자·처리 국가 정정 + 하위수탁 고지 추가 + 국외이전 동의 철회 방법 명문화(PIPA 제37조)</td></tr>
+      <tr><td>v1.2</td><td>2026.06.21</td><td>정직성 정정: 실제 미수집 항목(이메일·Supabase) 기재 삭제, 신체 치수 저장 방식(브라우저 localStorage 평문 저장, 미암호화) 정정, 회원가입 미수집 명시</td></tr>
+      <tr><td>v1.3</td><td>2026.07.14</td><td>정확성 정정(PIPA 제30조): 종료된 외부 처리자로의 신체 사진 해외 전송(국외이전) 고지 삭제 후, 실제 처리(치수 기반 핏 예측을 기기 내에서 자체 계산, 신체 치수·사진의 기기 로컬 저장, 외부 서버 미전송)에 맞게 정정.</td></tr>
     </table>
   </section>
 
@@ -157,7 +149,7 @@
 
 <footer>
   &copy; 2026 G2 Company Ltd. All rights reserved.<br/>
-  MyFit 개인정보처리방침 v1.2 &nbsp;|&nbsp; 시행일: 2026.06.06 (개정: 2026.06.21)
+  MyFit 개인정보처리방침 v1.3 &nbsp;|&nbsp; 시행일: 2026.06.06 (개정: 2026.07.14)
 </footer>
 
 </body>
