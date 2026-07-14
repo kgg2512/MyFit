@@ -1,8 +1,8 @@
-# myfit-fashn-proxy — 가상피팅 이미지 프록시 Worker
-# 2026-07-08 G2 보안감사 P0#1: 배포본 CF API 회수로 버전관리 복원.
-#
-# 배포: wrangler deploy   (main = 회수 번들 myfit-fashn-proxy.js)
-# ⚠️ 벤더 API키·서명키는 코드에 없음 → `wrangler secret put`으로만 등록(하드코딩 금지).
+# myfit-fashn-proxy — 폐기됨 (2026-07-14, 회장 확정: 가상피팅 외부벤더 전면 폐기)
+# main 워커는 구 엔드포인트(/try-on, /g/*, /garment/*)에 410 Gone을 반환하는 스텁이다.
+# ⚠️ 실배포 teardown(워커 삭제·시크릿 제거)은 회장 CF 크리덴셜 필요 —
+#    그 전까지는 이 스텁을 배포(wrangler deploy)해 구 클라이언트 호출을 명시적으로 종료한다.
+# 스텁은 KV·시크릿을 사용하지 않는다 (구 레이트리밋 KV 바인딩·벤더 키 참조 제거).
 
 name = "myfit-fashn-proxy"
 main = "myfit-fashn-proxy.js"
@@ -10,14 +10,3 @@ compatibility_date = "2024-01-01"
 
 [vars]
 ENVIRONMENT = "production"
-
-# 레이트리밋 KV — 배포된 워커의 실제 바인딩 (N1 시정 2026-07-09):
-# 주석처리 상태로 재배포하면 rate-limit이 통째로 풀리는(fail-open) 회귀가 발생하므로 바인딩 복원.
-# id는 `wrangler kv namespace list` 실측으로 확인한 실값(title=MYFIT_RATE_LIMIT) — 추측값 아님.
-# ⚠️ 이 바인딩을 다시 주석처리/삭제하지 말 것 — 바인딩 없이 배포 시 워커가 /try-on 요청을
-#    거부(fail-closed, 500)하도록 방어코드가 있다 (myfit-fashn-proxy.js handleTryOn).
-[[kv_namespaces]]
-binding = "RATE_LIMIT_KV"
-id = "085dd51cc8974c559d62dc29022f35af"
-
-# 시크릿(값은 wrangler secret put 으로만): 벤더 API 키, 이미지 서명키 등

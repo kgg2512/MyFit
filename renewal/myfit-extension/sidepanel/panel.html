@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://*.workers.dev;">
+        content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self';">
   <title>MyFit</title>
   <link rel="stylesheet" href="panel.css">
 </head>
@@ -29,16 +29,7 @@
         <div class="consent-check" id="check-privacy"></div>
         <div>
           <div class="consent-item-text">[필수] 개인정보 처리방침 동의</div>
-          <div class="consent-item-sub">신체 치수는 이 기기에만 저장됩니다. AI 피팅 이용 시 사진이 외부 서버로 전송됩니다 (아래 동의 참고).</div>
-        </div>
-      </div>
-
-      <!-- AI 피팅 국외 이전 동의 (필수 — CLO/CISO 기준) -->
-      <div class="consent-item" id="consent-item-ai">
-        <div class="consent-check" id="check-ai"></div>
-        <div>
-          <div class="consent-item-text">[필수] AI 피팅 국외이전 동의 (신체 사진 — PIPA 제28조의8)</div>
-          <div class="consent-item-sub">신체 사진은 AI 피팅 처리를 위해 인도 소재 TryOnCloud 서버로 전송됩니다. 원본 사진은 처리 후 즉시 삭제, 피팅 결과 이미지는 최대 7일 후 삭제됩니다. 동의를 철회하려면 AI 피팅 탭을 이용하지 않으시면 됩니다.</div>
+          <div class="consent-item-sub">신체 치수는 이 기기에만 저장됩니다. 외부 서버로 전송되지 않습니다.</div>
         </div>
       </div>
 
@@ -76,8 +67,8 @@
       <div class="feature-item">
         <div class="feature-icon">👗</div>
         <div class="feature-text">
-          <strong>AI 가상 피팅</strong>
-          <span>사기 전에 내 몸에 직접 입혀본다</span>
+          <strong>핏 시각화</strong>
+          <span>내 치수 기반 3D 모델·2D 핏 분석으로 미리 확인</span>
         </div>
       </div>
       <div class="feature-item">
@@ -230,18 +221,17 @@
   </div>
 
   <!-- ═══════════════════════════════════════════
-       SCREEN 4: 피팅 결과 (3D 사이즈 가이드 + AI 피팅 탭)
+       SCREEN 4: 피팅 결과 (3D 사이즈 가이드 + 핏 분석 탭)
        ═══════════════════════════════════════════ -->
   <div id="s-fitting" class="screen">
     <div class="panel-header">
       <button class="back-btn" id="btn-back-waiting">←</button>
-      <span class="header-title" id="fitting-product-name">가상 피팅</span>
+      <span class="header-title" id="fitting-product-name">핏 확인</span>
     </div>
 
     <!-- 탭 네비게이션 -->
     <div class="fitting-tabs" role="tablist">
       <button class="fitting-tab active" id="tab-3d" role="tab" aria-selected="true" aria-controls="panel-3d" type="button">3D 가이드</button>
-      <button class="fitting-tab" id="tab-ai" role="tab" aria-selected="false" aria-controls="panel-ai" type="button">AI 피팅</button>
       <button class="fitting-tab" id="tab-fit" role="tab" aria-selected="false" aria-controls="panel-fit" type="button">핏 분석</button>
     </div>
 
@@ -297,85 +287,6 @@
       </div>
 
       <!-- 커미션 고지 (상시 표시) -->
-      <div class="commission-notice">
-        <span class="commission-icon">ⓘ</span>
-        <span class="commission-text">쿠팡파트너스 제휴 링크 — 구매 시 수수료가 발생할 수 있습니다. 사용자 추가 비용 없음.</span>
-      </div>
-    </div>
-
-    <!-- 탭 2: AI 피팅 (TryOnCloud — 사진 업로드 → 결과 이미지) -->
-    <div id="panel-ai" class="fitting-tab-panel scroll-area hidden" role="tabpanel" aria-labelledby="tab-ai">
-      <div class="ai-fitting-section">
-        <div class="ai-fitting-desc">내 사진을 업로드하면 AI가 이 옷을 실제로 입혀드립니다.</div>
-
-        <!-- 사진 업로드 -->
-        <label class="ai-upload-label" id="ai-upload-label" for="ai-photo-input">
-          <span id="ai-upload-text">사진 선택</span>
-          <span class="ai-upload-hint">전신 또는 상반신 정면 사진 권장</span>
-        </label>
-        <input type="file" id="ai-photo-input" accept="image/*" class="ai-file-input" aria-label="사용자 사진 업로드">
-
-        <!-- 사진 미리보기 -->
-        <div class="ai-preview-wrap hidden" id="ai-preview-wrap">
-          <img id="ai-preview-img" class="ai-preview-img" alt="업로드한 사진 미리보기">
-        </div>
-
-        <!-- 피팅 시작 버튼 -->
-        <button class="btn btn-primary" id="btn-tryon-fit" disabled type="button">AI 피팅 시작</button>
-
-        <!-- 개인정보 고지 -->
-        <div class="ai-privacy-note">사진은 AI 피팅 처리 후 즉시 삭제됩니다. 서버에 저장되지 않습니다.</div>
-
-        <!-- 로딩 상태 — 단계별 진행 표시 (15-30초 이탈 방지) -->
-        <div class="ai-loading hidden" id="ai-loading" aria-live="polite">
-          <div class="ai-loading-spinner"></div>
-          <span id="ai-loading-text">AI가 옷을 입히는 중...</span>
-          <div class="ai-loading-steps">
-            <div class="ai-step" id="ai-step-1">
-              <div class="ai-step-dot ai-step-dot--active"></div>
-              <span id="ai-step-1-label">사진 분석 중</span>
-            </div>
-            <div class="ai-step" id="ai-step-2">
-              <div class="ai-step-dot"></div>
-              <span id="ai-step-2-label">옷 패턴 매핑</span>
-            </div>
-            <div class="ai-step" id="ai-step-3">
-              <div class="ai-step-dot"></div>
-              <span id="ai-step-3-label">피팅 이미지 생성</span>
-            </div>
-          </div>
-          <div class="ai-loading-bar-wrap">
-            <div class="ai-loading-bar" id="ai-loading-bar"></div>
-          </div>
-          <span class="ai-loading-tip" id="ai-loading-tip">정면 사진일수록 결과가 정확합니다</span>
-        </div>
-
-        <!-- 에러 메시지 (실제 오류 — 빨간색) -->
-        <div class="ai-error hidden" id="ai-error" role="alert"></div>
-
-        <!-- DEMO 모드 안내 (API Key 미등록 시 — 주황색, 에러 아님) -->
-        <div class="ai-demo-notice" id="ai-demo-notice" role="status" aria-live="polite"></div>
-
-        <!-- 결과 이미지 + PMF 피드백 -->
-        <div class="ai-result-wrap hidden" id="ai-result-wrap">
-          <div class="ai-result-header">
-            <div class="ai-result-label">AI 피팅 결과</div>
-            <button class="ai-result-save" id="btn-save-result" type="button" title="이미지 저장">저장</button>
-          </div>
-          <img id="tryon-result" class="ai-result-img" alt="AI 피팅 결과 이미지">
-          <div class="ai-result-disclaimer">AI 생성 이미지입니다. 실제 착용과 차이가 있을 수 있습니다.</div>
-          <!-- PMF 테스트: "이 결과 보고 샀겠냐?" -->
-          <div class="ai-pmf-block">
-            <div class="ai-pmf-question">이 피팅 결과, 구매에 도움이 됐나요?</div>
-            <div class="ai-pmf-btns">
-              <button class="ai-pmf-btn ai-pmf-btn--yes" id="btn-pmf-yes" type="button">도움 됐어요</button>
-              <button class="ai-pmf-btn ai-pmf-btn--no" id="btn-pmf-no" type="button">별로예요</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 커미션 고지 -->
       <div class="commission-notice">
         <span class="commission-icon">ⓘ</span>
         <span class="commission-text">쿠팡파트너스 제휴 링크 — 구매 시 수수료가 발생할 수 있습니다. 사용자 추가 비용 없음.</span>

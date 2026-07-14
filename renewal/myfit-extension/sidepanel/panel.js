@@ -682,356 +682,26 @@ function updateClothingScale(size) {
   applyScaleForSize(clothingGroup, size);
 }
 
-// ──────────────────────────────────────────────
-// TryOnCloud 피팅 — Cloudflare Worker 프록시 경유
-// ──────────────────────────────────────────────
-
-/**
- * CF Worker URL: 배포 후 실제 subdomain으로 교체
- * wrangler deploy 완료 후 터미널 출력에서 확인 가능
- * 예: https://myfit-fashn-proxy.kgg2512.workers.dev
- */
-const CF_WORKER_URL = 'https://myfit-fashn-proxy.kgg2512.workers.dev';
-
-/**
- * 이미지 File 객체를 base64 문자열로 변환
- * @param {File} file
- * @returns {Promise<string>} base64 (data: URI prefix 제거)
- */
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      // data:image/jpeg;base64,XXXX → XXXX 만 추출
-      const base64 = result.split(',')[1];
-      if (!base64) {
-        reject(new Error('base64 변환 실패'));
-        return;
-      }
-      resolve(base64);
-    };
-    reader.onerror = () => reject(new Error('파일 읽기 실패'));
-    reader.readAsDataURL(file);
-  });
-}
-
-/**
- * TryOnCloud 1인1회 쿼터 체크
- * chrome.storage.local의 tryonUsed 플래그로 사용 여부 확인
- * @returns {Promise<boolean>} true = 사용 가능, false = 이미 사용함
- */
-async function checkTryOnQuota() {
-  const { tryonUsed } = await chrome.storage.local.get('tryonUsed');
-  if (tryonUsed) {
-    showAiFittingError('이미 AI 피팅을 체험하셨어요! 정식 출시 후 무제한으로 이용하실 수 있습니다.');
-    return false;
-  }
-  return true;
-}
-
-// ── Demo 모드: TryOnCloud API Key 미등록 시 사용할 샘플 이미지 URL ──
-// TryOnCloud 결과처럼 보이는 공개 도메인 의류 합성 샘플 이미지
-const DEMO_RESULT_IMAGES = {
-  tops:    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&q=80',
-  bottoms: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&q=80',
-};
-
-/**
- * TryOnCloud 가상 피팅 요청
- * @param {File} userPhotoFile - 사용자 업로드 사진
- * @param {string} garmentImageUrl - 쇼핑몰 상품 이미지 https:// URL
- * @param {'tops'|'bottoms'} category
- * @returns {Promise<{output_image_url: string, demo?: boolean}>}
- */
-async function requestTryOnFit(userPhotoFile, garmentImageUrl, category) {
-  // Step 1: File → base64 (메모리 내 처리, 서버 전송 후 JS GC에 의해 해제)
-  const base64Image = await fileToBase64(userPhotoFile);
-
-  // Step 2: CF Worker 호출 (Worker → TryOnCloud API)
-  const response = await fetch(`${CF_WORKER_URL}/try-on`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      human_image: base64Image,
-      garment_image_url: garmentImageUrl,
-      category,
-    }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    // TryOnCloud API Key 미등록 → Demo 모드 폴백
-    // (Worker가 500 + "Server configuration error" 반환 시)
-    if (response.status === 500 && data.error === 'Server configuration error') {
-      return {
-        output_image_url: DEMO_RESULT_IMAGES[category] || DEMO_RESULT_IMAGES.tops,
-        demo: true,
-      };
-    }
-    // 크레딧 소진 특별 처리
-    if (response.status === 402 || data.code === 'CREDITS_EXHAUSTED') {
-      throw new Error('AI 피팅 크레딧이 소진되었습니다. 잠시 후 다시 시도해 주세요.');
-    }
-    if (response.status === 429) {
-      const wait = data.retryAfter ? `${data.retryAfter}초 후` : '잠시 후';
-      throw new Error(`요청이 너무 많습니다. ${wait} 다시 시도해 주세요.`);
-    }
-    throw new Error(data.error || `서버 오류 (${response.status})`);
-  }
-
-  if (!data.output_image_url) {
-    throw new Error('AI 피팅 결과를 받지 못했습니다.');
-  }
-
-  return data;
-}
-
-// ── 단계별 로딩 진행 타이머 ──
-let _loadingTimers = [];
-
-const LOADING_STEPS = [
-  { id: 'ai-step-1', label: '사진 분석 중', tip: '정면 사진일수록 결과가 정확합니다', bar: 10 },
-  { id: 'ai-step-2', label: '옷 패턴 매핑', tip: 'AI가 의류의 질감과 형태를 분석합니다', bar: 45 },
-  { id: 'ai-step-3', label: '피팅 이미지 생성', tip: '거의 다 됐어요! 잠시만 기다려주세요', bar: 85 },
-];
-
-function startLoadingSteps() {
-  _loadingTimers.forEach(clearTimeout);
-  _loadingTimers = [];
-
-  const bar     = document.getElementById('ai-loading-bar');
-  const tipEl   = document.getElementById('ai-loading-tip');
-  const stepEls = LOADING_STEPS.map(s => document.getElementById(s.id));
-
-  // 초기화
-  stepEls.forEach(el => {
-    if (!el) return;
-    el.classList.remove('active', 'done');
-    const dot = el.querySelector('.ai-step-dot');
-    if (dot) { dot.classList.remove('ai-step-dot--active'); }
-  });
-  if (bar) bar.style.width = '5%';
-
-  // Step 1 즉시 활성
-  activateStep(0, bar, tipEl, stepEls);
-
-  // Step 2: 7초 후
-  _loadingTimers.push(setTimeout(() => activateStep(1, bar, tipEl, stepEls), 7000));
-  // Step 3: 18초 후
-  _loadingTimers.push(setTimeout(() => activateStep(2, bar, tipEl, stepEls), 18000));
-}
-
-function activateStep(idx, bar, tipEl, stepEls) {
-  // 이전 단계 done 처리
-  for (let i = 0; i < idx; i++) {
-    if (!stepEls[i]) continue;
-    stepEls[i].classList.remove('active');
-    stepEls[i].classList.add('done');
-    const dot = stepEls[i].querySelector('.ai-step-dot');
-    if (dot) dot.classList.remove('ai-step-dot--active');
-  }
-  // 현재 단계 active
-  if (stepEls[idx]) {
-    stepEls[idx].classList.add('active');
-    const dot = stepEls[idx].querySelector('.ai-step-dot');
-    if (dot) dot.classList.add('ai-step-dot--active');
-  }
-  if (bar) bar.style.width = LOADING_STEPS[idx].bar + '%';
-  if (tipEl) tipEl.textContent = LOADING_STEPS[idx].tip;
-}
-
-function finishLoadingSteps() {
-  _loadingTimers.forEach(clearTimeout);
-  _loadingTimers = [];
-  const bar = document.getElementById('ai-loading-bar');
-  if (bar) bar.style.width = '100%';
-}
-
-// ── 피팅 탭 UI 상태 헬퍼 ──
-function setAiFittingLoading(isLoading, message) {
-  const loadingEl  = document.getElementById('ai-loading');
-  const loadingTxt = document.getElementById('ai-loading-text');
-  const btnFit     = document.getElementById('btn-tryon-fit');
-
-  if (isLoading) {
-    loadingEl.classList.remove('hidden');
-    loadingEl.classList.add('visible');
-    startLoadingSteps();
-  } else {
-    finishLoadingSteps();
-    loadingEl.classList.remove('visible');
-    loadingEl.classList.add('hidden');
-  }
-  btnFit.disabled = isLoading;
-  if (message && loadingTxt) loadingTxt.textContent = message;
-}
-
-function showAiFittingError(message) {
-  const errEl = document.getElementById('ai-error');
-  errEl.classList.remove('hidden');
-  errEl.textContent = message; // textContent — XSS 방지
-}
-
-function clearAiFittingError() {
-  const errEl = document.getElementById('ai-error');
-  errEl.classList.add('hidden');
-  errEl.textContent = '';
-}
-
-function showAiFittingResult(imageUrl, isDemo) {
-  const resultWrap  = document.getElementById('ai-result-wrap');
-  const resultImg   = document.getElementById('tryon-result');
-  const demoNotice  = document.getElementById('ai-demo-notice');
-
-  resultWrap.classList.remove('hidden');
-  resultImg.src = imageUrl;
-  resultImg.alt = 'AI 피팅 결과 — ' + (currentProduct?.name || '상품');
-
-  // Demo 모드: 전용 안내 div 사용 (에러 박스 재활용 금지)
-  if (isDemo) {
-    if (demoNotice) {
-      demoNotice.textContent = '미리보기 모드입니다. TryOnCloud API Key 등록 후 실제 AI 피팅을 이용하실 수 있습니다.';
-      demoNotice.classList.add('visible');
-    }
-    // DEMO 배지 (이미지 위 오버레이)
-    let demoBadge = document.getElementById('ai-demo-badge');
-    if (!demoBadge) {
-      demoBadge = document.createElement('div');
-      demoBadge.id = 'ai-demo-badge';
-      demoBadge.style.cssText = [
-        'position:absolute', 'top:8px', 'left:8px',
-        'background:rgba(255,160,0,0.92)', 'color:#000',
-        'font-size:10px', 'font-weight:700', 'padding:2px 7px',
-        'border-radius:4px', 'letter-spacing:.05em', 'pointer-events:none',
-        'z-index:10',
-      ].join(';');
-      demoBadge.textContent = '미리보기';
-      resultWrap.style.position = 'relative';
-      resultWrap.appendChild(demoBadge);
-    }
-    demoBadge.style.display = 'block';
-    clearAiFittingError();
-  } else {
-    if (demoNotice) { demoNotice.textContent = ''; demoNotice.classList.remove('visible'); }
-    const demoBadge = document.getElementById('ai-demo-badge');
-    if (demoBadge) demoBadge.style.display = 'none';
-    clearAiFittingError();
-  }
-
-  // PMF 버튼 초기화 (재시도 시 리셋)
-  document.getElementById('btn-pmf-yes')?.classList.remove('selected');
-  document.getElementById('btn-pmf-no')?.classList.remove('selected');
-  const thanks = document.querySelector('.ai-pmf-thanks');
-  if (thanks) thanks.classList.remove('visible');
-}
-
-// ── TryOnCloud 피팅 탭 이벤트 바인딩 ──
-(function initTryOnTab() {
-  const photoInput   = document.getElementById('ai-photo-input');
-  const uploadLabel  = document.getElementById('ai-upload-label');
-  const uploadText   = document.getElementById('ai-upload-text');
-  const previewWrap  = document.getElementById('ai-preview-wrap');
-  const previewImg   = document.getElementById('ai-preview-img');
-  const btnFit       = document.getElementById('btn-tryon-fit');
-
-  let selectedPhotoFile = null;
-
-  // 사진 선택 핸들러
-  photoInput.addEventListener('change', () => {
-    const file = photoInput.files[0];
-    if (!file) return;
-
-    // 파일 타입 검증
-    if (!file.type.startsWith('image/')) {
-      showAiFittingError('이미지 파일만 업로드 가능합니다.');
-      return;
-    }
-    // 크기 제한 (5MB)
-    if (file.size > 5_242_880) {
-      showAiFittingError('이미지 파일 크기는 5MB 이하여야 합니다.');
-      return;
-    }
-
-    clearAiFittingError();
-    selectedPhotoFile = file;
-    uploadText.textContent = file.name;
-
-    // 미리보기 표시 (blob URL — 로컬 전용, 서버 전송 없음)
-    const objectUrl = URL.createObjectURL(file);
-    previewImg.src = objectUrl;
-    previewImg.onload = () => URL.revokeObjectURL(objectUrl); // 즉시 해제
-    previewImg.onerror = () => URL.revokeObjectURL(objectUrl); // SEC-PANEL-001: 로드 실패 시에도 해제
-    previewWrap.classList.remove('hidden');
-
-    btnFit.disabled = false;
-  });
-
-  // AI 피팅 시작 버튼
-  btnFit.addEventListener('click', async () => {
-    if (!selectedPhotoFile) return;
-
-    // 1인1회 쿼터 체크 (베타 제한)
-    const quotaOk = await checkTryOnQuota();
-    if (!quotaOk) return;
-
-    // 현재 상품의 garment_image_url 가져오기
-    const garmentUrl = currentProduct?.imageUrl || currentProduct?.image || null;
-    if (!garmentUrl || !garmentUrl.startsWith('https://')) {
-      showAiFittingError('상품 이미지 URL을 찾을 수 없습니다. 쇼핑몰 상품 페이지에서 다시 시도해 주세요.');
-      return;
-    }
-
-    // 카테고리 결정
-    const sizeType = currentProduct ? detectSizeType(currentProduct) : { type: 'tops' };
-    const category = sizeType.type === 'bottoms' ? 'bottoms' : 'tops';
-
-    clearAiFittingError();
-    document.getElementById('ai-result-wrap').classList.add('hidden');
-    setAiFittingLoading(true, 'AI가 옷을 입히는 중... (15–30초)');
-
-    try {
-      const result = await requestTryOnFit(selectedPhotoFile, garmentUrl, category);
-      // 피팅 성공 후 1인1회 플래그 저장 (demo 모드는 플래그 저장 안 함)
-      if (!result.demo) {
-        await chrome.storage.local.set({ tryonUsed: true });
-      }
-      showAiFittingResult(result.output_image_url, result.demo);
-    } catch (err) {
-      showAiFittingError(err.message || 'AI 피팅 중 오류가 발생했습니다.');
-    } finally {
-      setAiFittingLoading(false);
-    }
-  });
-})();
-
 // ── 피팅 탭 전환 로직 ──
 (function initFittingTabs() {
   const tab3d    = document.getElementById('tab-3d');
-  const tabAi    = document.getElementById('tab-ai');
   const tabFit   = document.getElementById('tab-fit');
   const panel3d  = document.getElementById('panel-3d');
-  const panelAi  = document.getElementById('panel-ai');
   const panelFit = document.getElementById('panel-fit');
 
   function activateTab(t) {
     tab3d.classList.toggle('active', t === '3d');
     tab3d.setAttribute('aria-selected', String(t === '3d'));
-    tabAi.classList.toggle('active', t === 'ai');
-    tabAi.setAttribute('aria-selected', String(t === 'ai'));
     tabFit.classList.toggle('active', t === 'fit');
     tabFit.setAttribute('aria-selected', String(t === 'fit'));
 
     panel3d.classList.toggle('hidden', t !== '3d');
-    panelAi.classList.toggle('hidden', t !== 'ai');
     panelFit.classList.toggle('hidden', t !== 'fit');
 
     if (t === 'fit') window.fit2dRefresh?.();
   }
 
   tab3d.addEventListener('click', () => activateTab('3d'));
-  tabAi.addEventListener('click', () => activateTab('ai'));
   tabFit.addEventListener('click', () => activateTab('fit'));
 })();
 
@@ -1049,12 +719,10 @@ document.getElementById('btn-buy').addEventListener('click', () => {
   const btnConfirm = document.getElementById('btn-consent-confirm');
   const checkAll      = document.getElementById('check-all');
   const checkPrivacy  = document.getElementById('check-privacy');
-  const checkAi       = document.getElementById('check-ai');
   const checkAffiliate = document.getElementById('check-affiliate');
 
   function updateAllState() {
     const allChecked = checkPrivacy.classList.contains('checked')
-                    && checkAi.classList.contains('checked')
                     && checkAffiliate.classList.contains('checked');
     checkAll.classList.toggle('checked', allChecked);
     btnConfirm.disabled = !allChecked;
@@ -1062,10 +730,6 @@ document.getElementById('btn-buy').addEventListener('click', () => {
 
   document.getElementById('consent-item-privacy').addEventListener('click', () => {
     checkPrivacy.classList.toggle('checked');
-    updateAllState();
-  });
-  document.getElementById('consent-item-ai').addEventListener('click', () => {
-    checkAi.classList.toggle('checked');
     updateAllState();
   });
   document.getElementById('consent-item-affiliate').addEventListener('click', () => {
@@ -1076,7 +740,6 @@ document.getElementById('btn-buy').addEventListener('click', () => {
     const target = !checkAll.classList.contains('checked');
     checkAll.classList.toggle('checked', target);
     checkPrivacy.classList.toggle('checked', target);
-    checkAi.classList.toggle('checked', target);
     checkAffiliate.classList.toggle('checked', target);
     btnConfirm.disabled = !target;
   });
@@ -1086,55 +749,6 @@ document.getElementById('btn-buy').addEventListener('click', () => {
     chrome.storage.local.set({ myfit_consented: '1' });
     overlay.classList.add('hidden');
     showScreen('manual');
-  });
-})();
-
-// ── PMF 피드백 + 결과 저장 버튼 ──
-(function initResultActions() {
-  // PMF Yes/No
-  function handlePmf(selected) {
-    document.getElementById('btn-pmf-yes')?.classList.remove('selected');
-    document.getElementById('btn-pmf-no')?.classList.remove('selected');
-    selected.classList.add('selected');
-
-    // PMF 데이터 저장 (로컬 카운터 — 서버 전송 없음)
-    const key = selected.id === 'btn-pmf-yes' ? 'myfit_pmf_yes' : 'myfit_pmf_no';
-    chrome.storage.local.get(['myfit_pmf_yes', 'myfit_pmf_no']).then(data => {
-      const updated = { [key]: (data[key] || 0) + 1 };
-      chrome.storage.local.set(updated);
-    });
-
-    // 감사 메시지 표시
-    let thanks = document.querySelector('.ai-pmf-thanks');
-    if (!thanks) {
-      thanks = document.createElement('div');
-      thanks.className = 'ai-pmf-thanks';
-      thanks.textContent = '피드백 감사합니다!';
-      document.querySelector('.ai-pmf-block')?.appendChild(thanks);
-    }
-    thanks.classList.add('visible');
-  }
-
-  document.getElementById('btn-pmf-yes')?.addEventListener('click', function() { handlePmf(this); });
-  document.getElementById('btn-pmf-no')?.addEventListener('click', function() { handlePmf(this); });
-
-  // 결과 이미지 저장 (blob → a[download])
-  document.getElementById('btn-save-result')?.addEventListener('click', async () => {
-    const img = document.getElementById('tryon-result');
-    if (!img?.src) return;
-    try {
-      const resp = await fetch(img.src);
-      const blob = await resp.blob();
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
-      a.download = 'myfit-result.jpg';
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      // 크로스오리진 제한 시 새 탭 열기 폴백
-      window.open(img.src, '_blank', 'noopener,noreferrer');
-    }
   });
 })();
 

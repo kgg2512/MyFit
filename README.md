@@ -47,7 +47,7 @@ MyFit/
 ## 기술 스택
 
 - **신형**: Next.js 15 · React 19 · Tailwind v4 · 자체 `FitEngine`(치수→핏) · Capacitor(모바일)
-- **구형**: Chrome MV3 · Three.js · Cloudflare Workers · (AI 합성 벤더: FASHN→TryOnCloud)
+- **구형**: Chrome MV3 · Three.js · Cloudflare Workers · (외부 AI 합성 벤더는 2026-07-14 전면 폐기 — 워커 410 스텁)
 
 ---
 

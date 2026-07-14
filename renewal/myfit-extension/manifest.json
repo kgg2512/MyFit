@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "MyFit — AI 가상 피팅",
+  "name": "MyFit — 사이즈 핏 확인",
   "version": "0.1.0",
   "description": "무신사·Nike·Zara에서 AI가 내 체형에 사이즈를 확인해줍니다. 반품 걱정 없이, 자신 있게 구매하세요.",
 
@@ -17,8 +17,7 @@
     "https://www.zara.com/*",
     "https://www.uniqlo.com/*",
     "https://www.hm.com/*",
-    "https://www2.hm.com/*",
-    "https://myfit-fashn-proxy.kgg2512.workers.dev/*"
+    "https://www2.hm.com/*"
   ],
 
   "background": {
@@ -62,7 +61,7 @@
   },
 
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://myfit-fashn-proxy.kgg2512.workers.dev"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self'"
   },
 
   "web_accessible_resources": [

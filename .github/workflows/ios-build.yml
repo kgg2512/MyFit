@@ -61,13 +61,12 @@ jobs:
         run: |
           PLIST=ios/App/App/Info.plist
           set_str() { /usr/libexec/PlistBuddy -c "Add :$1 string $2" "$PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :$1 $2" "$PLIST"; }
-          set_str NSCameraUsageDescription "AI 피팅을 위해 카메라로 사진을 촬영합니다. 촬영된 사진은 AI 처리 후 즉시 삭제됩니다."
-          set_str NSPhotoLibraryUsageDescription "앨범에서 사진을 선택하여 AI 피팅을 진행합니다. 사진은 AI 처리 후 즉시 삭제됩니다."
+          set_str NSCameraUsageDescription "체형 프로필 사진 촬영에 사용됩니다. 사진은 기기 내에서만 처리되며 외부로 전송되지 않습니다."
+          set_str NSPhotoLibraryUsageDescription "앨범에서 체형 프로필 사진을 선택합니다. 사진은 기기 내에서만 처리되며 외부로 전송되지 않습니다."
           # 앱-바운드 도메인(capacitor.config.ts: limitsNavigationsToAppBoundDomains=true 요건)
           /usr/libexec/PlistBuddy -c "Delete :WKAppBoundDomains" "$PLIST" 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Add :WKAppBoundDomains array" "$PLIST"
-          /usr/libexec/PlistBuddy -c "Add :WKAppBoundDomains:0 string myfit-fashn-proxy.kgg2512.workers.dev" "$PLIST"
-          /usr/libexec/PlistBuddy -c "Add :WKAppBoundDomains:1 string kgg2512.github.io" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :WKAppBoundDomains:0 string kgg2512.github.io" "$PLIST"
           # 세로 방향 고정
           /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations" "$PLIST" 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations array" "$PLIST"
