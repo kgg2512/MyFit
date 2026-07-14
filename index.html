@@ -9,8 +9,8 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; base-uri 'self'; object-src 'none'; form-action 'self'" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MyFit — 버전 선택</title>
-  <meta name="description" content="MyFit — 치수 기반 핏 예측 & AI 가상피팅. 두 가지 접근을 각각 체험하세요." />
+  <title>MyFit — 치수 기반 핏 예측</title>
+  <meta name="description" content="MyFit — 내 치수로 옷이 부위별로 맞을지 예측합니다. 사진 합성이 아니라 실제 착용감을 수치로." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👕</text></svg>" />
   <style>
     :root {
@@ -30,7 +30,7 @@
     .logo { font-size: 34px; font-weight: 800; letter-spacing: -.02em; }
     .logo span { color: var(--accent2); }
     .tagline { color: var(--sub); margin-top: 10px; font-size: 15px; line-height: 1.6; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 18px; max-width: 440px; margin: 0 auto; }
     @media (max-width: 620px) { .grid { grid-template-columns: 1fr; } }
     .card {
       background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
@@ -55,29 +55,21 @@
   <div class="wrap">
     <header>
       <div class="logo">My<span>Fit</span></div>
-      <p class="tagline">한 벌을 사기 전에, <b>맞을지</b>부터.<br />두 가지 접근 중 하나를 선택하세요.</p>
+      <p class="tagline">한 벌을 사기 전에, <b>맞을지</b>부터.<br />내 치수로 부위별 핏을 예측합니다.</p>
     </header>
 
     <div class="grid">
       <a class="card" href="v2/">
-        <span class="badge v2">신형 · 권장</span>
+        <span class="badge v2">핏 예측 엔진</span>
         <h2>치수 기반 핏 예측</h2>
         <div class="kr">Fit Prediction · TrueToForm 벤치마킹</div>
         <p>내 치수 × 쇼핑몰 사이즈표를 대조해 <b>부위별로 맞을지</b>(오버/타이트) 예측합니다. 사진 합성이 아니라 실제 착용감을 수치로.</p>
-        <span class="go primary">신형 체험하기 →</span>
-      </a>
-
-      <a class="card" href="legacy/">
-        <span class="badge v1">구형 · 아카이브</span>
-        <h2>AI 가상 피팅</h2>
-        <div class="kr">Virtual Try-On · 라이브 버전</div>
-        <p>사진을 올리면 AI가 옷 입은 모습을 <b>이미지로 합성</b>합니다. MyFit의 1기 접근으로, 아카이브로 보존된 라이브 버전입니다.</p>
-        <span class="go muted">구형 열기 →</span>
+        <span class="go primary">시작하기 →</span>
       </a>
     </div>
 
     <footer>
-      두 버전은 각각 독립적으로 유지·배포됩니다 · <a href="https://github.com/kgg2512/MyFit">GitHub</a><br />
+      <a href="https://github.com/kgg2512/MyFit">GitHub</a><br />
       © 2026 G2 Company Ltd — MyFit
     </footer>
   </div>
