@@ -39,6 +39,10 @@ function Inject-NoIndex {
 
 function Build-Web {
     param([bool]$Demo = $true)
+    # P10-1: 로그인/클라우드 동기화 게이트. DEMO_MODE와 독립(데모·스토어 웹 모두 firebase 활성).
+    #   → 데모(/demo/v2, noindex)에서 회장 실로그인 검증. 스토어 승격은 검증 후 별도 진행.
+    #   안드로이드 빌드(.env.app*)에는 이 플래그가 없어 firebase 비활성(로그인 UI 미표시) — P10-3에서 네이티브로 배선.
+    $env:NEXT_PUBLIC_FIREBASE_ENABLED = "true"
     if ($Demo) {
         Write-Host "`n=== [데모 스테이징 /demo/v2] 빌드 (basePath /MyFit/demo/v2, DEMO_MODE=true) ===" -ForegroundColor Cyan
         $env:NEXT_PUBLIC_BASE_PATH = "/MyFit/demo/v2"
@@ -67,6 +71,11 @@ function Build-Android {
     $label = if ($Demo) { "Android 데모 APK" } else { "Android 실제 AAB" }
     $envf  = if ($Demo) { ".env.app.demo" } else { ".env.app" }
     Write-Host "`n=== [$label] 빌드 시작 ===" -ForegroundColor Cyan
+
+    # P10-1: 안드로이드는 웹 로그인(firebase JS) 대상 아님(P10-3에서 네이티브 플러그인).
+    #   'all' 타깃에서 Build-Web이 켠 shell env를 상속하지 않도록 명시적으로 끈다
+    #   (Next.js는 실제 shell env를 .env 파일보다 우선 적용하므로 누수 방지).
+    $env:NEXT_PUBLIC_FIREBASE_ENABLED = "false"
 
     Copy-Item $envf ".env.production.local" -Force
     npm run build

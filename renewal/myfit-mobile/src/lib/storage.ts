@@ -14,6 +14,11 @@ export interface Measurements {
   chest: number;    // cm
   waist: number;    // cm
   hip: number;      // cm
+  /**
+   * 마지막 저장 시각(epoch ms). 로컬↔클라우드 병합 기준(설계 §D).
+   * 선택 필드 — 이 값이 없는 레거시 데이터는 병합 시 '가장 오래된 것'으로 취급된다(하위호환).
+   */
+  savedAt?: number;
 }
 
 export interface FitHistoryItem {
@@ -52,7 +57,9 @@ function isBrowser(): boolean {
 
 export function saveMeasurements(m: Measurements): void {
   if (!isBrowser()) return;
-  localStorage.setItem(KEYS.MEASUREMENTS, JSON.stringify(m));
+  // 저장 시각 스탬프(항상 now) → 로컬↔클라우드 병합의 '최신' 판정 기준(설계 §D).
+  const withTs: Measurements = { ...m, savedAt: Date.now() };
+  localStorage.setItem(KEYS.MEASUREMENTS, JSON.stringify(withTs));
 }
 
 export function loadMeasurements(): Measurements | null {

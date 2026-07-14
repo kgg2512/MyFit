@@ -15,6 +15,7 @@ import {
   type Measurements,
 } from '@/lib/storage';
 import { captureImage } from '@/lib/camera';
+import { useAuth } from '@/lib/auth/useAuth';
 
 const QUICK_SIZE_MAP: Record<string, Measurements> = {
   XS: { height: 163, weight: 50, shoulder: 37, chest: 82, waist: 62, hip: 86 },
@@ -62,6 +63,14 @@ const IconX = (
     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
 );
+const IconGoogle = (
+  <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+    <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
+    <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
+    <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/>
+    <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
+  </svg>
+);
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -75,6 +84,11 @@ export default function ProfilePage() {
   const [mounted, setMounted] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string>(''); // 내 몸 기록 미리보기 (dataUrl)
   const [photoError, setPhotoError] = useState<string>('');
+
+  // 로그인(선택) + 클라우드 동기화. 로그인 시 병합된 치수로 폼을 갱신한다.
+  const auth = useAuth((merged) => {
+    if (merged) setForm(merged);
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -127,6 +141,7 @@ export default function ProfilePage() {
       return;
     }
     saveMeasurements(form);
+    void auth.pushMeasurements({ ...form, savedAt: Date.now() }); // 로그인 시에만 클라우드 반영(비로그인 no-op)
     setSaved(true);
     setTimeout(() => {
       router.push('/fit/check');
@@ -141,6 +156,7 @@ export default function ProfilePage() {
     setAgeConfirmed();
     setShowConsent(false);
     saveMeasurements(form);
+    void auth.pushMeasurements({ ...form, savedAt: Date.now() }); // 로그인 시에만 클라우드 반영
     setSaved(true);
     setTimeout(() => {
       router.push('/fit/check');
@@ -343,6 +359,58 @@ export default function ProfilePage() {
           <span style={{ color: 'var(--myfit-text-muted)' }}>{IconShield}</span>
           이 기기에만 저장 · 서버 전송 없음
         </div>
+
+        {/* 계정 로그인 (선택) — 로그인하면 기기 간 치수 동기화. firebase 비활성 빌드에서는 렌더 안 함(dead-code). */}
+        {auth.available && (
+          <section aria-label="계정 동기화" className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {auth.user ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ flexShrink: 0, color: 'var(--myfit-success)', display: 'flex' }}>{IconCheck}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--myfit-text)' }}>
+                      {auth.syncing ? '치수 동기화 중…' : '기기 간 동기화 켜짐'}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {auth.user.email ?? auth.user.displayName ?? '로그인됨'}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void auth.signOut()}
+                    style={{ flexShrink: 0, padding: '8px 12px', minHeight: 36, borderRadius: 8, background: '#fff', border: '1px solid var(--myfit-border-strong)', color: 'var(--myfit-text-sub)', fontSize: 12, fontWeight: 600 }}
+                  >
+                    로그아웃
+                  </button>
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--myfit-text-muted)', lineHeight: 1.5 }}>
+                  치수(숫자)만 계정에 저장돼 다른 기기에서도 이어집니다. 사진은 이 기기에만 남습니다.
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--myfit-text)', marginBottom: 4 }}>기기 간 치수 동기화 (선택)</div>
+                  <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', lineHeight: 1.5 }}>
+                    로그인하면 내 치수가 계정에 안전하게 저장돼 다른 기기에서도 이어집니다. 로그인 없이도 그대로 사용할 수 있어요.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void auth.signInGoogle()}
+                  disabled={auth.loading}
+                  style={{ width: '100%', minHeight: 48, borderRadius: 10, background: '#fff', border: '1px solid var(--myfit-border-strong)', color: 'var(--myfit-text)', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: auth.loading ? 0.6 : 1 }}
+                >
+                  {IconGoogle}
+                  Google로 로그인
+                </button>
+                {auth.error && (
+                  <div role="alert" style={{ fontSize: 12, color: 'var(--myfit-error)' }}>{auth.error}</div>
+                )}
+              </>
+            )}
+          </section>
+        )}
 
         {/* 내 몸 기록 (선택) — P9. 결과 화면에서 실루엣 대신 내 사진으로 확인 */}
         <section aria-label="내 몸 기록">

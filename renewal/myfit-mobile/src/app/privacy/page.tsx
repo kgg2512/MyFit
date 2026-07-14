@@ -15,6 +15,7 @@ import {
   PHOTO_RETENTION_DAYS,
   type PhotoStatus,
 } from '@/lib/storage';
+import { useAuth } from '@/lib/auth/useAuth';
 
 /* ── 아이콘 (SVG, Lucide 스타일 — 이모지 금지) ── */
 const IconArrowLeft = (
@@ -99,6 +100,7 @@ export default function PrivacyPage() {
   const [state, setState] = useState<DashboardState>(EMPTY_STATE);
   const [confirmAll, setConfirmAll] = useState(false);
   const [toast, setToast] = useState('');
+  const auth = useAuth();
 
   const refresh = useCallback(() => setState(readState()), []);
 
@@ -130,11 +132,19 @@ export default function PrivacyPage() {
     showToast('신체 사진을 삭제했습니다');
   };
 
-  const handleClearAll = () => {
-    clearAllData();
+  const handleClearAll = async () => {
+    // 로그인 상태면 클라우드 문서 + 계정도 삭제(PIPA 삭제권). 비로그인이면 'none'.
+    const cloud = auth.available ? await auth.purgeCloud() : 'none';
+    clearAllData(); // 로컬 전체 삭제(항상 수행)
     setConfirmAll(false);
     refresh();
-    showToast('모든 데이터를 삭제했습니다');
+    showToast(
+      cloud === 'deleted'
+        ? '모든 데이터와 계정을 삭제했습니다'
+        : cloud === 'signedout'
+          ? '데이터를 삭제하고 로그아웃했습니다'
+          : '모든 데이터를 삭제했습니다',
+    );
   };
 
   if (!mounted) {

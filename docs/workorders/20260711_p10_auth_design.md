@@ -88,3 +88,46 @@ match /profiles/{uid} {
 ---
 ## 부록: Supabase 설계(폐기, 이력 보존)
 초기 P10 설계는 Supabase Auth(PKCE·RLS·서울 리전) 기준이었으나 무료 유저당 2개 한도로 불가 판정(2026-07-12). Firebase로 전환. 나중에 Supabase 복귀 시 §B 어댑터의 `SupabaseAuthProvider`/`SupabaseStore`만 신규 작성하면 됨(앱 코드 불변).
+
+---
+
+## 구현 로그 — P10-1 웹 Google 로그인 + 치수 클라우드 저장 (2026-07-14, g2-cto)
+
+**범위:** P10-1만(웹 구글 로그인 + Firestore 치수 동기화). 확장/안드/iOS(P10-2~4) 미착수.
+
+### 추가/변경 파일
+| 파일 | 내용 |
+|---|---|
+| `renewal/myfit-mobile/package.json` | `firebase ^12.16.0`(modular SDK) 추가 |
+| `src/lib/firebase.ts` (신규) | config 단일 소스(공개 클라이언트 키) + 지연 싱글톤 init. `analytics(getAnalytics) 미초기화`(measurementId 제외, §9 프라이버시). 게이트=`NEXT_PUBLIC_FIREBASE_ENABLED`(DEMO_MODE와 독립). SSR-safe(typeof window 가드). |
+| `src/lib/auth/AuthProvider.ts` (신규) | 인증 인터페이스(§B) |
+| `src/lib/auth/FirebaseAuthProvider.ts` (신규) | Firebase 구현. `signInWithPopup` 기본 + 팝업차단시 `signInWithRedirect` 폴백 + `getRedirectResult` 복귀처리. `firebase/auth` 직접 import는 여기+firebase.ts만. |
+| `src/lib/auth/index.ts` (신규) | 싱글톤 `authProvider`(구현체 선택 단일 지점) |
+| `src/lib/auth/useAuth.ts` (신규) | 페이지용 React 훅. 로그인/로그아웃/자동 동기화/클라우드 업로드/계정삭제 캡슐화 → 페이지의 유일한 인증 진입점(firebase 직접 참조 0). |
+| `src/lib/cloud/CloudStore.ts` (신규) | 클라우드 저장 인터페이스(§B) |
+| `src/lib/cloud/FirestoreStore.ts` (신규) | Firestore 구현. `profiles/{uid}` read/write/delete. 필드 화이트리스트(임의필드 무시). `firebase/firestore` 직접 import는 여기+firebase.ts만. |
+| `src/lib/cloud/index.ts` (신규) | 싱글톤 `cloudStore` |
+| `src/lib/cloud/sync.ts` (신규) | `syncMeasurementsOnLogin(uid)` — 로컬↔클라우드 `savedAt` 최신우선 병합(§D, 데이터 비파괴) |
+| `src/lib/storage.ts` (변경) | `Measurements.savedAt?: number` 추가(하위호환) + `saveMeasurements`가 저장 시각 스탬프 |
+| `src/app/profile/page.tsx` (변경) | 로그인 카드(선택·비침습, "기기 간 치수 동기화") + 저장 시 클라우드 반영(로그인시만) |
+| `src/app/privacy/page.tsx` (변경) | 전체삭제 시 로그인상태면 Firestore 문서+Auth 계정도 삭제(PIPA 삭제권) |
+| `build-all.ps1` (변경) | 웹 빌드(데모·스토어)에 `NEXT_PUBLIC_FIREBASE_ENABLED=true` 주입. 안드로이드는 명시적 false(누수 차단). |
+| `firestore.rules` (신규, 레포 루트) | Security Rules — 본인 uid만 read/write + deny-by-default |
+
+### 데모/스토어 격리 tension 해결 (§F 모순 해소)
+- **핵심 판단:** firebase 로그인은 데모 기능이 아니라 **실제 제품 기능** → `DEMO_MODE`가 아니라 **독립 플래그 `NEXT_PUBLIC_FIREBASE_ENABLED`**로 게이팅. 데모/스토어 웹 빌드 모두 firebase 활성.
+- **검증 경로:** `web:demo`(DEMO=true·firebase=true·noindex)를 `/demo/v2`에 배포 → 회장이 크롤러 차단된 안전 스테이징에서 실로그인 검증. 스토어 `/v2` 승격은 회장 실로그인 PASS 후 별도 진행(이 작업에서 미빌드·미푸시).
+- **샘플 시드 격리는 별개 관심사로 유지:** `seedDemoData`/`getDemoFitInput` 등 DEMO_MODE 게이팅은 그대로. 격리 검증(demo-isolation-check, 심볼 grep): 스토어 스크래치 빌드(out/, 슬롯 미생성)에서 `seedDemoData`·`getDemoFitInput`·`무신사 나시`·`DemoBanner`·`DemoReset`·`오버핏 셔츠`·`tops_female` **전부 0건**. firebase 심볼은 데모·스토어 빌드 모두 존재, 현 커밋 v2 슬롯엔 0건(미승격).
+  - (참고: `myfit_demo_seeded` 키상수·community `DEMO_POSTS`는 DEMO_MODE 경계 밖 상시번들 = 기존 v2 베이스라인에도 존재, 누수 아님.)
+
+### 검증 증빙
+- `npm install firebase` → package.json `firebase ^12.16.0`.
+- `next build`(web:demo) EXIT=0, TypeScript 에러 0. 12/12 static export. profile/privacy First Load 306/304kB(firebase 번들 포함 확인).
+- firebase 직접 import = 어댑터 3파일(firebase.ts/FirebaseAuthProvider.ts/FirestoreStore.ts)만(grep 확증). 페이지는 useAuth 인터페이스만 참조.
+- 데모 슬롯 `demo/v2`: firebase 심볼 O, 데모 시드 O(정상). 스토어 스크래치 out/: 데모 게이팅 심볼 0건 + firebase O.
+
+### 미해결·리스크 (회장/후속 단계)
+- **실 Google 로그인(OAuth 팝업 실동작)은 회장 실계정 필요 → 미검증.** 빌드·코드정합·로컬로드까지만 확인. 회장 검증 전제: Firebase 콘솔 Auth > 승인된 도메인에 **`kgg2512.github.io` 추가**(설계 §7-4) + Firestore(서울) 생성 + `firestore.rules` 게시.
+- config apiKey는 회장 스크린샷 전사값 → 오독 가능성. 틀리면 `src/lib/firebase.ts` 한 곳만 수정.
+- 계정 삭제 `auth/requires-recent-login` 시 계정삭제 대신 로그아웃 폴백(문서는 삭제) → 완전 삭제 UX는 P10-5에서 재인증 플로우로 보강.
+- 🔒CLO: 클라우드 계정 저장 = 처리위탁사 **Google LLC**·서울 리전. "클라우드 계정 저장" 별도 옵트인 동의 문구·처리방침 개정 **필요(식별만, 개정은 P10-5)**.
