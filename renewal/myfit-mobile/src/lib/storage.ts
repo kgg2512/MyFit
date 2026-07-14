@@ -34,6 +34,7 @@ const KEYS = {
   MEASUREMENTS: 'myfit_measurements',
   HISTORY: 'myfit_fit_history',
   CONSENTED: 'myfit_consented',
+  CLOUD_CONSENT: 'myfit_cloud_consent',          // 클라우드(Google Firestore) 저장 별도 옵트인 동의 — 로컬 동의(CONSENTED)와 분리
   AGE_CONFIRMED: 'myfit_age_confirmed',          // 만 14세 이상 확인 (PIPA §22)
   LAST_PERSON_IMAGE: 'myfit_last_person_b64',    // 마지막 신체 사진 base64 (재사용용)
   LAST_PERSON_TS: 'myfit_last_person_ts',        // 신체 사진 저장 시각 (만료 자동폐기용)
@@ -139,6 +140,25 @@ export function setConsented(): void {
 export function isConsented(): boolean {
   if (!isBrowser()) return false;
   return localStorage.getItem(KEYS.CONSENTED) === '1';
+}
+
+// ── 클라우드 저장 별도 동의 (로그인과 분리 — 인증했다고 자동 위탁저장 아님) ──
+// 로컬 동의(CONSENTED, "이 기기에만 저장")와 무관한 독립 옵트인.
+// clearAllData가 KEYS 순회로 CLOUD_CONSENT도 함께 삭제한다(탈퇴 시 동의 철회).
+
+export function setCloudConsent(): void {
+  if (!isBrowser()) return;
+  localStorage.setItem(KEYS.CLOUD_CONSENT, '1');
+}
+
+export function isCloudConsented(): boolean {
+  if (!isBrowser()) return false;
+  return localStorage.getItem(KEYS.CLOUD_CONSENT) === '1';
+}
+
+export function clearCloudConsent(): void {
+  if (!isBrowser()) return;
+  localStorage.removeItem(KEYS.CLOUD_CONSENT);
 }
 
 // ── 만 14세 이상 확인 (PIPA §22 + Google Play 정책) ──

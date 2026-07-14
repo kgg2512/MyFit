@@ -12,10 +12,14 @@
 
 'use client';
 
-import { loadMeasurements, saveMeasurements, type Measurements } from '../storage';
+import { loadMeasurements, saveMeasurements, isCloudConsented, type Measurements } from '../storage';
 import { cloudStore } from './index';
 
 export async function syncMeasurementsOnLogin(uid: string): Promise<Measurements | null> {
+  // 클라우드 저장 별도 동의가 없으면 어떤 방향의 동기화도 하지 않는다(위탁 write/read 0, 로컬만 유지).
+  // 로그인만으로 개인정보(치수)가 Google로 전송되는 것을 원천 차단(CLO 게이트).
+  if (!isCloudConsented()) return null;
+
   const local = loadMeasurements();
   const remote = await cloudStore.loadMeasurements(uid);
 

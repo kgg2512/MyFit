@@ -89,6 +89,7 @@ export default function ProfilePage() {
   const auth = useAuth((merged) => {
     if (merged) setForm(merged);
   });
+  const [cloudConsentDismissed, setCloudConsentDismissed] = useState(false); // "동의 안 함" 시 옵트인 블록 접기(1회성)
 
   useEffect(() => {
     setMounted(true);
@@ -360,39 +361,16 @@ export default function ProfilePage() {
           이 기기에만 저장 · 서버 전송 없음
         </div>
 
-        {/* 계정 로그인 (선택) — 로그인하면 기기 간 치수 동기화. firebase 비활성 빌드에서는 렌더 안 함(dead-code). */}
+        {/* 계정 로그인 + 클라우드 동기화 (선택) — 로그인과 클라우드 저장 동의는 분리. firebase 비활성 빌드에서는 렌더 안 함(dead-code). */}
         {auth.available && (
           <section aria-label="계정 동기화" className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {auth.user ? (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ flexShrink: 0, color: 'var(--myfit-success)', display: 'flex' }}>{IconCheck}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--myfit-text)' }}>
-                      {auth.syncing ? '치수 동기화 중…' : '기기 간 동기화 켜짐'}
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {auth.user.email ?? auth.user.displayName ?? '로그인됨'}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => void auth.signOut()}
-                    style={{ flexShrink: 0, padding: '8px 12px', minHeight: 36, borderRadius: 8, background: '#fff', border: '1px solid var(--myfit-border-strong)', color: 'var(--myfit-text-sub)', fontSize: 12, fontWeight: 600 }}
-                  >
-                    로그아웃
-                  </button>
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--myfit-text-muted)', lineHeight: 1.5 }}>
-                  치수(숫자)만 계정에 저장돼 다른 기기에서도 이어집니다. 사진은 이 기기에만 남습니다.
-                </div>
-              </>
-            ) : (
+            {!auth.user ? (
+              /* ── 상태 1: 비로그인 ── */
               <>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--myfit-text)', marginBottom: 4 }}>기기 간 치수 동기화 (선택)</div>
                   <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', lineHeight: 1.5 }}>
-                    로그인하면 내 치수가 계정에 안전하게 저장돼 다른 기기에서도 이어집니다. 로그인 없이도 그대로 사용할 수 있어요.
+                    로그인하면 별도 동의 후 내 치수를 계정에 저장해 다른 기기에서도 이어갈 수 있어요. 로그인 없이도 그대로 사용할 수 있어요.
                   </div>
                 </div>
                 <button
@@ -406,6 +384,83 @@ export default function ProfilePage() {
                 </button>
                 {auth.error && (
                   <div role="alert" style={{ fontSize: 12, color: 'var(--myfit-error)' }}>{auth.error}</div>
+                )}
+              </>
+            ) : (
+              /* ── 로그인됨 (공통 헤더) ── */
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ flexShrink: 0, color: auth.cloudConsent ? 'var(--myfit-success)' : 'var(--myfit-text-sub)', display: 'flex' }}>{IconCheck}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--myfit-text)' }}>
+                      {auth.cloudConsent ? (auth.syncing ? '치수 동기화 중…' : '기기 간 동기화 켜짐') : '로그인됨'}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {auth.user.email ?? auth.user.displayName ?? '로그인됨'}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void auth.signOut()}
+                    style={{ flexShrink: 0, padding: '8px 12px', minHeight: 36, borderRadius: 8, background: '#fff', border: '1px solid var(--myfit-border-strong)', color: 'var(--myfit-text-sub)', fontSize: 12, fontWeight: 600 }}
+                  >
+                    로그아웃
+                  </button>
+                </div>
+
+                {auth.cloudConsent ? (
+                  /* ── 상태 3: 로그인 + 동의 → 켜짐 + 끄기(철회) ── */
+                  <>
+                    <div style={{ fontSize: 11, color: 'var(--myfit-text-muted)', lineHeight: 1.5 }}>
+                      치수(숫자)만 계정에 저장돼 다른 기기에서도 이어집니다. 사진은 이 기기에만 남습니다.
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void auth.revokeCloudConsent()}
+                      style={{ alignSelf: 'flex-start', padding: '8px 12px', minHeight: 36, borderRadius: 8, background: '#fff', border: '1px solid var(--myfit-border-strong)', color: 'var(--myfit-text-sub)', fontSize: 12, fontWeight: 600 }}
+                    >
+                      동기화 끄기
+                    </button>
+                  </>
+                ) : !cloudConsentDismissed ? (
+                  /* ── 상태 2: 로그인 + 미동의 → 명시적 옵트인 (로그인과 분리된 별도 확인) ── */
+                  <div style={{ borderTop: '1px solid var(--myfit-border)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--myfit-text)' }}>클라우드 동기화 동의 (선택)</div>
+                    <div style={{ fontSize: 12, color: 'var(--myfit-text-sub)', lineHeight: 1.6 }}>
+                      치수 6종(키·몸무게·어깨·가슴·허리·엉덩이)을 Google 클라우드(서울 리전)에 저장해 기기 간 동기화합니다. 처리위탁: Google LLC. 로그아웃·탈퇴 시 삭제됩니다. 동의하지 않아도 로그인은 가능하며, 이 경우 치수는 이 기기에만 저장됩니다.
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => void auth.giveCloudConsent()}
+                        style={{ flex: 1, minHeight: 44 }}
+                      >
+                        동의하고 동기화
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCloudConsentDismissed(true)}
+                        style={{ flex: 1, minHeight: 44, borderRadius: 10, background: '#fff', border: '1px solid var(--myfit-border-strong)', color: 'var(--myfit-text-sub)', fontSize: 14, fontWeight: 600 }}
+                      >
+                        동의 안 함
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* ── 상태 2': 미동의 + 접음 → 로컬 저장 안내 + 다시 켜기 ── */
+                  <div style={{ borderTop: '1px solid var(--myfit-border)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ fontSize: 12, color: 'var(--myfit-text-muted)', lineHeight: 1.5 }}>
+                      치수는 이 기기에만 저장 중입니다. (클라우드 동기화 미동의)
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCloudConsentDismissed(false)}
+                      style={{ alignSelf: 'flex-start', padding: '8px 12px', minHeight: 36, borderRadius: 8, background: '#fff', border: '1px solid var(--myfit-border-strong)', color: 'var(--myfit-primary)', fontSize: 12, fontWeight: 600 }}
+                    >
+                      기기 간 동기화 켜기
+                    </button>
+                  </div>
                 )}
               </>
             )}

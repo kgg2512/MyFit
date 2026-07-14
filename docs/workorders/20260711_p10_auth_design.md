@@ -131,3 +131,14 @@ match /profiles/{uid} {
 - config apiKey는 회장 스크린샷 전사값 → 오독 가능성. 틀리면 `src/lib/firebase.ts` 한 곳만 수정.
 - 계정 삭제 `auth/requires-recent-login` 시 계정삭제 대신 로그아웃 폴백(문서는 삭제) → 완전 삭제 UX는 P10-5에서 재인증 플로우로 보강.
 - 🔒CLO: 클라우드 계정 저장 = 처리위탁사 **Google LLC**·서울 리전. "클라우드 계정 저장" 별도 옵트인 동의 문구·처리방침 개정 **필요(식별만, 개정은 P10-5)**.
+
+### 🔴 CLO 블로커 시정 — 클라우드 저장 별도 옵트인 동의 분리 (2026-07-14, 독립검증 후)
+**문제:** 최초 구현은 로그인 완료 시 `syncMeasurementsOnLogin`이 무조건 로컬 치수를 Firestore 업로드 → 로그인만으로 치수 6종이 인지 없이 Google LLC로 위탁 전송(§1.5 "개인정보 수집" 게이트 위반). 기존 PIPA 동의는 "이 기기에만 저장"이라 로컬 동의일 뿐.
+**시정 (인증 ↔ 클라우드 저장 동의 분리):**
+1. `storage.ts`: `KEYS.CLOUD_CONSENT='myfit_cloud_consent'` + `setCloudConsent()/isCloudConsented()/clearCloudConsent()`. `clearAllData`가 KEYS 순회로 함께 삭제(확인).
+2. `sync.ts`: `syncMeasurementsOnLogin` 최상단 `if (!isCloudConsented()) return null` — 미동의 시 **양방향 동기화 전면 skip**(위탁 read/write 0).
+3. `useAuth.ts`: `pushMeasurements`도 `isCloudConsented()` 게이트. `cloudConsent` 상태 + `giveCloudConsent()`(동의+즉시 1회 동기화)/`revokeCloudConsent()`(동의 철회+클라우드 문서 삭제) 추가.
+4. `profile/page.tsx`: 로그인 영역 3-상태화 — ①비로그인=[Google 로그인] ②로그인+미동의=**별도 옵트인 블록**(고지 문구: 항목 6종·목적·서울 리전·위탁사 Google LLC·삭제·선택권 명시) [동의하고 동기화]/[동의 안 함] ③로그인+동의=[동기화 켜짐]+[동기화 끄기].
+**write 경로 전수 게이팅 증명:** `cloudStore.saveMeasurements` 호출부 = sync.ts(2)+useAuth(1) 3곳뿐, 전부 `isCloudConsented()` 뒤 → **미동의 로그인 시 Firestore write 0**(코드흐름 증명, grep 확증).
+**검증:** `next build`(web:demo) EXIT=0, TS 0, 12/12 export. 데모 빌드에 `myfit_cloud_consent`·firebase 심볼 존재. 데모 슬롯 재빌드+push.
+**범위 준수:** 이 블로커만 수정. 🟡권고(requires-recent-login 재인증 폴백·처리방침 전면개정)는 P10-5 이연. 스토어 `/v2/` 미승격.

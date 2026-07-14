@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { authProvider, type AuthUser } from './index';
 import { cloudStore } from '../cloud';
 import { syncMeasurementsOnLogin } from '../cloud/sync';
-import type { Measurements } from '../storage';
+import { isCloudConsented, setCloudConsent, clearCloudConsent, type Measurements } from '../storage';
 
 export interface AuthState {
   /** 현재 로그인 사용자(없으면 null). */
@@ -22,9 +22,15 @@ export interface AuthState {
   syncing: boolean;
   /** 마지막 로그인 시도 에러 메시지(사용자 취소는 null). */
   error: string | null;
+  /** 클라우드 저장 별도 동의 여부(로그인과 분리된 옵트인). */
+  cloudConsent: boolean;
   signInGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  /** 로그인 상태면 치수를 클라우드에 즉시 업로드(비로그인 시 no-op). */
+  /** 클라우드 저장 동의 부여 → 로그인 상태면 즉시 로컬↔클라우드 동기화. */
+  giveCloudConsent: () => Promise<void>;
+  /** 클라우드 저장 동의 철회 → 이후 업로드 중단 + 이미 올라간 클라우드 문서 삭제(로컬은 유지). */
+  revokeCloudConsent: () => Promise<void>;
+  /** 동의+로그인 상태면 치수를 클라우드에 즉시 업로드(미동의/비로그인 시 no-op). */
   pushMeasurements: (m: Measurements) => Promise<void>;
   /** 클라우드 데이터+계정 삭제(PIPA). 'deleted'=계정삭제, 'signedout'=재로그인필요로 로그아웃 대체, 'none'=비로그인. */
   purgeCloud: () => Promise<'deleted' | 'signedout' | 'none'>;
@@ -38,6 +44,12 @@ export function useAuth(onSynced?: (m: Measurements | null) => void): AuthState 
   const [loading, setLoading] = useState<boolean>(authProvider.available);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cloudConsent, setCloudConsentState] = useState(false);
+
+  // 클라우드 동의 플래그 초기 로드(localStorage → SSR 후 클라이언트에서).
+  useEffect(() => {
+    setCloudConsentState(isCloudConsented());
+  }, []);
 
   useEffect(() => {
     if (!authProvider.available) {
@@ -85,12 +97,42 @@ export function useAuth(onSynced?: (m: Measurements | null) => void): AuthState 
   }, []);
 
   const pushMeasurements = useCallback(async (m: Measurements) => {
+    if (!isCloudConsented()) return; // 클라우드 저장 미동의 → 위탁 write 0(로컬만)
     const u = authProvider.currentUser();
     if (!u) return;
     try {
       await cloudStore.saveMeasurements(u.uid, m);
     } catch {
-      // 업로드 실패는 로컬 저장을 막지 않는다(다음 로그인 때 재동기화).
+      // 업로드 실패는 로컬 저장을 막지 않는다(다음 동기화 때 재시도).
+    }
+  }, []);
+
+  const giveCloudConsent = useCallback(async () => {
+    setCloudConsent();               // 동의 플래그 먼저 set → 이후 sync가 통과
+    setCloudConsentState(true);
+    const u = authProvider.currentUser();
+    if (!u) return;
+    setSyncing(true);
+    try {
+      const merged = await syncMeasurementsOnLogin(u.uid); // 동의 직후 1회 동기화
+      onSynced?.(merged);
+    } catch {
+      // 오프라인 등 → 로컬 유지
+    } finally {
+      setSyncing(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const revokeCloudConsent = useCallback(async () => {
+    clearCloudConsent();             // 이후 업로드 중단
+    setCloudConsentState(false);
+    const u = authProvider.currentUser();
+    if (!u) return;
+    try {
+      await cloudStore.deleteAll(u.uid); // 이미 올라간 클라우드 문서 삭제(로컬은 유지)
+    } catch {
+      // 삭제 실패해도 동의는 철회됨(이후 업로드 안 함)
     }
   }, []);
 
@@ -116,5 +158,5 @@ export function useAuth(onSynced?: (m: Measurements | null) => void): AuthState 
     }
   }, []);
 
-  return { user, loading, available: authProvider.available, syncing, error, signInGoogle, signOut, pushMeasurements, purgeCloud };
+  return { user, loading, available: authProvider.available, syncing, error, cloudConsent, signInGoogle, signOut, giveCloudConsent, revokeCloudConsent, pushMeasurements, purgeCloud };
 }
