@@ -3,7 +3,8 @@
 - **작성:** 2026-07-09 (G2 CTO) · **대상:** 신형 `renewal/myfit-mobile` (Next.js 15 + Capacitor 6)
 - **appId:** `com.g2company.myfit` · **appName:** MyFit · **버전:** versionName 1.0 / versionCode 1
 - **제품 정의:** 신체 치수 기반 **AI 핏 예측·시각화** 앱(단순 가상 피팅 합성 아님). 사이즈표 자동 분석 × 내 치수 → 부위별 핏(오버/타이트) 예측. **외부 AI 가상 피팅은 2026-07-14 전면 폐기 — 미포함.**
-- **원격 의존:** 없음 — 치수·핏 예측·사진 보관은 전부 기기 로컬(localStorage). (구 AI 피팅 프록시 워커는 2026-07-14 폐기, 410 스텁)
+- **원격 의존:** **기본값 = 없음** — 치수·핏 예측·사진 보관은 전부 기기 로컬(localStorage). (구 AI 피팅 프록시 워커는 2026-07-14 폐기, 410 스텁)
+  - **예외(옵트인):** P10-1(2026-07-19)부터 **선택적 클라우드 백업** 존재 — 사용자가 Google 로그인 + 별도 동의(`myfit_cloud_consent`) 시에만 **6종 신체치수를 본인 Firestore 문서(`profiles/{uid}`)에 저장**(본인 uid만 접근, TLS). 미로그인·미동의 시 전송 0. → **Data Safety는 이 옵트인 경로를 반드시 신고**(§4, 2026-07-24 교정).
 
 > 이 문서는 제출 실무 체크리스트다. 코드/빌드는 준비 완료 상태이며, 남은 것은 **회장 계정·결제·서명키 재생성**(아래 §1, §4)이다.
 
@@ -78,20 +79,27 @@
 
 ## 4. 프라이버시 라벨 매핑
 
+> ⚠️ **2026-07-24 교정:** P10-1 옵트인 클라우드 백업 반영. 사진은 여전히 전송 0(기기 내), **신체 치수·이메일은 "옵트인 시 수집"으로 정직 신고**. 코드 실측 근거: `renewal/myfit-mobile/src/lib/cloud/FirestoreStore.ts`(setDoc `profiles/{uid}`={height,weight,shoulder,chest,waist,hip,savedAt,updatedAt}), 게이트=`storage.ts` `CLOUD_CONSENT`.
+
 ### 4.1 Apple App Privacy ("Nutrition Label")
 | 데이터 | 수집? | 용도 | 사용자 연결 | 추적 |
 |--------|-------|------|-------------|------|
 | **사진(신체 이미지)** | 수집·외부 전송 안 함(기기 내 처리만) | 앱 기능(App Functionality) | 아니오 | 아니오 |
-| 신체 치수 | 기기 내 저장(서버 미수집) | 앱 기능 | 아니오 | 아니오 |
+| 신체 치수 | **옵트인 시 수집**(기본=기기 로컬, 클라우드 백업 동의 시 Firestore 저장) | 앱 기능 | **예(본인 계정)** | 아니오 |
+| 이메일 주소 | **옵트인 시 수집**(Google 로그인 사용 시에만) | 앱 기능·계정 | 예 | 아니오 |
 | 기기 ID(로컬 저장 키) | 수집 아님(로컬만) | 앱 기능 | 아니오 | 아니오 |
 
-- 핵심 고지: **치수·핏 기록·사진은 기기(localStorage)에만 저장, MyFit 서버로 전송·보관하지 않음.** 사진의 외부 전송은 **없음**(AI 가상 피팅 기능 2026-07-14 폐기). 기기 내 재사용 보관 사진은 **7일 자동 폐기**.
-- iOS Privacy Manifest 준비됨: `ios-templates/PrivacyInfo.xcprivacy`(사진=PhotosOrVideos·App Functionality·Not Linked·No Tracking, UserDefaults/FileTimestamp/SystemBootTime API 사유 코드 포함). CI가 App 타겟 리소스로 등록.
+- 핵심 고지: **기본값은 치수·핏 기록·사진 전부 기기(localStorage) 로컬 저장, MyFit/외부 서버 미전송.** 사진의 외부 전송은 **항상 없음**(AI 가상 피팅 기능 2026-07-14 폐기). 기기 내 재사용 보관 사진은 **7일 자동 폐기**.
+- **옵트인 클라우드 백업**: 사용자가 Google 로그인 + 명시적 클라우드 저장 동의 시에만 6종 치수가 본인 Firestore 문서에 저장(본인 uid만 접근, TLS 암호화, 인앱 삭제 가능). 미동의 시 전송 0.
+- iOS Privacy Manifest 준비됨: `ios-templates/PrivacyInfo.xcprivacy`(사진=PhotosOrVideos·App Functionality·Not Linked·No Tracking). ⚠️ 옵트인 치수/이메일 반영 여부 재검토 필요(현 Manifest는 사진만 명시).
 
 ### 4.2 Google Play Data Safety
-- 수집/공유 데이터: **없음** — 사진·치수 전부 기기 로컬 처리(서버 미전송·미공유). 외부 AI 피팅 공유는 2026-07-14 폐기. 사용자 삭제는 인앱 "내 데이터 전부 삭제".
-- 위치/연락처/식별자 추적: **없음**.
-- 치수: 기기 로컬 저장 = Play 기준 "수집(collected)" 아님(서버 미전송)으로 신고.
+- **기본 경로(미로그인·미동의):** 수집/공유 **없음** — 사진·치수 전부 기기 로컬 처리(서버 미전송). 외부 AI 피팅 2026-07-14 폐기.
+- **옵트인 클라우드 백업 경로(신고 필수):**
+  - **개인 정보 → 이메일 주소**: 수집 O(Google 로그인 시), 공유 X, 목적=앱 기능/계정, 암호화 전송 O, 삭제 요청 가능 O.
+  - **건강·피트니스(신체 치수)** 또는 앱 활동 → 6종 치수: 수집 O(클라우드 동의 시), 공유 X, 목적=앱 기능, 암호화 전송 O, 삭제 O(인앱 "내 데이터 전부 삭제"→`deleteAll`).
+- 위치/연락처/광고식별자/추적: **없음**.
+- 삭제 메커니즘: 인앱 삭제(로컬 + `FirestoreStore.deleteAll(uid)`) + 웹 삭제 안내.
 
 ---
 
