@@ -38,6 +38,13 @@ jobs:
       - name: Run high-risk tests
         run: npm test
 
+      # 2026-07-30 L2 — 테스트만으로는 못 잡는 결함이 실제로 있었다.
+      # 직전 세션이 vitest 를 넣고 `next build` 를 안 돌려 cinderella 프로덕션 빌드가
+      # exit 1 로 깨진 채 CI 는 초록이었다(테스트 게이트는 npm test 만 돈다).
+      # 배포 전에 타입체크·정적 export 를 여기서 한 번 깬다.
+      - name: Build (프로덕션 타입체크·정적 export)
+        run: npx next build
+
       - name: Summary
         if: always()
         run: |
