@@ -1,0 +1,30 @@
+# 유령 더티 제거 (2026-07-31 M2 · G2 사고 재발방지)
+#
+# core.autocrlf=true + .gitattributes 부재 조합에서 도구가 파일을 LF 로 다시 쓰면
+# `git status` 는 " M" 인데 `git diff` 는 0줄이다(가짜 더티).
+# G2 실측: .md 40개 LF 재기록 → 더티 40 · 내용 diff 0.
+# 이 구분 불가 상태가 2026-07-30 reset --hard 사고의 선행 조건이었다.
+
+* text=auto eol=lf
+
+# Windows 스크립트는 CRLF 유지
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# 바이너리 — 줄바꿈 변환 금지
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.pdf  binary
+*.zip  binary
+*.jar  binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.otf  binary
+*.keystore binary
+*.jks  binary
