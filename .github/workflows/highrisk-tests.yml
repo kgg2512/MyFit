@@ -51,6 +51,6 @@ jobs:
           if [ "${{ job.status }}" = "success" ]; then
             echo "### ✅ 고위험 경로 테스트 통과" >> $GITHUB_STEP_SUMMARY
           else
-            echo "### ❌ 고위험 경로 테스트 실패 — 인증·개인정보 회귀 가능성" >> $GITHUB_STEP_SUMMARY
+            echo "### ❌ 고위험 경로 게이트 실패(테스트 또는 빌드) — 인증·개인정보 회귀 가능성" >> $GITHUB_STEP_SUMMARY
             echo "범위: \`renewal/myfit-mobile/tests/highrisk/**\` (G2 eval/highrisk_paths.json 동결 목록 기준)" >> $GITHUB_STEP_SUMMARY
           fi
