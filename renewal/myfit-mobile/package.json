@@ -17,7 +17,9 @@
     "build:web:demo": "powershell -File build-all.ps1 -Target web:demo",
     "build:web:prod": "powershell -File build-all.ps1 -Target web:prod",
     "build:android:demo": "powershell -File build-all.ps1 -Target android:demo",
-    "build:android:prod": "powershell -File build-all.ps1 -Target android:prod"
+    "build:android:prod": "powershell -File build-all.ps1 -Target android:prod",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",
@@ -35,10 +37,15 @@
   "devDependencies": {
     "@capacitor/cli": "^6.2.0",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.0.4",
+    "jsdom": "^29.1.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

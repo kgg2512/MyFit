@@ -1,0 +1,56 @@
+name: High-risk tests
+
+# 고위험 경로(인증·개인정보) 회귀 게이트.
+#
+# 배경(G2 2026-07-27 실측): 이 레포는 테스트 파일 0개 · test 스크립트 0 · 테스트 런너 0 이었다.
+# MyFit 은 결제가 없지만 **신체 치수(PII)** 와 **구글 로그인** 경로를 갖고,
+# 실질 방어선이 Firestore 규칙 + 인증 어댑터 한 겹뿐이었다.
+# 범위는 `renewal/myfit-mobile/tests/highrisk/**` 로 한정한다 — 전면 커버리지가 목표가 아니다.
+#
+# 대상 목록의 출처: G2 `eval/highrisk_paths.json` (2026-07-27 동결, MyFit 18개 경로).
+# 앱 소스는 레포 루트가 아니라 `renewal/myfit-mobile/` 에 있다(구조 실측).
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: renewal/myfit-mobile
+
+jobs:
+  highrisk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: renewal/myfit-mobile/package-lock.json
+
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Run high-risk tests
+        run: npm test
+
+      # 2026-07-30 L2 — 테스트만으로는 못 잡는 결함이 실제로 있었다.
+      # 직전 세션이 vitest 를 넣고 `next build` 를 안 돌려 cinderella 프로덕션 빌드가
+      # exit 1 로 깨진 채 CI 는 초록이었다(테스트 게이트는 npm test 만 돈다).
+      # 배포 전에 타입체크·정적 export 를 여기서 한 번 깬다.
+      - name: Build (프로덕션 타입체크·정적 export)
+        run: npx next build
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "### ✅ 고위험 경로 테스트 통과" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ 고위험 경로 게이트 실패(테스트 또는 빌드) — 인증·개인정보 회귀 가능성" >> $GITHUB_STEP_SUMMARY
+            echo "범위: \`renewal/myfit-mobile/tests/highrisk/**\` (G2 eval/highrisk_paths.json 동결 목록 기준)" >> $GITHUB_STEP_SUMMARY
+          fi
